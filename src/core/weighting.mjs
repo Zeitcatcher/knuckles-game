@@ -1,10 +1,12 @@
 /**
  * Per-die weighting for Knuckles Game. PURE — no Foundry imports.
  *
- * A "die spec" is a 6-length weight vector over faces 1..6. A uniform vector
- * (all values equal, e.g. [1,1,1,1,1,1]) is a fair die; anything else is loaded.
+ * A "die spec" is a 6-length weight vector over faces 1..6 (optionally wrapped as
+ * `{ weights, joker }`). A uniform vector is a fair die; anything else is loaded.
  * The weighting is applied by THIS module only; it never touches global RNG.
  */
+
+import { WILD } from "./dice-model.mjs";
 
 /** True if a weight vector is present and non-uniform (a loaded die). */
 export function isWeighted(weights) {
@@ -33,4 +35,15 @@ export function weightedFace(rng, weights) {
     if (r < 0) return face;
   }
   return 6;
+}
+
+/**
+ * Roll one die from a spec, returning a face 1..6 — or WILD if the die is a joker
+ * and its joker face (the 1-face) comes up. `spec` is a weight array or `{weights, joker}`.
+ */
+export function rollDieValue(rng, spec) {
+  const weights = Array.isArray(spec) ? spec : spec?.weights;
+  const isJoker = !Array.isArray(spec) && Boolean(spec?.joker);
+  const face = weightedFace(rng, weights);
+  return isJoker && face === 1 ? WILD : face;
 }

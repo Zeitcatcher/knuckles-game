@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { createGame, reduce, currentPlayer, computePool } from "../src/core/game-state.mjs";
 
-const two = (over = {}) => createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 2000, ...over });
+const start = (g) => reduce(g, { type: "startPlay" });
+const two = (over = {}) => start(createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 2000, ...over }));
 
 describe("a basic turn", () => {
   it("rolls, keeps scoring dice, banks, and passes the turn", () => {
@@ -40,7 +41,7 @@ describe("hot dice", () => {
 
 describe("hero points", () => {
   it("spends a point to re-roll out of a bust", () => {
-    let s = createGame({ players: [{ id: "a", heroPoints: 1 }, { id: "b" }] });
+    let s = start(createGame({ players: [{ id: "a", heroPoints: 1 }, { id: "b" }] }));
     s = reduce(s, { type: "roll", values: [2, 3, 4, 6, 2, 3] });
     expect(s.phase).toBe("bust");
     s = reduce(s, { type: "useHeroPoint", rerollIds: [1, 2, 3, 4, 5, 6], values: [1, 5, 5, 2, 3, 4] });
@@ -59,7 +60,7 @@ describe("hero points", () => {
 
 describe("complete-the-round win logic", () => {
   it("finishes the round after the trigger; earlier players do not get another turn", () => {
-    let s = createGame({ players: [{ id: "p1" }, { id: "p2" }, { id: "p3" }], targetScore: 1000 });
+    let s = start(createGame({ players: [{ id: "p1" }, { id: "p2" }, { id: "p3" }], targetScore: 1000 }));
 
     s = reduce(s, { type: "roll", values: [5, 2, 3, 4, 6, 2] });
     s = reduce(s, { type: "keepAndBank", ids: [1] }); // p1 → 50
@@ -82,7 +83,7 @@ describe("complete-the-round win logic", () => {
 
 describe("tie → sudden death", () => {
   it("does not finish on a tie, then resolves the sudden-death round", () => {
-    let s = createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 100 });
+    let s = start(createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 100 }));
 
     s = reduce(s, { type: "roll", values: [1, 2, 3, 4, 6, 2] });
     s = reduce(s, { type: "keepAndBank", ids: [1] }); // a → 100, final round
@@ -109,6 +110,35 @@ describe("purity", () => {
     const snapshot = JSON.stringify(s0);
     reduce(s0, { type: "roll", values: [1, 5, 2, 3, 4, 6] });
     expect(JSON.stringify(s0)).toBe(snapshot);
+  });
+});
+
+describe("dice selection (choosing phase)", () => {
+  it("starts in choosing with six fair dice each", () => {
+    const s = createGame({ players: [{ id: "a" }, { id: "b" }] });
+    expect(s.status).toBe("choosing");
+    expect(s.players[0].dieIds).toEqual(["fair", "fair", "fair", "fair", "fair", "fair"]);
+    expect(s.players[0].ready).toBe(false);
+  });
+
+  it("sets a single slot's die", () => {
+    let s = createGame({ players: [{ id: "a" }, { id: "b" }] });
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 2, dieId: "weighted" });
+    expect(s.players[0].dieIds[2]).toBe("weighted");
+    expect(s.players[0].dieIds[0]).toBe("fair");
+  });
+
+  it("setReady marks a player ready; startPlay begins play", () => {
+    let s = createGame({ players: [{ id: "a" }, { id: "b" }] });
+    s = reduce(s, { type: "setReady", playerId: "a", ready: true });
+    expect(s.players[0].ready).toBe(true);
+    s = reduce(s, { type: "startPlay" });
+    expect(s.status).toBe("playing");
+  });
+
+  it("rolling before startPlay is rejected", () => {
+    const s = createGame({ players: [{ id: "a" }, { id: "b" }] });
+    expect(() => reduce(s, { type: "roll", values: [1, 2, 3, 4, 5, 6] })).toThrow();
   });
 });
 

@@ -31,6 +31,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       heroCancel: BoardApp._onHeroCancel,
       heroConfirm: BoardApp._onHeroConfirm,
       takeBust: BoardApp._onTakeBust,
+      openDice: BoardApp._onOpenDice,
       newGame: BoardApp._onNewGame,
     },
   };
@@ -93,6 +94,10 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static _onNewGame() {
     import("./setup-app.mjs").then((m) => m.openSetup());
+  }
+
+  static _onOpenDice() {
+    import("./dice-picker.mjs").then((m) => m.openDicePicker());
   }
 }
 

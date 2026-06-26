@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isWeighted, weightedFace } from "../src/core/weighting.mjs";
+import { isWeighted, weightedFace, rollDieValue } from "../src/core/weighting.mjs";
 
 // Small seeded RNG so the distribution test is deterministic (no flakiness).
 function lcg(seed) {
@@ -54,5 +54,17 @@ describe("weightedFace", () => {
     const p1 = counts[0] / N;
     expect(p1).toBeGreaterThan(0.6);
     expect(p1).toBeLessThan(0.73);
+  });
+});
+
+describe("rollDieValue (joker)", () => {
+  it("returns the weighted face for a normal die", () => {
+    expect(rollDieValue(() => 0, { weights: [1, 1, 1, 1, 1, 1], joker: false })).toBe(1);
+    expect(rollDieValue(() => 0, [10, 1, 1, 1, 1, 1])).toBe(1); // plain array spec
+  });
+
+  it("turns the joker (1) face into a wild (0)", () => {
+    expect(rollDieValue(() => 0, { weights: [1, 1, 1, 1, 1, 1], joker: true })).toBe(0);
+    expect(rollDieValue(() => 0.999, { weights: [1, 1, 1, 1, 1, 1], joker: true })).toBe(6);
   });
 });

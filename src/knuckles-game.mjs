@@ -9,12 +9,14 @@ import { registerControls, ensureLauncherMacro } from "./foundry/controls.mjs";
 import { setupSocket, dispatch } from "./net/socket.mjs";
 import { openBoard, refreshBoard } from "./apps/board-app.mjs";
 import { openSetup } from "./apps/setup-app.mjs";
+import { openDicePicker, refreshDicePicker } from "./apps/dice-picker.mjs";
 import { loadState, clearState } from "./foundry/state-store.mjs";
 
 /** Launch handler for the icon / macro / public API — state-aware. */
 function open() {
   const state = loadState();
-  if (state?.status === "playing") return openBoard();
+  if (state?.status === "choosing") return openDicePicker();
+  if (state?.status === "playing" || state?.status === "finished") return openBoard();
   if (game.user.isGM) return openSetup();
   return openBoard(); // no active game → the board shows its "no game" message
 }
@@ -48,8 +50,8 @@ Hooks.once("init", () => {
   Handlebars.registerHelper("kgRange", (n) => Array.from({ length: Number(n) || 0 }, (_, i) => i));
 
   registerSettings({
-    onStateChanged: () => refreshBoard(),
-    onAppearanceChanged: () => refreshBoard(),
+    onStateChanged: () => { refreshDicePicker(); refreshBoard(); },
+    onAppearanceChanged: () => { refreshDicePicker(); refreshBoard(); },
   });
 
   registerControls(open);
@@ -62,7 +64,7 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("setup", async () => {
-  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP]);
+  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP, TEMPLATES.DICE]);
 });
 
 Hooks.once("socketlib.ready", () => setupSocket());

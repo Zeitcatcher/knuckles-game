@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 — loaded dice
+
+- Loaded dice: a catalog of named dice, each with its own face-probability weights, contained entirely within the module (no effect on any other rolls in the world).
+- Per-character dice: each character has six die slots; each slot can be any die, up to all six non-standard.
+- Pre-game picker: a "choosing" phase after the game is created — players pick dice for the characters they control, the GM for NPCs; the GM starts play.
+- During play, only the GM can change dice (from a board button); players' choices are locked once play begins.
+- The "Nameless" joker die: its 1-face is a wild that completes any combination but never scores on its own (scoring-engine support, with tests).
+- Per-viewer visibility: non-standard dice are labelled with their name only for the controlling player and the GM. Everyone sees the rolled faces, including wild faces, but other players' die names stay hidden.
+
 ## 0.1.9
 
 - Weighting plumbing (no behaviour change yet): the dice roller can take per-die weight vectors and override only loaded dice; fair dice keep Foundry's native uniform result, and nothing global is touched, so all other rolls are unaffected.

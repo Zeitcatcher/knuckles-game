@@ -6,6 +6,9 @@
 
 export const POOL_SIZE = 6;
 
+/** Sentinel die value for a wild (joker) face — completes a combo, scores nothing alone. */
+export const WILD = 0;
+
 /** A fresh pool of `size` dice, all in play with no value yet. */
 export function freshPool(size = POOL_SIZE) {
   return Array.from({ length: size }, (_, i) => ({ id: i + 1, value: null, state: "in-play" }));

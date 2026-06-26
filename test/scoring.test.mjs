@@ -111,6 +111,31 @@ describe("bestScore", () => {
 describe("input validation", () => {
   it("rejects out-of-range die values", () => {
     expect(() => scoreSelection([7])).toThrow();
-    expect(() => scoreSelection([0])).toThrow();
+    expect(() => scoreSelection([8])).toThrow();
+  });
+});
+
+describe("wild (joker) faces — value 0 is a wild", () => {
+  it("a wild completes a set with real dice", () => {
+    expect(scoreSelection([1, 1, 0]).points).toBe(1000); // two 1s + wild = triple 1
+    expect(scoreSelection([1, 0, 0]).points).toBe(1000); // one 1 + two wilds = triple 1
+    expect(scoreSelection([5, 5, 0]).points).toBe(500);
+    expect(scoreSelection([1, 1, 1, 0]).points).toBe(2000); // four of a kind
+  });
+
+  it("a wild can fill a straight", () => {
+    expect(scoreSelection([1, 2, 3, 4, 0]).points).toBe(500); // wild = 5
+    expect(scoreSelection([2, 3, 4, 6, 0]).points).toBe(750); // wild = 5 -> 2-3-4-5-6
+  });
+
+  it("a wild never scores alone", () => {
+    expect(scoreSelection([0]).valid).toBe(false);
+    expect(scoreSelection([0, 0, 0]).valid).toBe(false);
+    expect(scoreSelection([5, 0]).valid).toBe(false); // the 5 scores, but the wild can't be kept alone
+  });
+
+  it("wilds affect bust detection", () => {
+    expect(isBust([2, 3, 4, 6, 0])).toBe(false); // wild makes a 2-6 straight
+    expect(isBust([2, 3, 4, 0])).toBe(true); // nothing scoring is possible here
   });
 });

@@ -12,6 +12,7 @@ import { rollValues } from "../foundry/dice-roller.mjs";
 import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
+import { getDieSpec } from "../core/dice-catalog.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 8;
@@ -38,14 +39,46 @@ export async function dispatchAsGM(intent, userId) {
   }
 
   let state = loadState();
-  if (!state || state.status !== "playing") throw new Error("no active game");
+  if (!state) throw new Error("no active game");
 
   const requester = game.users.get(userId);
+
+  // Dice selection / GM dice management (allowed outside the play turn).
+  if (intent.type === "setDieSlot") {
+    const target = state.players.find((p) => p.id === intent.playerId);
+    if (!target) throw new Error("unknown player");
+    const allowed =
+      (state.status === "choosing" && canAct(requester, target)) ||
+      (state.status === "playing" && Boolean(requester?.isGM));
+    if (!allowed) throw new Error("you cannot change that die now");
+    state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId });
+    await saveState(state);
+    return state;
+  }
+  if (intent.type === "setReady") {
+    if (state.status !== "choosing") throw new Error("the game has already started");
+    const target = state.players.find((p) => p.id === intent.playerId);
+    if (!target || !canAct(requester, target)) throw new Error("not your player");
+    state = reduce(state, { type: "setReady", playerId: intent.playerId, ready: intent.ready });
+    await saveState(state);
+    return state;
+  }
+  if (intent.type === "startPlay") {
+    if (!requester?.isGM) throw new Error("only the GM can start play");
+    if (state.status !== "choosing") throw new Error("the game has already started");
+    state = reduce(state, { type: "startPlay" });
+    await syncCurrentHeroPoints(state);
+    await saveState(state);
+    return state;
+  }
+
+  if (state.status !== "playing") throw new Error("no active game");
   if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
 
   switch (intent.type) {
     case "roll": {
-      const { values, roll } = await rollValues(inPlay(state.pool).length);
+      const ids = inPlay(state.pool).map((d) => d.id);
+      const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
       await animateRoll(roll);
       state = reduce(state, { type: "roll", values });
       break;
@@ -54,7 +87,8 @@ export async function dispatchAsGM(intent, userId) {
       state = reduce(state, { type: "keepAndRoll", ids: intent.ids });
       // Auto-roll the dice now in play — no separate Roll click after keeping.
       if (state.status === "playing" && state.phase === "await-roll") {
-        const { values, roll } = await rollValues(inPlay(state.pool).length);
+        const ids = inPlay(state.pool).map((d) => d.id);
+        const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
         await animateRoll(roll);
         state = reduce(state, { type: "roll", values });
       }
@@ -84,7 +118,7 @@ export async function dispatchAsGM(intent, userId) {
       } else if ((player.heroPoints ?? 0) < 1) {
         throw new Error("no Hero Points to spend");
       }
-      const { values, roll } = await rollValues(intent.rerollIds.length);
+      const { values, roll } = await rollValues(intent.rerollIds.length, specsForIds(state, intent.rerollIds));
       await animateRoll(roll);
       state = reduce(state, { type: "useHeroPoint", rerollIds: intent.rerollIds, values });
       pushLog(state, "KNUCKLES.log.hero", { name });
@@ -119,6 +153,12 @@ function canAct(user, player) {
     return actor?.testUserPermission?.(user, "OWNER") ?? false;
   }
   return false; // generic / NPC players are driven by the GM
+}
+
+/** Per-die specs for the current player, aligned with the given slot ids (1..6). */
+function specsForIds(state, ids) {
+  const p = currentPlayer(state);
+  return ids.map((id) => getDieSpec(p.dieIds?.[id - 1] ?? "fair"));
 }
 
 async function buildNewGame(config) {
