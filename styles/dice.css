@@ -1,0 +1,56 @@
+/* Dice faces. Pips are drawn with CSS from the die's data-value; the numerals skin
+   swaps them for the number. Sizes/colours come from tokens, so dice are themeable. */
+
+.knuckles-game .kg-die {
+  position: relative;
+  width: var(--kg-die-size);
+  height: var(--kg-die-size);
+  background: var(--kg-die-bg);
+  color: var(--kg-die-face);
+  border-radius: var(--kg-radius);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+.knuckles-game .kg-die[data-action] { cursor: pointer; }
+.knuckles-game .kg-die.is-kept { outline: 2px solid var(--kg-keep); }
+.knuckles-game .kg-die.is-selected { outline: 3px solid var(--kg-keep); }
+.knuckles-game .kg-die.is-reroll { outline: 3px dashed var(--kg-reroll); }
+.knuckles-game .kg-die.is-blank { background: var(--kg-surface-2); }
+
+.knuckles-game .kg-die-num { font-size: 22px; font-weight: 700; display: none; }
+.knuckles-game[data-die-skin="numerals"] .kg-die-num { display: block; }
+.knuckles-game[data-die-skin="numerals"] .kg-pips { display: none; }
+
+.knuckles-game .kg-pips {
+  position: absolute;
+  inset: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
+}
+.knuckles-game .kg-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--kg-pip); opacity: 0; }
+
+.knuckles-game .kg-die[data-value="1"] .kg-pip:nth-child(5) { opacity: 1; }
+.knuckles-game .kg-die[data-value="2"] .kg-pip:nth-child(1),
+.knuckles-game .kg-die[data-value="2"] .kg-pip:nth-child(9) { opacity: 1; }
+.knuckles-game .kg-die[data-value="3"] .kg-pip:nth-child(1),
+.knuckles-game .kg-die[data-value="3"] .kg-pip:nth-child(5),
+.knuckles-game .kg-die[data-value="3"] .kg-pip:nth-child(9) { opacity: 1; }
+.knuckles-game .kg-die[data-value="4"] .kg-pip:nth-child(1),
+.knuckles-game .kg-die[data-value="4"] .kg-pip:nth-child(3),
+.knuckles-game .kg-die[data-value="4"] .kg-pip:nth-child(7),
+.knuckles-game .kg-die[data-value="4"] .kg-pip:nth-child(9) { opacity: 1; }
+.knuckles-game .kg-die[data-value="5"] .kg-pip:nth-child(1),
+.knuckles-game .kg-die[data-value="5"] .kg-pip:nth-child(3),
+.knuckles-game .kg-die[data-value="5"] .kg-pip:nth-child(5),
+.knuckles-game .kg-die[data-value="5"] .kg-pip:nth-child(7),
+.knuckles-game .kg-die[data-value="5"] .kg-pip:nth-child(9) { opacity: 1; }
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(1),
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(3),
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(4),
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(6),
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(7),
+.knuckles-game .kg-die[data-value="6"] .kg-pip:nth-child(9) { opacity: 1; }

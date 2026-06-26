@@ -1,0 +1,32 @@
+{
+  "id": "knuckles-game",
+  "title": "Knuckles Game",
+  "description": "A Farkle-style tavern dice game for Foundry VTT, with Pathfinder 2e Hero Point integration, per-player multiplayer sync, and 3D dice via Dice So Nice.",
+  "version": "0.1.0",
+  "authors": [{ "name": "Zeitcatcher" }],
+  "compatibility": { "minimum": "13", "verified": "14" },
+  "esmodules": ["src/knuckles-game.mjs"],
+  "styles": ["styles/tokens.css", "styles/knuckles-game.css", "styles/dice.css", "styles/themes/parchment.css", "styles/themes/dark-tavern.css"],
+  "languages": [
+    { "lang": "en", "name": "English", "path": "lang/en.json" },
+    { "lang": "ru", "name": "Русский", "path": "lang/ru.json" }
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "socketlib",
+        "type": "module",
+        "manifest": "https://github.com/manuelVo/foundryvtt-socketlib/releases/latest/download/module.json"
+      }
+    ],
+    "recommends": [
+      { "id": "dice-so-nice", "type": "module", "reason": "Adds the 3D dice-throw animation when rolling." }
+    ]
+  },
+  "socket": true,
+  "url": "https://github.com/Zeitcatcher/knuckles-game",
+  "manifest": "https://github.com/Zeitcatcher/knuckles-game/releases/latest/download/module.json",
+  "download": "https://github.com/Zeitcatcher/knuckles-game/releases/download/v0.1.0/module.zip",
+  "license": "LICENSE",
+  "readme": "README.md"
+}

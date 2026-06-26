@@ -1,0 +1,75 @@
+<div class="kg-board">
+{{#unless active}}
+  <p class="kg-empty">{{localize "KNUCKLES.board.noGame"}}</p>
+{{else}}
+
+  {{#if finalRound.active}}
+    <div class="kg-banner kg-final"><i class="fa-solid fa-flag" aria-hidden="true"></i> {{localize "KNUCKLES.board.finalRound"}}</div>
+  {{/if}}
+  {{#if finished}}
+    <div class="kg-banner kg-win">
+      {{#if tie}}{{localize "KNUCKLES.board.tie"}}{{else}}<i class="fa-solid fa-trophy" aria-hidden="true"></i> {{localize "KNUCKLES.board.winner"}}: {{winner.name}}{{/if}}
+    </div>
+  {{/if}}
+
+  <div class="kg-scoreboard">
+    {{#each players}}
+      <div class="kg-pcard{{#if isCurrent}} is-current{{/if}}{{#if isWinner}} is-winner{{/if}}">
+        <div class="kg-pname">{{name}}{{#if isCurrent}} · {{localize "KNUCKLES.board.turn"}}{{/if}}</div>
+        <div class="kg-ptotal">{{total}}</div>
+        <div class="kg-hero">
+          {{#if hasActor}}{{#each heroPips}}<span class="kg-pip-hp{{#if on}} on{{/if}}"></span>{{/each}}{{else}}<span class="kg-muted">{{localize "KNUCKLES.board.noHero"}}</span>{{/if}}
+        </div>
+      </div>
+    {{/each}}
+    <div class="kg-target">
+      <div class="kg-muted">{{localize "KNUCKLES.board.target"}}</div>
+      <div class="kg-tval">{{targetScore}}</div>
+    </div>
+  </div>
+
+  {{#unless finished}}
+    <div class="kg-turn">
+      <span class="kg-muted">{{localize "KNUCKLES.board.turnTotal"}}</span>
+      <span class="kg-turnscore">{{turnScore}}</span>
+    </div>
+
+    {{#if isBustPhase}}
+      <div class="kg-banner kg-bust"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{localize "KNUCKLES.board.bust"}}</div>
+    {{/if}}
+
+    <div class="kg-tray">
+      {{#each dice}}
+        <div class="kg-slot">
+          <span class="kg-idx">#{{id}}</span>
+          <div class="kg-die{{#if kept}} is-kept{{/if}}{{#if selected}} is-selected{{/if}}{{#if reroll}} is-reroll{{/if}}{{#if blank}} is-blank{{/if}}"
+               data-die-id="{{id}}" data-value="{{value}}"{{#if inPlay}} data-action="toggleDie"{{/if}}>
+            <span class="kg-die-num">{{value}}</span>
+            <span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+
+    <p class="kg-hint">
+      {{#if heroMode}}{{localize "KNUCKLES.board.heroHint"}}
+      {{else if selectionValid}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}
+    </p>
+
+    <div class="kg-controls">
+      {{#if canRoll}}<button type="button" data-action="roll"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.board.roll"}}</button>{{/if}}
+      {{#if heroMode}}
+        <button type="button" class="kg-hero-btn" data-action="heroConfirm"{{#unless canHeroConfirm}} disabled{{/unless}}><i class="fa-solid fa-rotate" aria-hidden="true"></i> {{localize "KNUCKLES.board.confirmReroll"}} ({{rerollCount}})</button>
+        <button type="button" data-action="heroCancel">{{localize "KNUCKLES.board.cancel"}}</button>
+      {{else}}
+        {{#if canKeepRoll}}<button type="button" class="primary" data-action="keepRoll">{{localize "KNUCKLES.board.keepRoll"}}</button>{{/if}}
+        {{#if canKeepBank}}<button type="button" data-action="keepBank">{{localize "KNUCKLES.board.keepBank"}}</button>{{/if}}
+        {{#if canTakeBust}}<button type="button" data-action="takeBust">{{localize "KNUCKLES.board.takeBust"}}</button>{{/if}}
+        {{#if canHeroOpen}}<button type="button" class="kg-hero-btn" data-action="heroOpen"><i class="fa-solid fa-star" aria-hidden="true"></i> {{localize "KNUCKLES.board.useHero"}} ({{heroPoints}})</button>{{/if}}
+      {{/if}}
+    </div>
+  {{/unless}}
+
+  {{#if isGM}}<div class="kg-foot"><button type="button" data-action="newGame"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{localize "KNUCKLES.board.newGame"}}</button></div>{{/if}}
+{{/unless}}
+</div>

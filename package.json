@@ -1,0 +1,14 @@
+{
+  "name": "knuckles-game",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Knuckles Game — a Farkle-style dice game module for Foundry VTT (Pathfinder 2e).",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
+  }
+}
