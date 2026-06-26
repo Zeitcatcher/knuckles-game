@@ -80,6 +80,15 @@ export async function dispatchAsGM(intent, userId) {
     return state;
   }
 
+  // GM value override: replace an in-play die's face (no log, no payout, GM only).
+  if (intent.type === "setDieValue") {
+    if (!requester?.isGM) throw new Error("only the GM can change a die");
+    if (state.status !== "playing") throw new Error("no active game");
+    state = reduce(state, { type: "setDieValue", dieId: intent.dieId, value: intent.value });
+    await saveState(state);
+    return state;
+  }
+
   if (state.status !== "playing") throw new Error("no active game");
   if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
 

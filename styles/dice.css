@@ -34,6 +34,10 @@
   place-items: center;
 }
 .knuckles-game .kg-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--kg-pip); opacity: 0; }
+.knuckles-game .kg-die.kg-mini { width: 34px; height: 34px; border-radius: 6px; }
+.knuckles-game .kg-die.kg-mini .kg-pips { inset: 5px; }
+.knuckles-game .kg-die.kg-mini .kg-pip { width: 5px; height: 5px; }
+.knuckles-game .kg-die.kg-mini .kg-die-num { font-size: 16px; }
 
 .knuckles-game .kg-die[data-value="1"] .kg-pip:nth-child(5) { opacity: 1; }
 .knuckles-game .kg-die[data-value="2"] .kg-pip:nth-child(1),

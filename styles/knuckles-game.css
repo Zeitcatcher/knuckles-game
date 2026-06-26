@@ -38,8 +38,21 @@
 .knuckles-game .kg-win { background: color-mix(in srgb, var(--kg-win) 24%, transparent); }
 
 .knuckles-game .kg-tray { display: flex; gap: var(--kg-gap); margin: 6px 0; flex-wrap: wrap; }
-.knuckles-game .kg-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.knuckles-game .kg-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
 .knuckles-game .kg-idx { font-size: 11px; color: var(--kg-muted); }
+
+/* GM per-die value override */
+.knuckles-game .kg-edit { margin-top: 2px; font-size: 11px; line-height: 1; color: var(--kg-accent); background: transparent; border: 1px solid color-mix(in srgb, var(--kg-accent) 50%, transparent); border-radius: 6px; padding: 2px 7px; cursor: pointer; }
+.knuckles-game .kg-edit:hover { background: color-mix(in srgb, var(--kg-accent) 14%, transparent); }
+.knuckles-game .kg-edit.on { background: color-mix(in srgb, var(--kg-accent) 24%, transparent); }
+.knuckles-game .kg-valpop { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 9px; width: 184px; background: var(--kg-board-bg); border: 1px solid var(--kg-surface-2); border-radius: 10px; padding: 11px; z-index: 10; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+.knuckles-game .kg-valpop-arr { position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 11px; height: 11px; background: var(--kg-board-bg); border-left: 1px solid var(--kg-surface-2); border-top: 1px solid var(--kg-surface-2); }
+.knuckles-game .kg-valpop-h { font-size: 11.5px; color: var(--kg-muted); text-align: center; margin-bottom: 9px; }
+.knuckles-game .kg-valopts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-items: center; }
+.knuckles-game .kg-valopt { background: transparent; border: 0; padding: 2px; border-radius: 9px; cursor: pointer; }
+.knuckles-game .kg-valopt:hover .kg-mini, .knuckles-game .kg-valopt:focus-visible .kg-mini { outline: 2px solid var(--kg-accent); }
+.knuckles-game .kg-valopt-wild { margin-top: 9px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--kg-accent); background: transparent; border: 1px solid color-mix(in srgb, var(--kg-accent) 45%, transparent); border-radius: 8px; padding: 6px; cursor: pointer; }
+.knuckles-game .kg-valopt-wild:hover { background: color-mix(in srgb, var(--kg-accent) 14%, transparent); }
 
 .knuckles-game .kg-hint { font-size: 12px; color: var(--kg-muted); min-height: 16px; margin: 4px 0 8px; }
 

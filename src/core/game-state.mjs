@@ -11,7 +11,7 @@
  * tied leaders.
  */
 
-import { freshPool, inPlay } from "./dice-model.mjs";
+import { freshPool, inPlay, WILD } from "./dice-model.mjs";
 import { validateKeep, isBust, hasReachedTarget, determineWinner } from "./rules.mjs";
 
 export const currentPlayer = (s) => s.players[s.turnIndex];
@@ -72,6 +72,7 @@ export function reduce(state, command) {
     case "keepAndBank": return applyKeep(s, command, true);
     case "useHeroPoint": return applyHeroPoint(s, command);
     case "takeBust": return applyTakeBust(s);
+    case "setDieValue": return applySetDieValue(s, command);
     case "setDieSlot": return applySetDieSlot(s, command);
     case "setReady": return applySetReady(s, command);
     case "startPlay": return applyStartPlay(s);
@@ -132,6 +133,21 @@ function applyTakeBust(s) {
   if (s.phase !== "bust") throw new Error("there is no bust to take");
   s.turnScore = 0;
   return endTurn(s);
+}
+
+/** GM override: set an in-play die's face to a chosen value, then re-evaluate the throw. */
+function applySetDieValue(s, { dieId, value }) {
+  if (s.phase !== "selecting" && s.phase !== "bust") {
+    throw new Error("dice values can only be changed right after a roll");
+  }
+  const d = s.pool.find((die) => die.id === dieId && die.state === "in-play");
+  if (!d) throw new Error("that die is not in play");
+  if (value !== WILD && (!Number.isInteger(value) || value < 1 || value > 6)) {
+    throw new Error("value must be 1..6 or wild");
+  }
+  d.value = value;
+  s.phase = isBust(inPlay(s.pool).map((die) => die.value)) ? "bust" : "selecting";
+  return s;
 }
 
 /** Choose the catalog die for one of a player's six slots. */
