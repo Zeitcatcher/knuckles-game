@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- Starting a game now opens the board for ALL connected players, so everyone sees the table (it still never opens on world load).
+- Actions (roll, keep, bank, Hero Points) are restricted to the owner of the character whose turn it is; the GM can act for anyone.
+
 ## 0.1.4
 
 - The board no longer opens automatically on world load (or when other players act); it stays hidden until you click the dice icon or run the macro.
