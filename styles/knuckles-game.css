@@ -46,7 +46,8 @@
 .knuckles-game .kg-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .knuckles-game .kg-controls .primary { background: color-mix(in srgb, var(--kg-keep) 32%, transparent); }
 .knuckles-game .kg-hero-btn { background: color-mix(in srgb, var(--kg-accent) 32%, transparent); }
-.knuckles-game .kg-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); }
+.knuckles-game .kg-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); display: flex; gap: 8px; flex-wrap: wrap; }
+.knuckles-game .kg-end { background: color-mix(in srgb, var(--kg-bust) 28%, transparent); }
 .knuckles-game .kg-log { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); }
 .knuckles-game .kg-log-line { font-size: 13px; color: var(--kg-muted); padding: 1px 0; }
 

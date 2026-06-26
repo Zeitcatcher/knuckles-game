@@ -32,6 +32,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       heroConfirm: BoardApp._onHeroConfirm,
       takeBust: BoardApp._onTakeBust,
       openDice: BoardApp._onOpenDice,
+      endGame: BoardApp._onEndGame,
       newGame: BoardApp._onNewGame,
     },
   };
@@ -99,6 +100,15 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static _onOpenDice() {
     import("./dice-picker.mjs").then((m) => m.openDicePicker());
   }
+
+  static async _onEndGame() {
+    const ok = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize("KNUCKLES.board.endGame") },
+      content: `<p>${game.i18n.localize("KNUCKLES.board.endConfirm")}</p>`,
+      modal: true,
+    });
+    if (ok) dispatch({ type: "endGame" }).catch(reportError);
+  }
 }
 
 function reportError(err) {
@@ -115,6 +125,12 @@ export function openBoard() {
 export function refreshBoard() {
   // Never auto-open a hidden board; only re-render if it is already open.
   if (!instance || !instance.rendered) return;
+  // The game was ended/cleared: close the board everywhere (the launch icon
+  // then reverts to New Game setup for the GM).
+  if (!loadState()) {
+    instance.close();
+    return;
+  }
   // Any synced state change resets transient UI: the keep-selection and the
   // Hero-Point re-roll mode (so after a re-roll the board returns to normal).
   instance.selection.clear();

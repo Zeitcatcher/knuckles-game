@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- GM **End game** button: ends the current game with no winner and no payout, then clears the table so the next launch opens New Game setup. Available on the board (during play or after a result) and in the dice picker (during setup); asks for confirmation first. When the game ends, the board and picker close for everyone.
+
 ## 0.2.0 — loaded dice
 
 - Loaded dice: a catalog of named dice, each with its own face-probability weights, contained entirely within the module (no effect on any other rolls in the world).
