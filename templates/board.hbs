@@ -87,6 +87,7 @@
 
   {{#if isGM}}<div class="kg-foot">
     {{#if canOpenDice}}<button type="button" data-action="openDice"><i class="fa-solid fa-dice-d6" aria-hidden="true"></i> {{localize "KNUCKLES.board.changeDice"}}</button>{{/if}}
+    <button type="button" class="kg-end" data-action="endGame"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "KNUCKLES.board.endGame"}}</button>
     <button type="button" data-action="newGame"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{localize "KNUCKLES.board.newGame"}}</button>
   </div>{{/if}}
 {{/unless}}

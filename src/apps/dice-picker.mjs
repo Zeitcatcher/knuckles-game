@@ -25,6 +25,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     actions: {
       ready: DicePicker._onReady,
       startPlay: DicePicker._onStartPlay,
+      endGame: DicePicker._onEndGame,
       close: DicePicker._onClose,
     },
   };
@@ -75,6 +76,15 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     await dispatch({ type: "startPlay" }).catch(reportError);
     broadcastOpen();
     this.close();
+  }
+
+  static async _onEndGame() {
+    const ok = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize("KNUCKLES.board.endGame") },
+      content: `<p>${game.i18n.localize("KNUCKLES.board.endConfirm")}</p>`,
+      modal: true,
+    });
+    if (ok) dispatch({ type: "endGame" }).catch(reportError);
   }
 
   static _onClose() {

@@ -40,6 +40,8 @@
   "KNUCKLES.board.noHero": "no Hero Points",
   "KNUCKLES.board.die": "Die",
   "KNUCKLES.board.changeDice": "Dice",
+  "KNUCKLES.board.endGame": "End game",
+  "KNUCKLES.board.endConfirm": "End the game now? There will be no winner and the pot is not paid out.",
   "KNUCKLES.dice.title": "Choose your dice",
   "KNUCKLES.dice.hint": "Pick a die for each of the six slots. Dice are chosen only before the game; during play only the GM can change them.",
   "KNUCKLES.dice.ready": "Ready",

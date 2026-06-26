@@ -22,6 +22,7 @@
     {{#if choosing}}
       {{#if isGM}}
         <button type="button" class="primary" data-action="startPlay"><i class="fa-solid fa-play" aria-hidden="true"></i> {{localize "KNUCKLES.dice.start"}}</button>
+        <button type="button" class="kg-end" data-action="endGame"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "KNUCKLES.board.endGame"}}</button>
       {{else}}
         <button type="button" class="primary" data-action="ready"><i class="fa-solid fa-check" aria-hidden="true"></i> {{localize "KNUCKLES.dice.ready"}}</button>
       {{/if}}

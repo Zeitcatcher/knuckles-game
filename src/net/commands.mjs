@@ -43,6 +43,14 @@ export async function dispatchAsGM(intent, userId) {
 
   const requester = game.users.get(userId);
 
+  // End the game with no winner and no payout: clear the state so the launch
+  // icon reverts to New Game setup. Allowed in any phase, GM only.
+  if (intent.type === "endGame") {
+    if (!requester?.isGM) throw new Error("only the GM can end the game");
+    await saveState(null);
+    return null;
+  }
+
   // Dice selection / GM dice management (allowed outside the play turn).
   if (intent.type === "setDieSlot") {
     const target = state.players.find((p) => p.id === intent.playerId);
