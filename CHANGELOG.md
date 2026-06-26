@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Fix: bets entered in setup were dropped before reaching the game state, so the pot never showed on the board and the winner received no payout. Bets now flow through to the pot display and the pf2e coin payout.
+
 ## 0.1.7
 
 - Wagers: the GM can set a bet per player (sun coins, gold, silver, copper) in setup; the board shows the combined pot.

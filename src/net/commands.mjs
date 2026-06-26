@@ -135,7 +135,7 @@ async function buildNewGame(config) {
       name = actor?.name ?? name; // the participant's name follows the linked character
       heroPoints = await getHeroPoints(p.actorUuid);
     }
-    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, heroPoints });
+    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, heroPoints, bet: p.bet });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET });
 }
