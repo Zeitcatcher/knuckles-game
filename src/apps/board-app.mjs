@@ -24,7 +24,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-board`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.title", icon: "fa-solid fa-dice-d6", resizable: true },
-    position: { width: 580, height: "auto" },
+    position: { width: 580, height: 600 },
     actions: {
       roll: BoardApp._onRoll,
       toggleDie: BoardApp._onToggleDie,

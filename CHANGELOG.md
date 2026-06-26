@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- The board window now opens at a fixed, comfortable size (580 × 600) instead of auto-sizing, so it no longer grows and shrinks as you roll, keep, bank, or open the GM die-value picker. Shorter states show clean dark padding; an unusually large game scrolls inside the window. The window stays manually resizable.
+
 ## 0.2.2
 
 - GM die-value override: a pencil button under each rolled die (GM only) opens a chooser to replace that die's face with any value 1–6 or a wild. The roll is re-scored instantly (a bust can flip to a score, or back), the change syncs to everyone as the physical die, and nothing is written to the turn log. Works on the in-play dice during the selecting/bust phase; change as many as you like.
