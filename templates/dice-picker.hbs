@@ -1,0 +1,33 @@
+<div class="kg-dice">
+{{#unless active}}
+  <p class="kg-empty">{{localize "KNUCKLES.dice.none"}}</p>
+{{else}}
+  {{#if choosing}}<div class="kg-muted" style="margin-bottom:10px">{{localize "KNUCKLES.dice.hint"}}</div>{{/if}}
+  {{#each players}}
+    <div class="kg-dchar">
+      <div class="kg-pname">{{name}}{{#if ready}} <i class="fa-solid fa-check" aria-hidden="true" style="color:var(--kg-win)"></i>{{/if}}</div>
+      <div class="kg-dslots">
+        {{#each slots}}
+          <label class="kg-dslot">
+            <span class="kg-idx">#{{n}}</span>
+            <select data-die-slot data-player-id="{{../id}}" data-slot="{{slot}}">
+              {{#each ../../catalog}}<option value="{{id}}"{{#if (kgEq id ../dieId)}} selected{{/if}} title="{{flavor}}">{{label}}</option>{{/each}}
+            </select>
+          </label>
+        {{/each}}
+      </div>
+    </div>
+  {{/each}}
+  <footer class="kg-dice-foot">
+    {{#if choosing}}
+      {{#if isGM}}
+        <button type="button" class="primary" data-action="startPlay"><i class="fa-solid fa-play" aria-hidden="true"></i> {{localize "KNUCKLES.dice.start"}}</button>
+      {{else}}
+        <button type="button" class="primary" data-action="ready"><i class="fa-solid fa-check" aria-hidden="true"></i> {{localize "KNUCKLES.dice.ready"}}</button>
+      {{/if}}
+    {{else}}
+      <button type="button" data-action="close">{{localize "KNUCKLES.dice.close"}}</button>
+    {{/if}}
+  </footer>
+{{/unless}}
+</div>

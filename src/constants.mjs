@@ -14,7 +14,7 @@ export const SETTINGS = Object.freeze({
   COLOR_DIE: "colorDie",
 });
 
-export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN_BOARD: "openBoard" });
+export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN: "open" });
 
 export const DEFAULTS = Object.freeze({
   TARGET: 2000,
@@ -26,6 +26,7 @@ export const DEFAULTS = Object.freeze({
 export const TEMPLATES = Object.freeze({
   BOARD: `modules/${MODULE_ID}/templates/board.hbs`,
   SETUP: `modules/${MODULE_ID}/templates/setup.hbs`,
+  DICE: `modules/${MODULE_ID}/templates/dice-picker.hbs`,
 });
 
 /** pf2e actor data path for Hero Points. */

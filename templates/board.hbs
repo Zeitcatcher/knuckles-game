@@ -51,11 +51,10 @@
     <div class="kg-tray">
       {{#each dice}}
         <div class="kg-slot">
-          <span class="kg-idx">#{{id}}</span>
-          <div class="kg-die{{#if kept}} is-kept{{/if}}{{#if selected}} is-selected{{/if}}{{#if reroll}} is-reroll{{/if}}{{#if blank}} is-blank{{/if}}"
+          <span class="kg-idx{{#if named}} kg-named{{/if}}"{{#if flavor}} title="{{flavor}}"{{/if}}>{{label}}</span>
+          <div class="kg-die{{#if kept}} is-kept{{/if}}{{#if selected}} is-selected{{/if}}{{#if reroll}} is-reroll{{/if}}{{#if blank}} is-blank{{/if}}{{#if isWild}} is-wild{{/if}}"
                data-die-id="{{id}}" data-value="{{value}}"{{#if inPlay}} data-action="toggleDie"{{/if}}>
-            <span class="kg-die-num">{{value}}</span>
-            <span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span>
+            {{#if isWild}}<i class="fa-solid fa-wand-sparkles kg-wild" aria-hidden="true"></i>{{else}}<span class="kg-die-num">{{value}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span>{{/if}}
           </div>
         </div>
       {{/each}}
@@ -86,6 +85,9 @@
     </div>
   {{/if}}
 
-  {{#if isGM}}<div class="kg-foot"><button type="button" data-action="newGame"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{localize "KNUCKLES.board.newGame"}}</button></div>{{/if}}
+  {{#if isGM}}<div class="kg-foot">
+    {{#if canOpenDice}}<button type="button" data-action="openDice"><i class="fa-solid fa-dice-d6" aria-hidden="true"></i> {{localize "KNUCKLES.board.changeDice"}}</button>{{/if}}
+    <button type="button" data-action="newGame"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{localize "KNUCKLES.board.newGame"}}</button>
+  </div>{{/if}}
 {{/unless}}
 </div>

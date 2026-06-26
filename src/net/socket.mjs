@@ -1,7 +1,15 @@
 import { MODULE_ID, SOCKET } from "../constants.mjs";
+import { loadState } from "../foundry/state-store.mjs";
 import { dispatchAsGM } from "./commands.mjs";
 
 let socket = null;
+
+/** Open the dice picker during setup, otherwise the board (state-aware). */
+async function openForState() {
+  const state = loadState();
+  if (state?.status === "choosing") (await import("../apps/dice-picker.mjs")).openDicePicker();
+  else (await import("../apps/board-app.mjs")).openBoard();
+}
 
 /** Register the socketlib bus (call on the socketlib.ready hook). */
 export function setupSocket() {
@@ -11,7 +19,7 @@ export function setupSocket() {
   }
   socket = socketlib.registerModule(MODULE_ID);
   socket.register(SOCKET.DISPATCH, dispatchAsGM);
-  socket.register(SOCKET.OPEN_BOARD, () => import("../apps/board-app.mjs").then((m) => m.openBoard()));
+  socket.register(SOCKET.OPEN, openForState);
 }
 
 /**
@@ -24,8 +32,8 @@ export async function dispatch(intent) {
   return socket.executeAsGM(SOCKET.DISPATCH, intent, game.user.id);
 }
 
-/** Open the board on every connected client (used when the GM starts a game). */
-export function broadcastOpenBoard() {
-  if (socket) socket.executeForEveryone(SOCKET.OPEN_BOARD);
-  else import("../apps/board-app.mjs").then((m) => m.openBoard());
+/** Open the right window on every connected client (dice picker or board). */
+export function broadcastOpen() {
+  if (socket) socket.executeForEveryone(SOCKET.OPEN);
+  else openForState();
 }

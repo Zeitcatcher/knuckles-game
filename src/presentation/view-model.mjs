@@ -5,6 +5,8 @@
 
 import { scoreSelection } from "../core/scoring.mjs";
 import { computePool } from "../core/game-state.mjs";
+import { getDie } from "../core/dice-catalog.mjs";
+import { WILD } from "../core/dice-model.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const pips = (n, max) => Array.from({ length: max }, (_, i) => ({ on: i < n }));
@@ -26,15 +28,26 @@ export function buildBoardContext(state, user, ui) {
   const cur = state.players[state.turnIndex];
   const control = canControl(user, cur);
 
-  const dice = state.pool.map((d) => ({
-    id: d.id,
-    value: d.value,
-    inPlay: d.state === "in-play",
-    kept: d.state === "kept",
-    selected: !ui.heroMode && ui.selection.has(d.id),
-    reroll: ui.heroMode && ui.rerollSelection.has(d.id),
-    blank: d.value === null,
-  }));
+  // The current player's controller (or the GM) sees die names + loaded styling;
+  // everyone else sees plain #n. The rolled face — including a wild — shows to all.
+  const reveal = control;
+  const dice = state.pool.map((d) => {
+    const dieId = cur?.dieIds?.[d.id - 1] ?? "fair";
+    const named = reveal && dieId !== "fair";
+    return {
+      id: d.id,
+      value: d.value,
+      inPlay: d.state === "in-play",
+      kept: d.state === "kept",
+      selected: !ui.heroMode && ui.selection.has(d.id),
+      reroll: ui.heroMode && ui.rerollSelection.has(d.id),
+      blank: d.value === null,
+      isWild: d.value === WILD,
+      label: named ? getDie(dieId).label : `#${d.id}`,
+      named,
+      flavor: named ? getDie(dieId).flavor : "",
+    };
+  });
 
   const selValues = state.pool
     .filter((d) => d.state === "in-play" && ui.selection.has(d.id))
@@ -42,6 +55,7 @@ export function buildBoardContext(state, user, ui) {
   const sel = selValues.length ? scoreSelection(selValues) : { valid: false, points: 0 };
 
   const players = state.players.map((p, i) => ({
+    id: p.id,
     name: p.name,
     total: p.total,
     isCurrent: i === state.turnIndex,
@@ -59,6 +73,7 @@ export function buildBoardContext(state, user, ui) {
     pool,
     hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0,
     players,
+    canOpenDice: Boolean(user.isGM) && !finished,
     log: [...(state.log ?? [])].slice(-3).reverse().map((e) => game.i18n.format(e.key, e.data ?? {})),
     canControl: control,
     isGM: Boolean(user.isGM),

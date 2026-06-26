@@ -13,6 +13,19 @@
 .knuckles-game .kg-hero { margin-top: 5px; display: flex; gap: 3px; align-items: center; min-height: 12px; }
 .knuckles-game .kg-pip-hp { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--kg-accent); }
 .knuckles-game .kg-pip-hp.on { background: var(--kg-accent); }
+.knuckles-game .kg-pdie { margin-top: 6px; }
+.knuckles-game .kg-pdie select { width: 100%; font-size: 12px; box-sizing: border-box; }
+.knuckles-game .kg-die-name { font-size: 12px; }
+.knuckles-game .kg-named { color: var(--kg-accent); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* dice picker */
+.knuckles-game .kg-dice { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); }
+.knuckles-game .kg-dchar { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; margin-bottom: 8px; }
+.knuckles-game .kg-dslots { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.knuckles-game .kg-dslot { display: flex; align-items: center; gap: 8px; }
+.knuckles-game .kg-dslot .kg-idx { width: 26px; flex: 0 0 auto; }
+.knuckles-game .kg-dslot select { flex: 1; box-sizing: border-box; }
+.knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 .knuckles-game .kg-target { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; text-align: center; }
 .knuckles-game .kg-tval { font-size: 22px; font-weight: 600; }
 

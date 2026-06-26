@@ -18,6 +18,8 @@
 .knuckles-game .kg-die.is-selected { outline: 3px solid var(--kg-accent); }
 .knuckles-game .kg-die.is-reroll { outline: 3px dashed var(--kg-reroll); }
 .knuckles-game .kg-die.is-blank { background: var(--kg-surface-2); }
+.knuckles-game .kg-die.is-wild { background: color-mix(in srgb, var(--kg-accent) 28%, var(--kg-die-bg)); }
+.knuckles-game .kg-wild { font-size: 22px; color: var(--kg-accent); }
 
 .knuckles-game .kg-die-num { font-size: 22px; font-weight: 700; display: none; }
 .knuckles-game[data-die-skin="numerals"] .kg-die-num { display: block; }
