@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- GM die-value override: a pencil button under each rolled die (GM only) opens a chooser to replace that die's face with any value 1–6 or a wild. The roll is re-scored instantly (a bust can flip to a score, or back), the change syncs to everyone as the physical die, and nothing is written to the turn log. Works on the in-play dice during the selecting/bust phase; change as many as you like.
+
 ## 0.2.1
 
 - GM **End game** button: ends the current game with no winner and no payout, then clears the table so the next launch opens New Game setup. Available on the board (during play or after a result) and in the dice picker (during setup); asks for confirmation first. When the game ends, the board and picker close for everyone.

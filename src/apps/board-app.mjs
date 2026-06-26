@@ -1,4 +1,5 @@
 import { TEMPLATES, MODULE_ID } from "../constants.mjs";
+import { WILD } from "../core/dice-model.mjs";
 import { loadState } from "../foundry/state-store.mjs";
 import { dispatch } from "../net/socket.mjs";
 import { buildBoardContext } from "../presentation/view-model.mjs";
@@ -16,6 +17,8 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   heroMode = false;
   /** dice ids selected to re-roll with a Hero Point */
   rerollSelection = new Set();
+  /** die id whose GM value-override picker is open (transient, client-local) */
+  editDieId = null;
 
   static DEFAULT_OPTIONS = {
     id: `${MODULE_ID}-board`,
@@ -31,6 +34,8 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       heroCancel: BoardApp._onHeroCancel,
       heroConfirm: BoardApp._onHeroConfirm,
       takeBust: BoardApp._onTakeBust,
+      editDie: BoardApp._onEditDie,
+      setDieValue: BoardApp._onSetDieValue,
       openDice: BoardApp._onOpenDice,
       endGame: BoardApp._onEndGame,
       newGame: BoardApp._onNewGame,
@@ -44,6 +49,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       selection: this.selection,
       heroMode: this.heroMode,
       rerollSelection: this.rerollSelection,
+      editDieId: this.editDieId,
     });
   }
 
@@ -93,6 +99,20 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     dispatch({ type: "takeBust" }).catch(reportError);
   }
 
+  static _onEditDie(event, target) {
+    const id = Number(target.dataset.dieId);
+    this.editDieId = this.editDieId === id ? null : id;
+    this.render();
+  }
+
+  static _onSetDieValue(event, target) {
+    const id = Number(target.dataset.dieId);
+    const raw = target.dataset.value;
+    const value = raw === "wild" ? WILD : Number(raw);
+    this.editDieId = null;
+    dispatch({ type: "setDieValue", dieId: id, value }).catch(reportError);
+  }
+
   static _onNewGame() {
     import("./setup-app.mjs").then((m) => m.openSetup());
   }
@@ -136,5 +156,6 @@ export function refreshBoard() {
   instance.selection.clear();
   instance.heroMode = false;
   instance.rerollSelection.clear();
+  instance.editDieId = null;
   instance.render();
 }

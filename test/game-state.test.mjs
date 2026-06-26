@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createGame, reduce, currentPlayer, computePool } from "../src/core/game-state.mjs";
+import { WILD } from "../src/core/dice-model.mjs";
 
 const start = (g) => reduce(g, { type: "startPlay" });
 const two = (over = {}) => start(createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 2000, ...over }));
@@ -139,6 +140,38 @@ describe("dice selection (choosing phase)", () => {
   it("rolling before startPlay is rejected", () => {
     const s = createGame({ players: [{ id: "a" }, { id: "b" }] });
     expect(() => reduce(s, { type: "roll", values: [1, 2, 3, 4, 5, 6] })).toThrow();
+  });
+});
+
+describe("setDieValue (GM override)", () => {
+  it("changes an in-play die and re-scores a bust into a score", () => {
+    let s = two();
+    s = reduce(s, { type: "roll", values: [2, 3, 4, 6, 2, 3] }); // bust
+    expect(s.phase).toBe("bust");
+    s = reduce(s, { type: "setDieValue", dieId: 1, value: 5 });
+    expect(s.pool.find((d) => d.id === 1).value).toBe(5);
+    expect(s.phase).toBe("selecting");
+  });
+
+  it("can turn a scoring roll into a bust", () => {
+    let s = two();
+    s = reduce(s, { type: "roll", values: [1, 3, 4, 6, 2, 3] }); // the 1 scores
+    expect(s.phase).toBe("selecting");
+    s = reduce(s, { type: "setDieValue", dieId: 1, value: 4 });
+    expect(s.phase).toBe("bust");
+  });
+
+  it("can set a die to a wild", () => {
+    let s = two();
+    s = reduce(s, { type: "roll", values: [2, 3, 4, 6, 2, 3] }); // bust
+    s = reduce(s, { type: "setDieValue", dieId: 1, value: WILD });
+    expect(s.pool.find((d) => d.id === 1).value).toBe(WILD);
+    expect(s.phase).toBe("selecting"); // wild + two 3s → triple
+  });
+
+  it("rejects an override outside the selecting/bust phase", () => {
+    const s = two(); // phase await-roll
+    expect(() => reduce(s, { type: "setDieValue", dieId: 1, value: 5 })).toThrow();
   });
 });
 
