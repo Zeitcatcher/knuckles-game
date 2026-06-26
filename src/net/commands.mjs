@@ -83,15 +83,18 @@ function canAct(user, player) {
 
 async function buildNewGame(config) {
   const players = [];
+  config.players?.forEach((p, i) => (p._fallback = `Player ${i + 1}`));
   for (const p of config.players ?? []) {
     let type = "generic";
     let heroPoints = config.npcHeroPool ?? 0;
+    let name = p.name || p._fallback;
     if (p.actorUuid) {
       const actor = await fromUuid(p.actorUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
+      name = actor?.name ?? name; // the participant's name follows the linked character
       heroPoints = await getHeroPoints(p.actorUuid);
     }
-    players.push({ id: p.id, name: p.name, type, actorUuid: p.actorUuid ?? null, heroPoints });
+    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, heroPoints });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET });
 }

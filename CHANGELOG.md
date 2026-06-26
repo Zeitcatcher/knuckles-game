@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Player names are no longer hard-coded: rows start empty, selecting a character auto-fills the name, and the board uses the linked character's name (and Hero Points / type) authoritatively.
+
 ## 0.1.1
 
 - Setup: replaced the type dropdown with a clear Character picker (lists world actors); the participant type and Hero Points are derived from the linked actor.

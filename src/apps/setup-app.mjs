@@ -5,11 +5,12 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 let instance = null;
 
-/** GM-only new-game window: add/rename players, link a character, set the target. */
+/** GM-only new-game window: add players, link a character, set the target. */
 export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
+  // Two empty rows by default — names come from the chosen character, not hard-coded.
   players = [
-    { id: "p1", name: "Грог", actorUuid: null },
-    { id: "p2", name: "Иримэ", actorUuid: null },
+    { id: "p1", name: "", actorUuid: null },
+    { id: "p2", name: "", actorUuid: null },
   ];
 
   static DEFAULT_OPTIONS = {
@@ -38,19 +39,30 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
+  /** Auto-fill a row's name from the character chosen in its dropdown. */
+  _onRender() {
+    for (const select of this.element.querySelectorAll("select[name='actorUuid']")) {
+      select.addEventListener("change", (ev) => {
+        if (!ev.target.value) return;
+        const row = ev.target.closest("[data-player-row]");
+        const nameInput = row?.querySelector("input[name='name']");
+        if (nameInput) nameInput.value = ev.target.selectedOptions[0]?.textContent.trim() ?? "";
+      });
+    }
+  }
+
   _syncFromForm() {
     const rows = this.element.querySelectorAll("[data-player-row]");
     this.players = [...rows].map((row, i) => ({
       id: `p${i + 1}`,
-      name: row.querySelector("[name='name']")?.value?.trim() || `Player ${i + 1}`,
+      name: row.querySelector("[name='name']")?.value?.trim() || "",
       actorUuid: row.querySelector("[name='actorUuid']")?.value || null,
     }));
   }
 
   static _onAddPlayer() {
     this._syncFromForm();
-    const n = this.players.length + 1;
-    this.players.push({ id: `p${n}`, name: `Player ${n}`, actorUuid: null });
+    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null });
     this.render();
   }
 
