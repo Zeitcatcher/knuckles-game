@@ -80,7 +80,7 @@ export function buildBoardContext(state, user, ui) {
     players,
     canOpenDice: Boolean(user.isGM) && !finished,
     faces: [1, 2, 3, 4, 5, 6],
-    log: [...(state.log ?? [])].slice(-3).reverse().map((e) => game.i18n.format(e.key, e.data ?? {})),
+    log: [...(state.log ?? [])].reverse().map((e) => game.i18n.format(e.key, e.data ?? {})),
     canControl: control,
     isGM: Boolean(user.isGM),
     phase: state.phase,
