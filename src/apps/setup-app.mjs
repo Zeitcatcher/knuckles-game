@@ -1,5 +1,5 @@
 import { TEMPLATES, MODULE_ID, SETTINGS, DEFAULTS } from "../constants.mjs";
-import { dispatch } from "../net/socket.mjs";
+import { dispatch, broadcastOpenBoard } from "../net/socket.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -81,8 +81,8 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const targetScore = Number(formData.object.targetScore) || DEFAULTS.TARGET;
     const npcHeroPool = game.settings.get(MODULE_ID, SETTINGS.NPC_HERO_POOL) ?? 0;
     await dispatch({ type: "startGame", config: { players: this.players, targetScore, npcHeroPool } });
-    // Open the board for the GM who just started the game (players use the icon).
-    (await import("./board-app.mjs")).openBoard();
+    // Show the board to everyone at the table once the game starts.
+    broadcastOpenBoard();
   }
 }
 

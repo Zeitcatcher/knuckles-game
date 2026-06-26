@@ -11,6 +11,7 @@ export function setupSocket() {
   }
   socket = socketlib.registerModule(MODULE_ID);
   socket.register(SOCKET.DISPATCH, dispatchAsGM);
+  socket.register(SOCKET.OPEN_BOARD, () => import("../apps/board-app.mjs").then((m) => m.openBoard()));
 }
 
 /**
@@ -21,4 +22,10 @@ export async function dispatch(intent) {
   if (game.user.isGM) return dispatchAsGM(intent, game.user.id);
   if (!socket) throw new Error("socketlib not ready");
   return socket.executeAsGM(SOCKET.DISPATCH, intent, game.user.id);
+}
+
+/** Open the board on every connected client (used when the GM starts a game). */
+export function broadcastOpenBoard() {
+  if (socket) socket.executeForEveryone(SOCKET.OPEN_BOARD);
+  else import("../apps/board-app.mjs").then((m) => m.openBoard());
 }

@@ -14,7 +14,7 @@ export const SETTINGS = Object.freeze({
   COLOR_DIE: "colorDie",
 });
 
-export const SOCKET = Object.freeze({ DISPATCH: "dispatch" });
+export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN_BOARD: "openBoard" });
 
 export const DEFAULTS = Object.freeze({
   TARGET: 2000,
