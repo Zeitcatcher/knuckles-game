@@ -54,6 +54,7 @@ export function buildBoardContext(state, user, ui) {
     finished,
     targetScore: state.targetScore,
     players,
+    log: [...(state.log ?? [])].slice(-3).reverse().map((e) => game.i18n.format(e.key, e.data ?? {})),
     canControl: control,
     isGM: Boolean(user.isGM),
     phase: state.phase,

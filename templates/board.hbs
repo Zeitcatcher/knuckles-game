@@ -70,6 +70,13 @@
     </div>
   {{/unless}}
 
+  {{#if log.length}}
+    <div class="kg-log">
+      <div class="kg-muted">{{localize "KNUCKLES.board.history"}}</div>
+      {{#each log}}<div class="kg-log-line">{{this}}</div>{{/each}}
+    </div>
+  {{/if}}
+
   {{#if isGM}}<div class="kg-foot"><button type="button" data-action="newGame"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{localize "KNUCKLES.board.newGame"}}</button></div>{{/if}}
 {{/unless}}
 </div>

@@ -14,8 +14,8 @@
   cursor: default;
 }
 .knuckles-game .kg-die[data-action] { cursor: pointer; }
-.knuckles-game .kg-die.is-kept { outline: 2px solid var(--kg-keep); }
-.knuckles-game .kg-die.is-selected { outline: 3px solid var(--kg-keep); }
+.knuckles-game .kg-die.is-kept { background: color-mix(in srgb, var(--kg-keep) 30%, var(--kg-die-bg)); outline: 2px solid var(--kg-keep); }
+.knuckles-game .kg-die.is-selected { outline: 3px solid var(--kg-accent); }
 .knuckles-game .kg-die.is-reroll { outline: 3px dashed var(--kg-reroll); }
 .knuckles-game .kg-die.is-blank { background: var(--kg-surface-2); }
 

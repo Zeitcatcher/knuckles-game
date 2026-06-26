@@ -113,10 +113,10 @@ export function refreshBoard(state) {
     if (state?.status === "playing") openBoard();
     return;
   }
+  // Any synced state change resets transient UI: the keep-selection and the
+  // Hero-Point re-roll mode (so after a re-roll the board returns to normal).
   instance.selection.clear();
-  if (!state || (state.phase !== "selecting" && state.phase !== "bust")) {
-    instance.heroMode = false;
-    instance.rerollSelection.clear();
-  }
+  instance.heroMode = false;
+  instance.rerollSelection.clear();
   instance.render();
 }

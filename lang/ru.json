@@ -31,6 +31,12 @@
   "KNUCKLES.board.selected": "Выбрано",
   "KNUCKLES.board.heroHint": "Выберите кости из последнего броска для переброса (от одной до всех шести), затем подтвердите, чтобы потратить 1 Hero Point.",
   "KNUCKLES.board.noHero": "нет Hero Points",
+  "KNUCKLES.board.history": "Последние ходы",
+  "KNUCKLES.log.banked": "{name} записал {points} (→ {total})",
+  "KNUCKLES.log.busted": "{name} обнулился",
+  "KNUCKLES.log.bustedLost": "{name} обнулился (потерял {points})",
+  "KNUCKLES.log.hero": "{name} потратил Hero Point на переброс",
+  "KNUCKLES.log.wins": "{name} побеждает!",
 
   "KNUCKLES.settings.defaultTarget.name": "Целевой счёт по умолчанию",
   "KNUCKLES.settings.defaultTarget.hint": "Счёт, до которого по умолчанию идёт игра. Можно менять для каждой игры.",
