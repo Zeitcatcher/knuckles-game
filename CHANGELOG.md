@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.9
+
+- Weighting plumbing (no behaviour change yet): the dice roller can take per-die weight vectors and override only loaded dice; fair dice keep Foundry's native uniform result, and nothing global is touched, so all other rolls are unaffected.
+- Added a console helper `KnucklesGame.testWeightedRoll(weights, n, animate)` to verify weighting + 3D display, plus unit tests for the weighting math.
+
 ## 0.1.8
 
 - Fix: bets entered in setup were dropped before reaching the game state, so the pot never showed on the board and the winner received no payout. Bets now flow through to the pot display and the pf2e coin payout.

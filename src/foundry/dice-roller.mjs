@@ -1,15 +1,28 @@
+import { isWeighted, weightedFace } from "../core/weighting.mjs";
+
+/** Foundry's uniform RNG (shared with every other roll), with a safe fallback. */
+const uniform = () => (CONFIG.Dice?.randomUniform ?? Math.random)();
+
 /**
- * Rolls fair d6 through the Foundry Roll API. Returns both the plain values
- * (fed to the pure reducer) and the Roll instance (handed to Dice So Nice).
+ * Roll `count` d6 through the Foundry Roll API. Returns the plain values (for the
+ * pure reducer) and the Roll instance (for Dice So Nice).
  *
- * The per-die "spec" abstraction is intentionally absent for now: every die is a
- * fair d6. Loaded/weighted dice (the future cheating system) will slot in here by
- * building the Roll from per-die weight vectors — no change required elsewhere.
+ * `specs` is an optional array of per-die weight vectors, aligned with the dice
+ * being rolled. **Fair dice keep Foundry's native uniform result** — only a die
+ * given a loaded (non-uniform) spec has its result overridden with a weighted pick.
+ * Nothing here is global: this affects rolls made by this module's game only, never
+ * combat rolls, checks, or any other dice in the world.
  */
-export async function rollValues(count) {
+export async function rollValues(count, specs) {
   if (!count || count <= 0) return { values: [], roll: null };
+
   const roll = await new Roll(`${count}d6`).evaluate();
   const term = roll.dice.find((d) => d.faces === 6) ?? roll.dice[0];
+
+  term.results.forEach((res, i) => {
+    if (isWeighted(specs?.[i])) res.result = weightedFace(uniform, specs[i]);
+  });
+
   const values = term.results.map((r) => r.result);
   return { values, roll };
 }
