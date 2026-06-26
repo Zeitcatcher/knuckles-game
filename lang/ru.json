@@ -45,6 +45,7 @@
   "KNUCKLES.board.editDie": "Изменить грань",
   "KNUCKLES.board.pickFace": "Новая грань",
   "KNUCKLES.board.wild": "Дикая",
+  "KNUCKLES.board.history": "История",
   "KNUCKLES.dice.title": "Выбор костей",
   "KNUCKLES.dice.hint": "Выберите кость для каждого из шести слотов. Кости выбираются только перед игрой; во время игры менять их может только ГМ.",
   "KNUCKLES.dice.ready": "Готово",

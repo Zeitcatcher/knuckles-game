@@ -45,6 +45,7 @@
   "KNUCKLES.board.editDie": "Change value",
   "KNUCKLES.board.pickFace": "Pick a new face",
   "KNUCKLES.board.wild": "Wild",
+  "KNUCKLES.board.history": "History",
   "KNUCKLES.dice.title": "Choose your dice",
   "KNUCKLES.dice.hint": "Pick a die for each of the six slots. Dice are chosen only before the game; during play only the GM can change them.",
   "KNUCKLES.dice.ready": "Ready",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- Board: the action log moved below all the buttons and is now a full-game "History" panel that scrolls inside the fixed window instead of resizing it. Previously it sat above the GM buttons and showed only the last three turns.
+
 ## 0.2.4
 
 - Fix: the GM die-value picker no longer clips at the window's left edge. When the popover would overflow the board (e.g. under the leftmost die), it is nudged inward to stay fully visible while its arrow keeps pointing at the die being edited.

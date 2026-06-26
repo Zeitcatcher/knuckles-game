@@ -15,7 +15,7 @@ import { awardCoins } from "../foundry/currency.mjs";
 import { getDieSpec } from "../core/dice-catalog.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
-const LOG_MAX = 8;
+const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
 
 /** Log entries are stored as {key, data} and localized per client in the view-model. */
 function pushLog(state, key, data) {

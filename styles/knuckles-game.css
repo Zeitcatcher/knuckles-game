@@ -1,6 +1,7 @@
 /* Layout / structure. Consumes tokens only — no hardcoded colours. */
 
-.knuckles-game .kg-board { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); box-sizing: border-box; min-height: 100%; }
+.knuckles-game .kg-board { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); box-sizing: border-box; min-height: 100%; display: flex; flex-direction: column; }
+.knuckles-game .kg-board > * { flex-shrink: 0; }
 /* Fixed-size board: the dark panel fills the window; oversized games scroll inside. */
 #knuckles-game-board .window-content { overflow: hidden auto; }
 .knuckles-game .kg-muted { color: var(--kg-muted); font-size: 12px; }
@@ -63,7 +64,9 @@
 .knuckles-game .kg-hero-btn { background: color-mix(in srgb, var(--kg-accent) 32%, transparent); }
 .knuckles-game .kg-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); display: flex; gap: 8px; flex-wrap: wrap; }
 .knuckles-game .kg-end { background: color-mix(in srgb, var(--kg-bust) 28%, transparent); }
-.knuckles-game .kg-log { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); }
+.knuckles-game .kg-log { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--kg-surface-2); flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; }
+.knuckles-game .kg-log-title { flex: 0 0 auto; font-size: 11px; color: var(--kg-muted); margin-bottom: 5px; }
+.knuckles-game .kg-log-lines { flex: 1 1 0; min-height: 0; overflow-y: auto; }
 .knuckles-game .kg-log-line { font-size: 13px; color: var(--kg-muted); padding: 1px 0; }
 
 /* setup window */
