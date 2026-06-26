@@ -55,6 +55,22 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _onRender() {
     applyAppearance(this.element);
+    // Keep the GM value-override popover inside the board; an edge die (e.g. #1)
+    // would otherwise centre the popover past the window edge and clip it.
+    const pop = this.element.querySelector(".kg-valpop");
+    const board = this.element.querySelector(".kg-board");
+    if (!pop || !board) return;
+    const pad = 8;
+    const b = board.getBoundingClientRect();
+    const p = pop.getBoundingClientRect();
+    let shift = 0;
+    if (p.left < b.left + pad) shift = b.left + pad - p.left;
+    else if (p.right > b.right - pad) shift = b.right - pad - p.right;
+    if (!shift) return;
+    shift = Math.round(shift);
+    pop.style.transform = `translateX(calc(-50% + ${shift}px))`;
+    const arrow = pop.querySelector(".kg-valpop-arr");
+    if (arrow) arrow.style.transform = `translateX(calc(-50% - ${shift}px)) rotate(45deg)`;
   }
 
   static _onRoll() {

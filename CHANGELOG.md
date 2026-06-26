@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+
+- Fix: the GM die-value picker no longer clips at the window's left edge. When the popover would overflow the board (e.g. under the leftmost die), it is nudged inward to stay fully visible while its arrow keeps pointing at the die being edited.
+
 ## 0.2.3
 
 - The board window now opens at a fixed, comfortable size (580 × 600) instead of auto-sizing, so it no longer grows and shrinks as you roll, keep, bank, or open the GM die-value picker. Shorter states show clean dark padding; an unusually large game scrolls inside the window. The window stays manually resizable.
