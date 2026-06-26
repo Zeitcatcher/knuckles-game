@@ -1,8 +1,8 @@
 /**
  * GM-authoritative command handler. Player clients send intents; this runs on the
  * GM, generates dice values, applies the pure reducer, spends Hero Points on the
- * linked actor, and persists the new state. The state write broadcasts to every
- * client (see settings onChange), which re-renders the board.
+ * linked actor, keeps the active player's Hero Points in sync with their sheet, and
+ * records a short turn log. The state write broadcasts to every client.
  */
 
 import { reduce, createGame, currentPlayer } from "../core/game-state.mjs";
@@ -13,11 +13,25 @@ import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
+const LOG_MAX = 8;
+
+/** Log entries are stored as {key, data} and localized per client in the view-model. */
+function pushLog(state, key, data) {
+  state.log = [...(state.log ?? []), { key, data }].slice(-LOG_MAX);
+}
+
+/** Re-read the active player's Hero Points from their linked actor (may have changed). */
+async function syncCurrentHeroPoints(state) {
+  const p = currentPlayer(state);
+  if (p?.actorUuid) p.heroPoints = await getHeroPoints(p.actorUuid);
+}
+
 /** @param {object} intent  @param {string} userId - the requesting user's id */
 export async function dispatchAsGM(intent, userId) {
   if (intent.type === "startGame") {
     if (!game.users.get(userId)?.isGM) throw new Error("only the GM can start a game");
     const state = await buildNewGame(intent.config);
+    await syncCurrentHeroPoints(state);
     await saveState(state);
     return state;
   }
@@ -35,9 +49,6 @@ export async function dispatchAsGM(intent, userId) {
       state = reduce(state, { type: "roll", values });
       break;
     }
-    case "keepAndBank":
-      state = reduce(state, { type: "keepAndBank", ids: intent.ids });
-      break;
     case "keepAndRoll": {
       state = reduce(state, { type: "keepAndRoll", ids: intent.ids });
       // Auto-roll the dice now in play — no separate Roll click after keeping.
@@ -48,11 +59,25 @@ export async function dispatchAsGM(intent, userId) {
       }
       break;
     }
-    case "takeBust":
-      state = reduce(state, { type: "takeBust" });
+    case "keepAndBank": {
+      const banker = currentPlayer(state);
+      const { id: bankerId, name: bankerName } = banker;
+      const oldTotal = banker.total;
+      state = reduce(state, { type: "keepAndBank", ids: intent.ids });
+      const np = state.players.find((p) => p.id === bankerId);
+      pushLog(state, "KNUCKLES.log.banked", { name: bankerName, points: np.total - oldTotal, total: np.total });
       break;
+    }
+    case "takeBust": {
+      const { name } = currentPlayer(state);
+      const lost = state.turnScore;
+      state = reduce(state, { type: "takeBust" });
+      pushLog(state, lost > 0 ? "KNUCKLES.log.bustedLost" : "KNUCKLES.log.busted", { name, points: lost });
+      break;
+    }
     case "useHeroPoint": {
       const player = currentPlayer(state);
+      const { name } = player;
       if (player.actorUuid) {
         if (!(await spendHeroPoint(player.actorUuid))) throw new Error("no Hero Points to spend");
       } else if ((player.heroPoints ?? 0) < 1) {
@@ -61,10 +86,20 @@ export async function dispatchAsGM(intent, userId) {
       const { values, roll } = await rollValues(intent.rerollIds.length);
       await animateRoll(roll);
       state = reduce(state, { type: "useHeroPoint", rerollIds: intent.rerollIds, values });
+      pushLog(state, "KNUCKLES.log.hero", { name });
       break;
     }
     default:
       throw new Error(`unknown intent: ${intent.type}`);
+  }
+
+  if (state.status === "finished") {
+    const w = state.winnerId ? state.players.find((p) => p.id === state.winnerId) : null;
+    if (w && state.log?.[state.log.length - 1]?.key !== "KNUCKLES.log.wins") {
+      pushLog(state, "KNUCKLES.log.wins", { name: w.name });
+    }
+  } else {
+    await syncCurrentHeroPoints(state);
   }
 
   await saveState(state);
@@ -83,11 +118,12 @@ function canAct(user, player) {
 
 async function buildNewGame(config) {
   const players = [];
-  config.players?.forEach((p, i) => (p._fallback = `Player ${i + 1}`));
+  let i = 0;
   for (const p of config.players ?? []) {
+    i += 1;
     let type = "generic";
     let heroPoints = config.npcHeroPool ?? 0;
-    let name = p.name || p._fallback;
+    let name = p.name || `Player ${i}`;
     if (p.actorUuid) {
       const actor = await fromUuid(p.actorUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";

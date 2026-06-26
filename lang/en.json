@@ -31,6 +31,12 @@
   "KNUCKLES.board.selected": "Selected",
   "KNUCKLES.board.heroHint": "Pick dice from the last roll to re-roll (one up to all six), then confirm to spend 1 Hero Point.",
   "KNUCKLES.board.noHero": "no Hero Points",
+  "KNUCKLES.board.history": "Last turns",
+  "KNUCKLES.log.banked": "{name} banked {points} (→ {total})",
+  "KNUCKLES.log.busted": "{name} busted",
+  "KNUCKLES.log.bustedLost": "{name} busted (lost {points})",
+  "KNUCKLES.log.hero": "{name} spent a Hero Point to re-roll",
+  "KNUCKLES.log.wins": "{name} wins!",
 
   "KNUCKLES.settings.defaultTarget.name": "Default target score",
   "KNUCKLES.settings.defaultTarget.hint": "The score new games are played to by default. Can be changed per game.",

@@ -39,6 +39,7 @@ export function createGame({ players, targetScore = 2000 } = {}) {
     suddenDeath: null, // null | { contenders: string[] }
     winnerId: null,
     tiedIds: [],
+    log: [],
   };
 }
 
