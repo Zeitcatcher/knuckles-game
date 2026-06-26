@@ -37,10 +37,10 @@
 
 /* setup window */
 .knuckles-game .kg-players { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
-.knuckles-game .kg-prow { display: flex; gap: 6px; align-items: center; }
-.knuckles-game .kg-prow input[name="name"] { flex: 1 1 auto; }
-.knuckles-game .kg-prow select { flex: 0 0 auto; }
-.knuckles-game .kg-icon { flex: 0 0 auto; }
+.knuckles-game .kg-prow { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
+.knuckles-game .kg-prow > * { min-width: 0; }
+.knuckles-game .kg-prow input, .knuckles-game .kg-prow select { width: 100%; box-sizing: border-box; }
+.knuckles-game .kg-prow-head { padding: 0 2px; margin-bottom: 2px; }
 .knuckles-game .kg-target-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 .knuckles-game .kg-target-row input { width: 120px; }
 .knuckles-game .kg-setup-foot { margin-top: 14px; display: flex; justify-content: flex-end; }

@@ -1,17 +1,16 @@
 <div class="kg-setup">
-  <div class="kg-muted">{{localize "KNUCKLES.setup.players"}}</div>
+  <div class="kg-prow kg-prow-head">
+    <span class="kg-muted">{{localize "KNUCKLES.setup.name"}}</span>
+    <span class="kg-muted">{{localize "KNUCKLES.setup.character"}}</span>
+    <span></span>
+  </div>
   <div class="kg-players">
     {{#each players}}
       <div class="kg-prow" data-player-row data-index="{{@index}}">
         <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.name'}}" />
-        <select name="type">
-          <option value="pc"{{#if (kgEq type "pc")}} selected{{/if}}>{{localize "KNUCKLES.setup.typePc"}}</option>
-          <option value="npc"{{#if (kgEq type "npc")}} selected{{/if}}>{{localize "KNUCKLES.setup.typeNpc"}}</option>
-          <option value="generic"{{#if (kgEq type "generic")}} selected{{/if}}>{{localize "KNUCKLES.setup.typeGeneric"}}</option>
-        </select>
         <select name="actorUuid">
           <option value="">{{localize "KNUCKLES.setup.noCharacter"}}</option>
-          {{#each ../characters}}
+          {{#each ../actors}}
             <option value="{{uuid}}"{{#if (kgEq uuid ../actorUuid)}} selected{{/if}}>{{name}}</option>
           {{/each}}
         </select>

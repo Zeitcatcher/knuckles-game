@@ -45,7 +45,7 @@ export function buildBoardContext(state, user, ui) {
     total: p.total,
     isCurrent: i === state.turnIndex,
     isWinner: finished && p.id === state.winnerId,
-    hasActor: Boolean(p.actorUuid),
+    showHero: p.type === "pc" || (p.heroPoints ?? 0) > 0,
     heroPips: pips(p.heroPoints ?? 0, DEFAULTS.MAX_HERO_POINTS),
   }));
 
