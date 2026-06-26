@@ -92,6 +92,11 @@ export function openSetup() {
     return null;
   }
   instance ??= new SetupApp();
+  // Always open a fresh setup — never remember the previous player selection.
+  instance.players = [
+    { id: "p1", name: "", actorUuid: null },
+    { id: "p2", name: "", actorUuid: null },
+  ];
   instance.render({ force: true });
   return instance;
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+
+- A previous game is no longer resumed or saved across sessions: leftover state is cleared on world load, so the launch icon opens a fresh New Game setup.
+- The setup window no longer remembers the previous player selection — it opens with empty rows each time.
+
 ## 0.1.5
 
 - Starting a game now opens the board for ALL connected players, so everyone sees the table (it still never opens on world load).

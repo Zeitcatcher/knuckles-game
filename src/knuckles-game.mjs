@@ -9,7 +9,7 @@ import { registerControls, ensureLauncherMacro } from "./foundry/controls.mjs";
 import { setupSocket, dispatch } from "./net/socket.mjs";
 import { openBoard, refreshBoard } from "./apps/board-app.mjs";
 import { openSetup } from "./apps/setup-app.mjs";
-import { loadState } from "./foundry/state-store.mjs";
+import { loadState, clearState } from "./foundry/state-store.mjs";
 
 /** Launch handler for the icon / macro / public API — state-aware. */
 function open() {
@@ -44,6 +44,10 @@ Hooks.once("setup", async () => {
 Hooks.once("socketlib.ready", () => setupSocket());
 
 Hooks.once("ready", async () => {
-  if (game.user.isGM) await ensureLauncherMacro();
+  if (game.user.isGM) {
+    await ensureLauncherMacro();
+    // Start each session fresh: a previous game is not resumed or saved.
+    if (loadState()) await clearState();
+  }
   // The board stays hidden on load — it opens only via the launch icon / macro.
 });
