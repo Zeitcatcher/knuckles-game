@@ -35,10 +35,19 @@ export async function dispatchAsGM(intent, userId) {
       state = reduce(state, { type: "roll", values });
       break;
     }
-    case "keepAndRoll":
     case "keepAndBank":
-      state = reduce(state, { type: intent.type, ids: intent.ids });
+      state = reduce(state, { type: "keepAndBank", ids: intent.ids });
       break;
+    case "keepAndRoll": {
+      state = reduce(state, { type: "keepAndRoll", ids: intent.ids });
+      // Auto-roll the dice now in play — no separate Roll click after keeping.
+      if (state.status === "playing" && state.phase === "await-roll") {
+        const { values, roll } = await rollValues(inPlay(state.pool).length);
+        await animateRoll(roll);
+        state = reduce(state, { type: "roll", values });
+      }
+      break;
+    }
     case "takeBust":
       state = reduce(state, { type: "takeBust" });
       break;
@@ -75,13 +84,14 @@ function canAct(user, player) {
 async function buildNewGame(config) {
   const players = [];
   for (const p of config.players ?? []) {
-    const heroPoints = p.actorUuid
-      ? await getHeroPoints(p.actorUuid)
-      : (config.npcHeroPool ?? 0);
-    players.push({
-      id: p.id, name: p.name, type: p.type,
-      actorUuid: p.actorUuid ?? null, heroPoints,
-    });
+    let type = "generic";
+    let heroPoints = config.npcHeroPool ?? 0;
+    if (p.actorUuid) {
+      const actor = await fromUuid(p.actorUuid);
+      type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
+      heroPoints = await getHeroPoints(p.actorUuid);
+    }
+    players.push({ id: p.id, name: p.name, type, actorUuid: p.actorUuid ?? null, heroPoints });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET });
 }

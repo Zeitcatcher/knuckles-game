@@ -5,11 +5,11 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 let instance = null;
 
-/** GM-only new-game window: add/rename players, link characters, set the target. */
+/** GM-only new-game window: add/rename players, link a character, set the target. */
 export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   players = [
-    { id: "p1", name: "Грог", type: "pc", actorUuid: null },
-    { id: "p2", name: "Иримэ", type: "pc", actorUuid: null },
+    { id: "p1", name: "Грог", actorUuid: null },
+    { id: "p2", name: "Иримэ", actorUuid: null },
   ];
 
   static DEFAULT_OPTIONS = {
@@ -17,7 +17,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     tag: "form",
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.setup.title", icon: "fa-solid fa-dice-d6" },
-    position: { width: 520, height: "auto" },
+    position: { width: 560, height: "auto" },
     form: { handler: SetupApp._onSubmit, closeOnSubmit: true },
     actions: {
       addPlayer: SetupApp._onAddPlayer,
@@ -28,12 +28,12 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static PARTS = { setup: { template: TEMPLATES.SETUP } };
 
   async _prepareContext() {
-    const characters = game.actors
-      .filter((a) => a.type === "character")
-      .map((a) => ({ uuid: a.uuid, name: a.name }));
+    const actors = game.actors
+      .map((a) => ({ uuid: a.uuid, name: a.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
     return {
       players: this.players,
-      characters,
+      actors,
       defaultTarget: game.settings.get(MODULE_ID, SETTINGS.DEFAULT_TARGET) ?? DEFAULTS.TARGET,
     };
   }
@@ -43,7 +43,6 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.players = [...rows].map((row, i) => ({
       id: `p${i + 1}`,
       name: row.querySelector("[name='name']")?.value?.trim() || `Player ${i + 1}`,
-      type: row.querySelector("[name='type']")?.value || "generic",
       actorUuid: row.querySelector("[name='actorUuid']")?.value || null,
     }));
   }
@@ -51,7 +50,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static _onAddPlayer() {
     this._syncFromForm();
     const n = this.players.length + 1;
-    this.players.push({ id: `p${n}`, name: `Player ${n}`, type: "generic", actorUuid: null });
+    this.players.push({ id: `p${n}`, name: `Player ${n}`, actorUuid: null });
     this.render();
   }
 
