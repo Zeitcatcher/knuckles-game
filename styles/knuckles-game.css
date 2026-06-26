@@ -1,6 +1,8 @@
 /* Layout / structure. Consumes tokens only — no hardcoded colours. */
 
-.knuckles-game .kg-board { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); }
+.knuckles-game .kg-board { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); box-sizing: border-box; min-height: 100%; }
+/* Fixed-size board: the dark panel fills the window; oversized games scroll inside. */
+#knuckles-game-board .window-content { overflow: hidden auto; }
 .knuckles-game .kg-muted { color: var(--kg-muted); font-size: 12px; }
 .knuckles-game .kg-empty { color: var(--kg-muted); text-align: center; padding: 18px 0; }
 
