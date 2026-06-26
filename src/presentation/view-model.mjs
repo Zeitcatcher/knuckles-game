@@ -4,6 +4,7 @@
  */
 
 import { scoreSelection } from "../core/scoring.mjs";
+import { computePool } from "../core/game-state.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const pips = (n, max) => Array.from({ length: max }, (_, i) => ({ on: i < n }));
@@ -49,10 +50,14 @@ export function buildBoardContext(state, user, ui) {
     heroPips: pips(p.heroPoints ?? 0, DEFAULTS.MAX_HERO_POINTS),
   }));
 
+  const pool = computePool(state.players);
+
   return {
     active: true,
     finished,
     targetScore: state.targetScore,
+    pool,
+    hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0,
     players,
     log: [...(state.log ?? [])].slice(-3).reverse().map((e) => game.i18n.format(e.key, e.data ?? {})),
     canControl: control,

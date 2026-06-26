@@ -6,15 +6,24 @@
   </div>
   <div class="kg-players">
     {{#each players}}
-      <div class="kg-prow" data-player-row data-index="{{@index}}">
-        <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.name'}}" />
-        <select name="actorUuid">
-          <option value="">{{localize "KNUCKLES.setup.noCharacter"}}</option>
-          {{#each ../actors}}
-            <option value="{{uuid}}"{{#if (kgEq uuid ../actorUuid)}} selected{{/if}}>{{name}}</option>
-          {{/each}}
-        </select>
-        <button type="button" class="kg-icon" data-action="removePlayer" data-index="{{@index}}" aria-label="Remove"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+      <div class="kg-pblock" data-player-block data-index="{{@index}}">
+        <div class="kg-prow">
+          <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.name'}}" />
+          <select name="actorUuid">
+            <option value="">{{localize "KNUCKLES.setup.noCharacter"}}</option>
+            {{#each ../actors}}
+              <option value="{{uuid}}"{{#if (kgEq uuid ../actorUuid)}} selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+          <button type="button" class="kg-icon" data-action="removePlayer" data-index="{{@index}}" aria-label="Remove"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+        </div>
+        <div class="kg-bets">
+          <span class="kg-bet-label">{{localize "KNUCKLES.setup.bet"}}</span>
+          <label class="kg-bet"><span>{{localize "KNUCKLES.coin.sun"}}</span><input type="number" name="sun" value="{{bet.sun}}" min="0" step="1" /></label>
+          <label class="kg-bet"><span>{{localize "KNUCKLES.coin.gold"}}</span><input type="number" name="gold" value="{{bet.gold}}" min="0" step="1" /></label>
+          <label class="kg-bet"><span>{{localize "KNUCKLES.coin.silver"}}</span><input type="number" name="silver" value="{{bet.silver}}" min="0" step="1" /></label>
+          <label class="kg-bet"><span>{{localize "KNUCKLES.coin.copper"}}</span><input type="number" name="copper" value="{{bet.copper}}" min="0" step="1" /></label>
+        </div>
       </div>
     {{/each}}
   </div>

@@ -5,12 +5,13 @@
  * records a short turn log. The state write broadcasts to every client.
  */
 
-import { reduce, createGame, currentPlayer } from "../core/game-state.mjs";
+import { reduce, createGame, currentPlayer, computePool } from "../core/game-state.mjs";
 import { inPlay } from "../core/dice-model.mjs";
 import { loadState, saveState } from "../foundry/state-store.mjs";
 import { rollValues } from "../foundry/dice-roller.mjs";
 import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
+import { awardCoins } from "../foundry/currency.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 8;
@@ -97,6 +98,10 @@ export async function dispatchAsGM(intent, userId) {
     const w = state.winnerId ? state.players.find((p) => p.id === state.winnerId) : null;
     if (w && state.log?.[state.log.length - 1]?.key !== "KNUCKLES.log.wins") {
       pushLog(state, "KNUCKLES.log.wins", { name: w.name });
+      // Award the pot to the winner only if they are linked to an actor ("a token").
+      if (w.actorUuid && (await awardCoins(w.actorUuid, computePool(state.players)))) {
+        pushLog(state, "KNUCKLES.log.pot", { name: w.name });
+      }
     }
   } else {
     await syncCurrentHeroPoints(state);

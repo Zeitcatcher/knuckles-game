@@ -46,3 +46,15 @@
 .knuckles-game .kg-target-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 .knuckles-game .kg-target-row input { width: 120px; }
 .knuckles-game .kg-setup-foot { margin-top: 14px; display: flex; justify-content: flex-end; }
+.knuckles-game .kg-pblock { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px; }
+.knuckles-game .kg-bets { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.knuckles-game .kg-bet-label { font-size: 12px; color: var(--kg-muted); }
+.knuckles-game .kg-bet { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--kg-muted); }
+.knuckles-game .kg-bet input { width: 66px; }
+
+.knuckles-game .kg-pot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; margin-bottom: 12px; }
+.knuckles-game .kg-coin { font-size: 14px; font-weight: 500; }
+.knuckles-game .kg-sun { color: var(--kg-accent); }
+.knuckles-game .kg-gold { color: #d9b44a; }
+.knuckles-game .kg-silver { color: #b8c0c8; }
+.knuckles-game .kg-copper { color: #c2814a; }

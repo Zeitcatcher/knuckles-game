@@ -3,6 +3,16 @@
   <p class="kg-empty">{{localize "KNUCKLES.board.noGame"}}</p>
 {{else}}
 
+  {{#if hasPot}}
+    <div class="kg-pot">
+      <span class="kg-muted">{{localize "KNUCKLES.board.pot"}}</span>
+      <span class="kg-coin kg-sun">{{pool.sun}} {{localize "KNUCKLES.coin.sun"}}</span>
+      <span class="kg-coin kg-gold">{{pool.gold}} {{localize "KNUCKLES.coin.gold"}}</span>
+      <span class="kg-coin kg-silver">{{pool.silver}} {{localize "KNUCKLES.coin.silver"}}</span>
+      <span class="kg-coin kg-copper">{{pool.copper}} {{localize "KNUCKLES.coin.copper"}}</span>
+    </div>
+  {{/if}}
+
   {{#if finalRound.active}}
     <div class="kg-banner kg-final"><i class="fa-solid fa-flag" aria-hidden="true"></i> {{localize "KNUCKLES.board.finalRound"}}</div>
   {{/if}}
@@ -72,7 +82,6 @@
 
   {{#if log.length}}
     <div class="kg-log">
-      <div class="kg-muted">{{localize "KNUCKLES.board.history"}}</div>
       {{#each log}}<div class="kg-log-line">{{this}}</div>{{/each}}
     </div>
   {{/if}}
