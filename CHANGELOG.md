@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- The board no longer opens automatically on world load (or when other players act); it stays hidden until you click the dice icon or run the macro.
+- The launch icon is state-aware: it opens the board when a game is in progress, otherwise the GM gets the setup window. Starting a game opens the board for the GM.
+
 ## 0.1.3
 
 - Kept (set-aside) dice now have a distinct fill colour, separate from the current selection.

@@ -40,6 +40,6 @@ export async function ensureLauncherMacro() {
     name,
     type: "script",
     img: "icons/svg/d20-grey.svg",
-    command: `game.modules.get("${MODULE_ID}").api.openSetup();`,
+    command: `game.modules.get("${MODULE_ID}").api.open();`,
   });
 }

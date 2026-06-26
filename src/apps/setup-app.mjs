@@ -81,6 +81,8 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const targetScore = Number(formData.object.targetScore) || DEFAULTS.TARGET;
     const npcHeroPool = game.settings.get(MODULE_ID, SETTINGS.NPC_HERO_POOL) ?? 0;
     await dispatch({ type: "startGame", config: { players: this.players, targetScore, npcHeroPool } });
+    // Open the board for the GM who just started the game (players use the icon).
+    (await import("./board-app.mjs")).openBoard();
   }
 }
 

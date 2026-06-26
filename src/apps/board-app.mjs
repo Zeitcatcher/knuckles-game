@@ -107,12 +107,9 @@ export function openBoard() {
   return instance;
 }
 
-export function refreshBoard(state) {
-  state = state ?? loadState();
-  if (!instance || !instance.rendered) {
-    if (state?.status === "playing") openBoard();
-    return;
-  }
+export function refreshBoard() {
+  // Never auto-open a hidden board; only re-render if it is already open.
+  if (!instance || !instance.rendered) return;
   // Any synced state change resets transient UI: the keep-selection and the
   // Hero-Point re-roll mode (so after a re-roll the board returns to normal).
   instance.selection.clear();

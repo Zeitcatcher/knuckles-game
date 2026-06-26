@@ -11,19 +11,27 @@ import { openBoard, refreshBoard } from "./apps/board-app.mjs";
 import { openSetup } from "./apps/setup-app.mjs";
 import { loadState } from "./foundry/state-store.mjs";
 
+/** Launch handler for the icon / macro / public API — state-aware. */
+function open() {
+  const state = loadState();
+  if (state?.status === "playing") return openBoard();
+  if (game.user.isGM) return openSetup();
+  return openBoard(); // no active game → the board shows its "no game" message
+}
+
 Hooks.once("init", () => {
   Handlebars.registerHelper("kgEq", (a, b) => a === b);
   Handlebars.registerHelper("kgRange", (n) => Array.from({ length: Number(n) || 0 }, (_, i) => i));
 
   registerSettings({
-    onStateChanged: (state) => refreshBoard(state),
+    onStateChanged: () => refreshBoard(),
     onAppearanceChanged: () => refreshBoard(),
   });
 
-  registerControls(() => (game.user.isGM ? openSetup() : openBoard()));
+  registerControls(open);
 
   const mod = game.modules.get(MODULE_ID);
-  mod.api = { openSetup, openBoard, dispatch, getState: loadState };
+  mod.api = { open, openSetup, openBoard, dispatch, getState: loadState };
   globalThis.KnucklesGame = mod.api;
 
   console.log("knuckles-game | initialised");
@@ -37,6 +45,5 @@ Hooks.once("socketlib.ready", () => setupSocket());
 
 Hooks.once("ready", async () => {
   if (game.user.isGM) await ensureLauncherMacro();
-  const state = loadState();
-  if (state?.status === "playing") openBoard();
+  // The board stays hidden on load — it opens only via the launch icon / macro.
 });
