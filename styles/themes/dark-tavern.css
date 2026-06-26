@@ -1,0 +1,16 @@
+/* Dark tavern — a candle-lit theme. Overrides tokens only. */
+.knuckles-game[data-theme="dark-tavern"] {
+  --kg-board-bg: #16130f;
+  --kg-surface: rgba(255, 210, 140, 0.06);
+  --kg-surface-2: rgba(255, 210, 140, 0.12);
+  --kg-text: #e8dcc4;
+  --kg-muted: #9a8b6f;
+  --kg-accent: #d8a24a;
+  --kg-keep: #6aa0d8;
+  --kg-reroll: #d8924a;
+  --kg-bust: #d8624a;
+  --kg-win: #6ab86a;
+  --kg-die-bg: #2a2218;
+  --kg-die-face: #f0e2c4;
+  --kg-pip: #f0e2c4;
+}

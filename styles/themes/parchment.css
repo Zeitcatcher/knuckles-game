@@ -1,0 +1,16 @@
+/* Parchment — a light, warm theme. Overrides tokens only. */
+.knuckles-game[data-theme="parchment"] {
+  --kg-board-bg: #efe6d0;
+  --kg-surface: rgba(90, 70, 35, 0.08);
+  --kg-surface-2: rgba(90, 70, 35, 0.16);
+  --kg-text: #3a2f1d;
+  --kg-muted: #7a6b4f;
+  --kg-accent: #9a6b2f;
+  --kg-keep: #2f6b9a;
+  --kg-reroll: #b5642a;
+  --kg-bust: #b23a2a;
+  --kg-win: #3f7a45;
+  --kg-die-bg: #fbf7ec;
+  --kg-die-face: #3a2f1d;
+  --kg-pip: #3a2f1d;
+}
