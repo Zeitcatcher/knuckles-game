@@ -29,6 +29,12 @@ export function createGame({ players, targetScore = 2000 } = {}) {
       actorUuid: p.actorUuid ?? null,
       total: 0,
       heroPoints: p.heroPoints ?? 0,
+      bet: {
+        sun: Number(p.bet?.sun) || 0,
+        gold: Number(p.bet?.gold) || 0,
+        silver: Number(p.bet?.silver) || 0,
+        copper: Number(p.bet?.copper) || 0,
+      },
     })),
     turnIndex: 0,
     turnScore: 0,
@@ -41,6 +47,18 @@ export function createGame({ players, targetScore = 2000 } = {}) {
     tiedIds: [],
     log: [],
   };
+}
+
+/** Sum every player's bet into a single pot, per currency. */
+export function computePool(players) {
+  const pool = { sun: 0, gold: 0, silver: 0, copper: 0 };
+  for (const p of players ?? []) {
+    pool.sun += p.bet?.sun ?? 0;
+    pool.gold += p.bet?.gold ?? 0;
+    pool.silver += p.bet?.silver ?? 0;
+    pool.copper += p.bet?.copper ?? 0;
+  }
+  return pool;
 }
 
 /** Apply a command, returning a NEW state (input is never mutated). */

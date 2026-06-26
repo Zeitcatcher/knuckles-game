@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createGame, reduce, currentPlayer } from "../src/core/game-state.mjs";
+import { createGame, reduce, currentPlayer, computePool } from "../src/core/game-state.mjs";
 
 const two = (over = {}) => createGame({ players: [{ id: "a" }, { id: "b" }], targetScore: 2000, ...over });
 
@@ -109,5 +109,16 @@ describe("purity", () => {
     const snapshot = JSON.stringify(s0);
     reduce(s0, { type: "roll", values: [1, 5, 2, 3, 4, 6] });
     expect(JSON.stringify(s0)).toBe(snapshot);
+  });
+});
+
+describe("computePool", () => {
+  it("sums each currency across all players' bets", () => {
+    const players = [
+      { bet: { sun: 10, gold: 5, silver: 0, copper: 100 } },
+      { bet: { sun: 0, gold: 15, silver: 15, copper: 127 } },
+      { bet: {} },
+    ];
+    expect(computePool(players)).toEqual({ sun: 10, gold: 20, silver: 15, copper: 227 });
   });
 });

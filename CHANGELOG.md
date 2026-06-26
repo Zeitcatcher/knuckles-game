@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+- Wagers: the GM can set a bet per player (sun coins, gold, silver, copper) in setup; the board shows the combined pot.
+- On a win, the pot is awarded to the winner's linked actor (sun→platinum, gold, silver, copper); if the winner has no linked actor, nothing is paid out.
+- Removed the "Last turns" caption from the history.
+
 ## 0.1.6
 
 - A previous game is no longer resumed or saved across sessions: leftover state is cleared on world load, so the launch icon opens a fresh New Game setup.

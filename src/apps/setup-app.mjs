@@ -5,20 +5,23 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 let instance = null;
 
-/** GM-only new-game window: add players, link a character, set the target. */
+const emptyBet = () => ({ sun: 0, gold: 0, silver: 0, copper: 0 });
+const freshPlayers = () => [
+  { id: "p1", name: "", actorUuid: null, bet: emptyBet() },
+  { id: "p2", name: "", actorUuid: null, bet: emptyBet() },
+];
+const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
+
+/** GM-only new-game window: add players, link a character, set bets and the target. */
 export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
-  // Two empty rows by default — names come from the chosen character, not hard-coded.
-  players = [
-    { id: "p1", name: "", actorUuid: null },
-    { id: "p2", name: "", actorUuid: null },
-  ];
+  players = freshPlayers();
 
   static DEFAULT_OPTIONS = {
     id: `${MODULE_ID}-setup`,
     tag: "form",
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.setup.title", icon: "fa-solid fa-dice-d6" },
-    position: { width: 560, height: "auto" },
+    position: { width: 600, height: "auto" },
     form: { handler: SetupApp._onSubmit, closeOnSubmit: true },
     actions: {
       addPlayer: SetupApp._onAddPlayer,
@@ -44,25 +47,31 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     for (const select of this.element.querySelectorAll("select[name='actorUuid']")) {
       select.addEventListener("change", (ev) => {
         if (!ev.target.value) return;
-        const row = ev.target.closest("[data-player-row]");
-        const nameInput = row?.querySelector("input[name='name']");
+        const block = ev.target.closest("[data-player-block]");
+        const nameInput = block?.querySelector("input[name='name']");
         if (nameInput) nameInput.value = ev.target.selectedOptions[0]?.textContent.trim() ?? "";
       });
     }
   }
 
   _syncFromForm() {
-    const rows = this.element.querySelectorAll("[data-player-row]");
-    this.players = [...rows].map((row, i) => ({
+    const blocks = this.element.querySelectorAll("[data-player-block]");
+    this.players = [...blocks].map((b, i) => ({
       id: `p${i + 1}`,
-      name: row.querySelector("[name='name']")?.value?.trim() || "",
-      actorUuid: row.querySelector("[name='actorUuid']")?.value || null,
+      name: b.querySelector("[name='name']")?.value?.trim() || "",
+      actorUuid: b.querySelector("[name='actorUuid']")?.value || null,
+      bet: {
+        sun: toInt(b.querySelector("[name='sun']")?.value),
+        gold: toInt(b.querySelector("[name='gold']")?.value),
+        silver: toInt(b.querySelector("[name='silver']")?.value),
+        copper: toInt(b.querySelector("[name='copper']")?.value),
+      },
     }));
   }
 
   static _onAddPlayer() {
     this._syncFromForm();
-    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null });
+    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null, bet: emptyBet() });
     this.render();
   }
 
@@ -93,10 +102,7 @@ export function openSetup() {
   }
   instance ??= new SetupApp();
   // Always open a fresh setup — never remember the previous player selection.
-  instance.players = [
-    { id: "p1", name: "", actorUuid: null },
-    { id: "p2", name: "", actorUuid: null },
-  ];
+  instance.players = freshPlayers();
   instance.render({ force: true });
   return instance;
 }
