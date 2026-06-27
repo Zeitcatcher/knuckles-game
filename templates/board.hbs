@@ -26,7 +26,7 @@
     <div class="kg-pcards">
     {{#each players}}
       <div class="kg-pcard{{#if isCurrent}} is-current{{/if}}{{#if isWinner}} is-winner{{/if}}">
-        <div class="kg-pname">{{name}}{{#if isCurrent}} · {{localize "KNUCKLES.board.turn"}}{{/if}}</div>
+        <div class="kg-pname">{{name}}</div>
         <div class="kg-ptotal">{{total}}</div>
         <div class="kg-hero">
           {{#if showHero}}{{#each heroPips}}<span class="kg-pip-hp{{#if on}} on{{/if}}"></span>{{/each}}{{else}}<span class="kg-muted">{{localize "KNUCKLES.board.noHero"}}</span>{{/if}}
