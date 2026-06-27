@@ -55,6 +55,18 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _onRender() {
     applyAppearance(this.element);
+
+    // Auto-scroll the scoreboard so the active player's card is always in view
+    // (only when the row actually overflows).
+    const cur = this.element.querySelector(".kg-pcard.is-current");
+    const pcards = cur?.closest(".kg-pcards");
+    if (cur && pcards && pcards.scrollWidth > pcards.clientWidth + 1) {
+      const card = cur.getBoundingClientRect();
+      const bar = pcards.getBoundingClientRect();
+      if (card.left < bar.left + 4) pcards.scrollLeft -= bar.left - card.left + 8;
+      else if (card.right > bar.right - 4) pcards.scrollLeft += card.right - bar.right + 8;
+    }
+
     // Keep the GM value-override popover inside the board; an edge die (e.g. #1)
     // would otherwise centre the popover past the window edge and clip it.
     const pop = this.element.querySelector(".kg-valpop");
