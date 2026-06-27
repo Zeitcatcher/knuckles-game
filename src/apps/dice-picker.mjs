@@ -4,7 +4,7 @@ import { dispatch, broadcastOpen } from "../net/socket.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
 import { diceIds } from "../foundry/dice-data.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
-import { isPhysicalMode, ownedDieIds, isDieItem } from "../foundry/dice-items.mjs";
+import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices } from "../foundry/dice-items.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -13,40 +13,59 @@ let instance = null;
 function canControl(user, player) {
   if (!user || !player) return false;
   if (user.isGM) return true;
-  if (player.actorUuid) return fromUuidSync(player.actorUuid)?.testUserPermission?.(user, "OWNER") ?? false;
-  return false;
+  return inventoryActor(player)?.testUserPermission?.(user, "OWNER") ?? false;
 }
 
 /**
- * The <option> list for one slot. Virtual mode (or a generic/no-actor player): the
- * full catalog. Physical GM: the full catalog, owned dice flagged for a check.
- * Physical player: only owned dice (plus the currently-stored die shown disabled if
- * they no longer own it, so the control never disagrees with saved state).
+ * Options for one slot, copy-aware.
+ * - "virtual": full catalog, no marks (virtual mode, or a generic/no-actor player).
+ * - "full":    GM picking for an NPC — full catalog, counts + check on owned, may
+ *              over-assign (missing copies are auto-granted on start).
+ * - "owned":   a PC — only their owned dice; a die with no free copy for this slot
+ *              is shown but disabled (greyed); a slot holding an unowned die reads
+ *              "no die left".
  */
-function slotOptions({ phys, isGM, allIds, owned, dieId, theme, lang }) {
-  const opt = (id, extra = {}) => ({
-    id,
-    label: dieName(theme, lang, id),
-    flavor: dieDesc(theme, lang, id),
-    selected: id === dieId,
-    ...extra,
-  });
-  if (!phys) return allIds.map((id) => opt(id));
-  if (isGM) return allIds.map((id) => opt(id, { check: owned.has(id) }));
-  if (owned.size === 0) {
-    return [{ id: dieId, label: game.i18n.localize("KNUCKLES.dice.noneOwned"), flavor: "", selected: true, disabled: true }];
+function slotOptions({ mode, allIds, owned, usedExcl, dieId, theme, lang }) {
+  const nm = (id) => dieName(theme, lang, id);
+  const fl = (id) => dieDesc(theme, lang, id);
+  if (mode === "virtual") {
+    return allIds.map((id) => ({ id, label: nm(id), flavor: fl(id), selected: id === dieId }));
   }
-  const list = allIds.filter((id) => owned.has(id)).map((id) => opt(id));
-  if (!owned.has(dieId)) {
-    list.unshift({
-      id: dieId,
-      label: `${dieName(theme, lang, dieId)} — ${game.i18n.localize("KNUCKLES.dice.notOwnedSuffix")}`,
-      flavor: "",
-      selected: true,
-      disabled: true,
+  if (mode === "full") {
+    return allIds.map((id) => {
+      const c = owned.get(id) ?? 0;
+      return { id, label: c > 0 ? `${nm(id)} ×${c}` : nm(id), flavor: fl(id), selected: id === dieId, check: c > 0 };
     });
   }
-  return list;
+  // "owned"
+  const { ids, placeholder } = ownedSlotChoices(allIds, owned, usedExcl, dieId);
+  const opts = ids.map(({ id, selected, disabled }) => ({
+    id,
+    label: `${nm(id)} ×${owned.get(id)}`,
+    flavor: fl(id),
+    selected,
+    disabled,
+  }));
+  if (placeholder) {
+    opts.unshift({ id: dieId, label: game.i18n.localize("KNUCKLES.dice.noDieLeft"), flavor: "", selected: true, disabled: true });
+  }
+  return opts;
+}
+
+/** The per-slot ownership marker: { icon, cls, title } or null (virtual). */
+function slotMark(mode, owned, usedExcl, dieId) {
+  if (mode === "owned") {
+    const free = (owned.get(dieId) ?? 0) - (usedExcl.get(dieId) ?? 0);
+    return free >= 1
+      ? { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") }
+      : { icon: "fa-triangle-exclamation", cls: "is-warn", title: game.i18n.localize("KNUCKLES.dice.noDieLeft") };
+  }
+  if (mode === "full") {
+    return (owned.get(dieId) ?? 0) > 0
+      ? { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") }
+      : { icon: "fa-plus", cls: "is-add", title: game.i18n.localize("KNUCKLES.dice.willAdd") };
+  }
+  return null;
 }
 
 /** Pre-game (and GM mid-game) window: choose a die for each of a character's six slots. */
@@ -75,33 +94,44 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     const editable = state.players.filter((p) => canControl(game.user, p));
     const theme = activeTheme();
     const lang = activeLanguage();
-    const physical = isPhysicalMode();
-    const isGM = Boolean(game.user.isGM);
+    const physical = Boolean(state.physical);
     const allIds = diceIds();
 
     const players = editable.map((p) => {
-      // Generic / token-less players have no inventory and are economy-exempt:
-      // they keep the plain full-catalog picker even in physical mode.
-      const phys = physical && Boolean(p.actorUuid);
-      const owned = phys ? ownedDieIds(fromUuidSync(p.actorUuid)) : new Set();
-      const slots = (p.dieIds ?? []).map((dieId, i) => ({
-        slot: i,
-        n: i + 1,
-        dieId,
-        owned: phys && owned.has(dieId),
-        options: slotOptions({ phys, isGM, allIds, owned, dieId, theme, lang }),
-      }));
+      const generic = !p.actorUuid && !p.tokenUuid;
+      const mode = !physical || generic ? "virtual" : p.type === "npc" ? "full" : "owned";
+      const owned = mode === "virtual" ? new Map() : ownedDieCounts(inventoryActor(p));
+      const total = [...owned.values()].reduce((a, b) => a + b, 0);
+
+      const used = new Map();
+      for (const id of p.dieIds ?? []) used.set(id, (used.get(id) ?? 0) + 1);
+
+      const slots = (p.dieIds ?? []).map((dieId, i) => {
+        const usedExcl = new Map(used);
+        usedExcl.set(dieId, (usedExcl.get(dieId) ?? 0) - 1);
+        return {
+          slot: i,
+          n: i + 1,
+          dieId,
+          mark: slotMark(mode, owned, usedExcl, dieId),
+          options: slotOptions({ mode, allIds, owned, usedExcl, dieId, theme, lang }),
+        };
+      });
+
+      const enough = total >= 6;
       return {
         id: p.id,
         name: p.name,
         ready: Boolean(p.ready),
-        phys,
-        ownsNone: phys && owned.size === 0,
+        physical: mode !== "virtual",
+        tally: mode === "owned" ? { have: Math.min(total, 6), ok: enough } : null,
+        buyHint: mode === "owned" && !enough ? game.i18n.format("KNUCKLES.dice.buyMore", { n: 6 - total }) : null,
+        stockNote: mode === "full" ? game.i18n.localize("KNUCKLES.dice.stockNote") : null,
         slots,
       };
     });
 
-    return { active: editable.length > 0, choosing: state.status === "choosing", isGM, players };
+    return { active: editable.length > 0, choosing: state.status === "choosing", isGM: Boolean(game.user.isGM), players };
   }
 
   _onRender() {
@@ -116,9 +146,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
         }).catch(reportError);
       });
     }
-    // Physical mode: refresh the ownership markers if a die enters/leaves a shown
-    // actor's inventory while the picker is open. Off in virtual mode and on close.
-    if (isPhysicalMode()) this._ensureItemHooks();
+    if (loadState()?.physical) this._ensureItemHooks();
     else this._dropItemHooks();
   }
 
@@ -131,7 +159,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!state) return;
       const aid = item.parent?.id;
       const mine = state.players.some(
-        (p) => p.actorUuid && canControl(game.user, p) && fromUuidSync(p.actorUuid)?.id === aid,
+        (p) => canControl(game.user, p) && inventoryActor(p)?.id === aid,
       );
       if (mine) refresh();
     };
@@ -197,8 +225,6 @@ export function openDicePicker() {
 export function refreshDicePicker() {
   if (!instance || !instance.rendered) return;
   const state = loadState();
-  // Once play begins the picker closes for players (the board takes over);
-  // the GM may keep it open to change dice mid-game.
   if (!state || (state.status !== "choosing" && !game.user.isGM)) {
     instance.close();
     return;

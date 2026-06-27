@@ -7,8 +7,8 @@ let instance = null;
 
 const emptyBet = () => ({ sun: 0, gold: 0, silver: 0, copper: 0 });
 const freshPlayers = () => [
-  { id: "p1", name: "", actorUuid: null, bet: emptyBet() },
-  { id: "p2", name: "", actorUuid: null, bet: emptyBet() },
+  { id: "p1", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() },
+  { id: "p2", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() },
 ];
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
 
@@ -25,6 +25,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     form: { handler: SetupApp._onSubmit, closeOnSubmit: true },
     actions: {
       addPlayer: SetupApp._onAddPlayer,
+      addTokens: SetupApp._onAddTokens,
       removePlayer: SetupApp._onRemovePlayer,
     },
   };
@@ -48,6 +49,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     for (const combo of this.element.querySelectorAll("[data-combo]")) {
       const input = combo.querySelector("input[name='name']");
       const hidden = combo.querySelector("input[name='actorUuid']");
+      const tokenHidden = combo.querySelector("input[name='tokenUuid']");
       const list = combo.querySelector(".kg-combo-list");
       const items = [...combo.querySelectorAll(".kg-combo-item")];
 
@@ -71,6 +73,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
           ev.preventDefault(); // select before the input's blur fires
           input.value = it.dataset.name;
           hidden.value = it.dataset.uuid;
+          if (tokenHidden) tokenHidden.value = ""; // a world-actor pick clears any token binding
           list.hidden = true;
         });
       }
@@ -83,6 +86,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
       id: `p${i + 1}`,
       name: b.querySelector("[name='name']")?.value?.trim() || "",
       actorUuid: b.querySelector("[name='actorUuid']")?.value || null,
+      tokenUuid: b.querySelector("[name='tokenUuid']")?.value || null,
       bet: {
         sun: toInt(b.querySelector("[name='sun']")?.value),
         gold: toInt(b.querySelector("[name='gold']")?.value),
@@ -94,7 +98,29 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static _onAddPlayer() {
     this._syncFromForm();
-    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null, bet: emptyBet() });
+    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() });
+    this.render();
+  }
+
+  /** Add a participant row per selected canvas token, bound to that token (so its
+   *  inventory is the one physical dice are read from and added to). */
+  static _onAddTokens() {
+    this._syncFromForm();
+    const tokens = canvas.tokens?.controlled ?? [];
+    if (!tokens.length) {
+      ui.notifications.warn(game.i18n.localize("KNUCKLES.warn.noTokens"));
+      return;
+    }
+    for (const t of tokens) {
+      const worldActor = t.actor?.isToken ? game.actors.get(t.document.actorId) : t.actor;
+      this.players.push({
+        id: `p${this.players.length + 1}`,
+        name: t.name,
+        actorUuid: worldActor?.uuid ?? t.actor?.uuid ?? null,
+        tokenUuid: t.document.uuid,
+        bet: emptyBet(),
+      });
+    }
     this.render();
   }
 
