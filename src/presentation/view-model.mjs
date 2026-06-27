@@ -55,7 +55,7 @@ export function buildBoardContext(state, user, ui) {
   });
 
   const selValues = state.pool
-    .filter((d) => d.state === "in-play" && ui.selection.has(d.id))
+    .filter((d) => d.state === "in-play" && d.value !== null && ui.selection.has(d.id))
     .map((d) => d.value);
   const sel = selValues.length ? scoreSelection(selValues) : { valid: false, points: 0 };
 
@@ -96,7 +96,8 @@ export function buildBoardContext(state, user, ui) {
     tie: finished && !state.winnerId,
     isBustPhase: state.phase === "bust",
     canRoll: !finished && state.phase === "await-roll" && control,
-    canKeep: state.phase === "selecting" && control && !ui.heroMode,
+    inTurn: control && !ui.heroMode && (state.phase === "await-roll" || state.phase === "selecting"),
+    heroAvail: control && !ui.heroMode && state.status === "playing" && (cur?.heroPoints ?? 0) > 0 && (state.phase === "await-roll" || state.phase === "selecting" || state.phase === "bust"),
     canKeepRoll: state.phase === "selecting" && control && sel.valid && !ui.heroMode,
     canKeepBank: state.phase === "selecting" && control && sel.valid && !ui.heroMode,
     canTakeBust: state.phase === "bust" && control,

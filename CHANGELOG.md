@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- The controls no longer jump at the roll: the "Selected: N" caption and the Roll / Keep + roll on / Keep + bank buttons (plus Use Hero Points for characters with Hero Points) are shown from the start of the turn, grayed and disabled until usable — rolling and selecting only toggle their state. Blank, unrolled dice are no longer clickable.
+
 ## 0.3.0
 
 - New-game setup: the character field is now a search box. Type a letter or part of a name to filter the world's actors live, then click to pick; a name that matches nothing still creates a token-less player. Replaces the long scrolling dropdown.
