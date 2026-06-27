@@ -10,8 +10,8 @@
 .knuckles-game .kg-scoreboard { display: flex; gap: var(--kg-gap); margin-bottom: 12px; }
 .knuckles-game .kg-pcards { display: flex; gap: var(--kg-gap); flex: 1 1 auto; min-width: 0; overflow-x: auto; }
 .knuckles-game .kg-pcard { flex: 1 0 130px; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; }
-.knuckles-game .kg-pcard.is-current { outline: 2px solid var(--kg-accent); }
-.knuckles-game .kg-pcard.is-winner { outline: 2px solid var(--kg-win); }
+.knuckles-game .kg-pcard.is-current { box-shadow: inset 0 0 0 2px var(--kg-accent); }
+.knuckles-game .kg-pcard.is-winner { box-shadow: inset 0 0 0 2px var(--kg-win); }
 .knuckles-game .kg-pname { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .knuckles-game .kg-ptotal { font-size: 22px; font-weight: 600; }
 .knuckles-game .kg-hero { margin-top: 5px; display: flex; gap: 3px; align-items: center; min-height: 12px; }

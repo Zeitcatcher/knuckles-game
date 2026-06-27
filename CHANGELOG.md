@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.7
+
+- Fix: the active player's highlight is no longer clipped by the scoreboard's horizontal scroll — it is drawn inside the card now. When the turn passes to a player who is scrolled out of view, the scoreboard auto-scrolls to bring the active card into view.
+
 ## 0.2.6
 
 - Larger tables: the dice picker's character list scrolls vertically when there are more characters than fit (the hint and the Start / End buttons stay pinned), and the board scoreboard scrolls horizontally when there are more players than fit (the Target box stays pinned). Scrollbars appear only when needed, so the window no longer runs off-screen or wraps players into extra rows.
