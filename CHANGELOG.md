@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.7
+
+- **Default loadouts and quicker setup.**
+  - **Save a default dice set per character.** In the dice picker each character now has a **Save default** button: it pins their current six dice as a default loadout stored on the character (an actor flag, so it survives reloads and Foundry restarts). New games **auto-apply** that default (in both virtual and physical mode), and a **Reset** button restores it in one click. Picking different dice for one game never changes the saved default. Only the character's owner (or the GM) can save it.
+  - **Launch with the right players already filled in.** When the GM opens a new game with tokens selected on the canvas, those tokens now **pre-fill the player rows** automatically (each bound to its token), instead of opening two empty rows. Nothing selected → the empty rows as before; to add more after the window is open, use **Add selected tokens**.
+  - **Tidier bets.** The four-coin bet row (sun / gold / silver / copper) now renders on a single compact line instead of sprawling wide, mostly-empty fields.
+
 ## 0.5.6
 
 - **Picker polish and GM gifting (physical-dice mode).**

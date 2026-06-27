@@ -333,3 +333,21 @@ describe("setDieSlot gift tracking", () => {
     expect(s.players[0].gifts[0]).toBe(false);
   });
 });
+
+describe("setLoadout (batched, e.g. reset to default)", () => {
+  const fresh = () => createGame({ players: [{ id: "a" }, { id: "b" }] });
+
+  it("sets all six slots at once and clears the gift flags", () => {
+    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
+    s = reduce(s, { type: "setLoadout", playerId: "a", dieIds: ["02", "02", "02", "02", "02", "02"] });
+    expect(s.players[0].dieIds).toEqual(["02", "02", "02", "02", "02", "02"]);
+    expect(s.players[0].gifts).toEqual([false, false, false, false, false, false]);
+  });
+
+  it("does not mutate the input state", () => {
+    const s = fresh();
+    const snapshot = structuredClone(s);
+    reduce(s, { type: "setLoadout", playerId: "a", dieIds: ["01", "02", "03", "04", "05", "06"] });
+    expect(s).toEqual(snapshot);
+  });
+});

@@ -12,6 +12,8 @@ import {
   orderIdsOwnedFirst,
   freeCopies,
   coverLoadout,
+  resolveLoadout,
+  readDefaultLoadout,
 } from "../src/foundry/dice-items.mjs";
 
 describe("dice-items identity", () => {
@@ -196,5 +198,48 @@ describe("coverLoadout (block unless GM gifted six)", () => {
     const dieIds = ["07", "07", "07", "07", "07", "07"]; // own 1, placed 6, none gifted
     const { shortBy } = coverLoadout(dieIds, [], owned);
     expect(shortBy).toBe(5); // first slot covered, other five short
+  });
+});
+
+describe("resolveLoadout (saved default → starting hand)", () => {
+  const validIds = new Set(["01", "02", "03", "07", "22"]);
+  const saved = ["07", "07", "22", "01", "02", "03"];
+
+  it("returns null with no / short saved default", () => {
+    expect(resolveLoadout(null, new Map(), { validIds })).toBe(null);
+    expect(resolveLoadout(["01", "02"], new Map(), { validIds })).toBe(null);
+  });
+
+  it("virtual mode: returns the validated default verbatim (duplicates kept)", () => {
+    expect(resolveLoadout(saved, new Map(), { physical: false, validIds })).toEqual(saved);
+  });
+
+  it("virtual mode: replaces an unknown id with 01", () => {
+    const r = resolveLoadout(["99", "02", "03", "01", "07", "22"], new Map(), { physical: false, validIds });
+    expect(r).toEqual(["01", "02", "03", "01", "07", "22"]);
+  });
+
+  it("physical mode: clamps onto the owned copies, keeping owned picks in place", () => {
+    const owned = new Map([["07", 2], ["22", 1]]);
+    const r = resolveLoadout(saved, owned, { physical: true, validIds });
+    expect(r).toHaveLength(6);
+    expect(r.slice(0, 3)).toEqual(["07", "07", "22"]); // the three owned copies are kept
+  });
+});
+
+describe("readDefaultLoadout", () => {
+  const actorWith = (flag) => ({ getFlag: () => flag });
+
+  it("reads a valid six-string array", () => {
+    const ids = ["01", "02", "03", "04", "05", "06"];
+    expect(readDefaultLoadout(actorWith(ids))).toEqual(ids);
+  });
+
+  it("rejects wrong length, non-array, or non-string entries, and a null actor", () => {
+    expect(readDefaultLoadout(actorWith(["01", "02"]))).toBe(null);
+    expect(readDefaultLoadout(actorWith("nope"))).toBe(null);
+    expect(readDefaultLoadout(actorWith([1, 2, 3, 4, 5, 6]))).toBe(null);
+    expect(readDefaultLoadout(actorWith(undefined))).toBe(null);
+    expect(readDefaultLoadout(null)).toBe(null);
   });
 });

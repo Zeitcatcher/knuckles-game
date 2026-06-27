@@ -4,7 +4,7 @@ import { dispatch, broadcastOpen } from "../net/socket.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
 import { diceIds } from "../foundry/dice-data.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
-import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, coverLoadout } from "../foundry/dice-items.mjs";
+import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, coverLoadout, readDefaultLoadout, saveDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
 import { pickerSignature } from "../core/transient-ui.mjs";
 
@@ -87,6 +87,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       ready: DicePicker._onReady,
       startPlay: DicePicker._onStartPlay,
       endGame: DicePicker._onEndGame,
+      saveDefault: DicePicker._onSaveDefault,
+      resetDefault: DicePicker._onResetDefault,
       close: DicePicker._onCloseClick,
     },
   };
@@ -109,7 +111,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       // The GM gets the full catalog for any inventory player (to stock NPCs / gift PCs);
       // a player sees only their own owned dice. Generic / no-actor is the plain catalog.
       const mode = !physical || generic ? "virtual" : (isGM || npc) ? "full" : "owned";
-      const owned = mode === "virtual" ? new Map() : ownedDieCounts(inventoryActor(p));
+      const actor = inventoryActor(p);
+      const owned = mode === "virtual" ? new Map() : ownedDieCounts(actor);
       const total = [...owned.values()].reduce((a, b) => a + b, 0);
       const gifts = Array.isArray(p.gifts) ? p.gifts : [];
 
@@ -144,6 +147,9 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
         tally: showTally ? { have: Math.min(total, 6), ok: shortBy === 0 } : null,
         buyHint: showTally && shortBy > 0 ? game.i18n.format("KNUCKLES.dice.buyMore", { n: shortBy }) : null,
         stockNote: physical && npc ? game.i18n.localize("KNUCKLES.dice.stockNote") : null,
+        // Saved default loadout (any actor-backed player, virtual or physical).
+        canSaveDefault: Boolean(actor),
+        hasDefault: Boolean(actor) && readDefaultLoadout(actor) !== null,
         slots,
       };
     });
@@ -239,6 +245,30 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       modal: true,
     });
     if (ok) dispatch({ type: "endGame" }).catch(reportError);
+  }
+
+  /** Pin the player's current six dice as their default (an actor flag; survives restarts).
+   *  Foundry enforces OWNER/GM on the flag write — the button is shown only to controllers. */
+  static async _onSaveDefault(event, target) {
+    const p = loadState()?.players.find((x) => x.id === target.dataset.playerId);
+    if (!p || !canControl(game.user, p)) return;
+    const actor = inventoryActor(p);
+    if (!actor) return;
+    await saveDefaultLoadout(actor, p.dieIds);
+    ui.notifications?.info(game.i18n.localize("KNUCKLES.dice.defaultSaved"));
+    this.render(); // flag writes don't sync game state, so refresh locally to enable Reset
+  }
+
+  /** Apply the saved default to this player's six slots in one atomic write. */
+  static async _onResetDefault(event, target) {
+    const state = loadState();
+    const p = state?.players.find((x) => x.id === target.dataset.playerId);
+    if (!p || !canControl(game.user, p)) return;
+    const actor = inventoryActor(p);
+    const saved = readDefaultLoadout(actor);
+    if (!saved) return;
+    const dieIds = resolveLoadout(saved, ownedDieCounts(actor), { physical: Boolean(state.physical), validIds: new Set(diceIds()) });
+    if (dieIds) await dispatch({ type: "setLoadout", playerId: p.id, dieIds }).catch(reportError);
   }
 
   static _onCloseClick() {

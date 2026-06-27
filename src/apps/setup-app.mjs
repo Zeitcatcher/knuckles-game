@@ -12,6 +12,20 @@ const freshPlayers = () => [
 ];
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
 
+/** A participant row bound to a canvas token: dice read from / write to THAT token's
+ *  inventory. An unlinked token resolves to its world actor for the uuid; a deleted source
+ *  actor leaves actorUuid null (still bound to the token). `index` sets the row id. */
+function rowFromToken(t, index) {
+  const worldActor = t.actor?.isToken ? game.actors.get(t.document.actorId) : t.actor;
+  return {
+    id: `p${index + 1}`,
+    name: t.name,
+    actorUuid: worldActor?.uuid ?? t.actor?.uuid ?? null,
+    tokenUuid: t.document.uuid,
+    bet: emptyBet(),
+  };
+}
+
 /** GM-only new-game window: add players, link a character, set bets and the target. */
 export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   players = freshPlayers();
@@ -111,16 +125,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ui.notifications.warn(game.i18n.localize("KNUCKLES.warn.noTokens"));
       return;
     }
-    for (const t of tokens) {
-      const worldActor = t.actor?.isToken ? game.actors.get(t.document.actorId) : t.actor;
-      this.players.push({
-        id: `p${this.players.length + 1}`,
-        name: t.name,
-        actorUuid: worldActor?.uuid ?? t.actor?.uuid ?? null,
-        tokenUuid: t.document.uuid,
-        bet: emptyBet(),
-      });
-    }
+    for (const t of tokens) this.players.push(rowFromToken(t, this.players.length));
     this.render();
   }
 
@@ -150,8 +155,11 @@ export function openSetup() {
     return null;
   }
   instance ??= new SetupApp();
-  // Always open a fresh setup — never remember the previous player selection.
-  instance.players = freshPlayers();
+  // Always open a fresh setup. If tokens are selected on the canvas, seed the roster from
+  // them (each bound to its token); otherwise two empty rows, exactly as before. Seeding
+  // happens on a fresh open only — to add more mid-setup, use "Add selected tokens".
+  const tokens = canvas.tokens?.controlled ?? [];
+  instance.players = tokens.length ? tokens.map((t, i) => rowFromToken(t, i)) : freshPlayers();
   instance.render({ force: true });
   return instance;
 }

@@ -80,6 +80,7 @@ export function reduce(state, command) {
     case "setDieValue": return applySetDieValue(s, command);
     case "setSelection": return applySetSelection(s, command);
     case "setDieSlot": return applySetDieSlot(s, command);
+    case "setLoadout": return applySetLoadout(s, command);
     case "setReady": return applySetReady(s, command);
     case "startPlay": return applyStartPlay(s);
     default: throw new Error(`unknown command: ${command.type}`);
@@ -204,6 +205,17 @@ function applySetDieSlot(s, { playerId, slot, dieId, gifted }) {
     p.dieIds[slot] = dieId ?? "01";
     if (!Array.isArray(p.gifts)) p.gifts = [false, false, false, false, false, false];
     p.gifts[slot] = Boolean(gifted);
+  }
+  return s;
+}
+
+/** Set all six of a player's slots at once (e.g. applying a saved default). Clears the
+ *  gift flags — a default is the player's own owned favourites, never a gift. */
+function applySetLoadout(s, { playerId, dieIds }) {
+  const p = s.players.find((pl) => pl.id === playerId);
+  if (p && Array.isArray(dieIds)) {
+    for (let i = 0; i < 6; i++) p.dieIds[i] = dieIds[i] ?? "01";
+    p.gifts = [false, false, false, false, false, false];
   }
   return s;
 }
