@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- Loaded-die labels: a die's name now wraps to a maximum of two lines, centered horizontally and vertically in a fixed-height field, instead of being truncated to one line. The dice are about 20% larger, and every slot is a fixed width so the spacing between dice is uniform.
+
 ## 0.3.2
 
 - The GM die-edit pencils no longer pop in after the roll: for the GM a grayed, disabled pencil sits under every die from the start of the turn and lights up once the dice are rolled, so the dice tray height stays fixed.
