@@ -30,6 +30,14 @@ export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeC
     range: { min: 0, max: 3, step: 1 },
   });
 
+  // Optional item-based dice economy. OFF (default) = today's virtual dice, verbatim.
+  // The behaviour this gates (owned-dice picker, NPC stocking) is wired in later phases.
+  reg(SETTINGS.PHYSICAL_DICE, {
+    name: "KNUCKLES.settings.physicalDice.name",
+    hint: "KNUCKLES.settings.physicalDice.hint",
+    scope: "world", config: true, type: Boolean, default: false,
+  });
+
   reg(SETTINGS.THEME, {
     name: "KNUCKLES.settings.theme.name", hint: "KNUCKLES.settings.theme.hint",
     scope: "client", config: true, type: String, default: DEFAULTS.THEME,
