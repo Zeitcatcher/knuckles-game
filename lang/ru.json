@@ -3,6 +3,7 @@
   "KNUCKLES.setup.title": "Новая игра в кости",
   "KNUCKLES.setup.players": "Игроки",
   "KNUCKLES.setup.name": "Имя",
+  "KNUCKLES.setup.searchChar": "Имя или персонаж",
   "KNUCKLES.setup.typePc": "Игрок",
   "KNUCKLES.setup.typeNpc": "NPC",
   "KNUCKLES.setup.typeGeneric": "Обычный",

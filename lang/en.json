@@ -3,6 +3,7 @@
   "KNUCKLES.setup.title": "New dice game",
   "KNUCKLES.setup.players": "Players",
   "KNUCKLES.setup.name": "Name",
+  "KNUCKLES.setup.searchChar": "Name or character",
   "KNUCKLES.setup.typePc": "Player",
   "KNUCKLES.setup.typeNpc": "NPC",
   "KNUCKLES.setup.typeGeneric": "Generic",
