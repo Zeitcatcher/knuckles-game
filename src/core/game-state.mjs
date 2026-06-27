@@ -42,6 +42,7 @@ export function createGame({ players, targetScore = 2000, physical = false } = {
     })),
     turnIndex: 0,
     turnScore: 0,
+    selection: [], // the current controller's shared keep-selection (in-play die ids), visible to all
     pool: freshPool(),
     phase: "await-roll", // await-roll | selecting | bust | finished
     round: { index: 0, acted: 0 },
@@ -75,6 +76,7 @@ export function reduce(state, command) {
     case "useHeroPoint": return applyHeroPoint(s, command);
     case "takeBust": return applyTakeBust(s);
     case "setDieValue": return applySetDieValue(s, command);
+    case "setSelection": return applySetSelection(s, command);
     case "setDieSlot": return applySetDieSlot(s, command);
     case "setReady": return applySetReady(s, command);
     case "startPlay": return applyStartPlay(s);
@@ -90,6 +92,7 @@ function applyRoll(s, { values }) {
     throw new Error("roll values must match the in-play dice count");
   }
   dice.forEach((d, i) => { d.value = values[i]; });
+  s.selection = []; // a fresh roll invalidates any prior selection
   s.phase = isBust(dice.map((d) => d.value)) ? "bust" : "selecting";
   return s;
 }
@@ -104,6 +107,7 @@ function applyKeep(s, { ids }, bank) {
   if (!ok) throw new Error("invalid keep selection");
   for (const d of keepDice) d.state = "kept";
   s.turnScore += points;
+  s.selection = []; // dice were committed; clear the shared selection
   if (bank) return bankAndEndTurn(s);
   if (inPlay(s.pool).length === 0) s.pool = freshPool(); // hot dice — refill, keep the turn score
   s.phase = "await-roll";
@@ -127,6 +131,7 @@ function applyHeroPoint(s, { rerollIds, values }) {
   const next = new Map(rerollIds.map((id, i) => [id, values[i]]));
   for (const d of s.pool) if (next.has(d.id)) d.value = next.get(d.id);
   p.heroPoints -= 1;
+  s.selection = []; // re-rolled values invalidate the selection
   s.phase = isBust(inPlay(s.pool).map((d) => d.value)) ? "bust" : "selecting";
   return s;
 }
@@ -148,7 +153,20 @@ function applySetDieValue(s, { dieId, value }) {
     throw new Error("value must be 1..6 or wild");
   }
   d.value = value;
+  s.selection = []; // a GM face override changes the running sum; clear the selection
   s.phase = isBust(inPlay(s.pool).map((die) => die.value)) ? "bust" : "selecting";
+  return s;
+}
+
+/**
+ * Set the current controller's shared keep-selection (the in-play die ids they have
+ * marked to keep). Visible to every viewer; filtered to in-play ids and de-duped, so
+ * a stale or doubled toggle can never corrupt it. Only meaningful while selecting.
+ */
+function applySetSelection(s, { ids }) {
+  if (s.phase !== "selecting") { s.selection = []; return s; }
+  const inPlayIds = new Set(inPlay(s.pool).map((d) => d.id));
+  s.selection = [...new Set(ids ?? [])].filter((id) => inPlayIds.has(id));
   return s;
 }
 
@@ -203,6 +221,7 @@ function nextActiveTurnIndex(s) {
 function startTurn(s, idx) {
   s.turnIndex = idx;
   s.turnScore = 0;
+  s.selection = []; // single chokepoint for every turn change (bank, bust, sudden-death, advance)
   s.pool = freshPool();
   s.phase = "await-roll";
   return s;

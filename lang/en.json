@@ -41,6 +41,7 @@
   "KNUCKLES.board.tie": "Tie — sudden-death round!",
   "KNUCKLES.board.bust": "Bust — no scoring dice. Spend a Hero Point to re-roll, or take the bust.",
   "KNUCKLES.board.selected": "Selected",
+  "KNUCKLES.board.selectedBy": "Selected by {name}",
   "KNUCKLES.board.heroHint": "Pick dice from the last roll to re-roll (one up to all six), then confirm to spend 1 Hero Point.",
   "KNUCKLES.board.noHero": "no Hero Points",
   "KNUCKLES.board.die": "Die",

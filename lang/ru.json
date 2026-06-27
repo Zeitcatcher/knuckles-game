@@ -41,6 +41,7 @@
   "KNUCKLES.board.tie": "Ничья — раунд внезапной смерти!",
   "KNUCKLES.board.bust": "Обнуление — нет очковых костей. Потратьте Hero Point на переброс или примите обнуление.",
   "KNUCKLES.board.selected": "Выбрано",
+  "KNUCKLES.board.selectedBy": "Выбирает {name}",
   "KNUCKLES.board.heroHint": "Выберите кости из последнего броска для переброса (от одной до всех шести), затем подтвердите, чтобы потратить 1 Hero Point.",
   "KNUCKLES.board.noHero": "нет Hero Points",
   "KNUCKLES.board.die": "Кость",

@@ -185,3 +185,72 @@ describe("computePool", () => {
     expect(computePool(players)).toEqual({ sun: 10, gold: 20, silver: 15, copper: 227 });
   });
 });
+
+describe("setSelection (shared keep-selection)", () => {
+  const scoring = (g) => reduce(g, { type: "roll", values: [1, 5, 2, 3, 4, 6] }); // selecting; all in play
+
+  it("createGame seeds an empty selection", () => {
+    expect(createGame({ players: [{ id: "a" }, { id: "b" }] }).selection).toEqual([]);
+  });
+
+  it("sets the in-play ids during the selecting phase", () => {
+    const s = reduce(scoring(two()), { type: "setSelection", ids: [1, 2] });
+    expect(s.selection).toEqual([1, 2]);
+  });
+
+  it("filters out ids that are not in play", () => {
+    let s = scoring(two());
+    s = reduce(s, { type: "keepAndRoll", ids: [1] }); // die #1 kept, back to await-roll
+    s = reduce(s, { type: "roll", values: [5, 2, 3, 4, 6] }); // 5 in-play dice (#2..#6), selecting
+    s = reduce(s, { type: "setSelection", ids: [1, 2] }); // #1 is kept, not in play
+    expect(s.selection).toEqual([2]);
+  });
+
+  it("de-dupes repeated ids", () => {
+    const s = reduce(scoring(two()), { type: "setSelection", ids: [3, 3, 4, 4, 4] });
+    expect(s.selection).toEqual([3, 4]);
+  });
+
+  it("yields an empty selection when set outside the selecting phase", () => {
+    const s = reduce(two(), { type: "setSelection", ids: [1, 2] }); // await-roll
+    expect(s.selection).toEqual([]);
+  });
+
+  it("is cleared on keepAndRoll", () => {
+    let s = reduce(scoring(two()), { type: "setSelection", ids: [1, 2] });
+    s = reduce(s, { type: "keepAndRoll", ids: [1, 2] });
+    expect(s.selection).toEqual([]);
+  });
+
+  it("is cleared on keepAndBank (turn change)", () => {
+    let s = reduce(scoring(two()), { type: "setSelection", ids: [1, 2] });
+    s = reduce(s, { type: "keepAndBank", ids: [1, 2] });
+    expect(s.selection).toEqual([]);
+  });
+
+  it("is cleared on useHeroPoint", () => {
+    let s = scoring(start(createGame({ players: [{ id: "a", heroPoints: 1 }, { id: "b" }] })));
+    s = reduce(s, { type: "setSelection", ids: [1, 2] });
+    s = reduce(s, { type: "useHeroPoint", rerollIds: [3], values: [5] });
+    expect(s.selection).toEqual([]);
+  });
+
+  it("is cleared on a GM setDieValue override", () => {
+    let s = reduce(scoring(two()), { type: "setSelection", ids: [1, 2] });
+    s = reduce(s, { type: "setDieValue", dieId: 3, value: 1 });
+    expect(s.selection).toEqual([]);
+  });
+
+  it("is cleared on a fresh roll (defensive)", () => {
+    const s = two();
+    s.selection = [1, 2, 3]; // simulate a leftover
+    expect(reduce(s, { type: "roll", values: [1, 5, 2, 3, 4, 6] }).selection).toEqual([]);
+  });
+
+  it("does not mutate the input state", () => {
+    const s = scoring(two());
+    const snapshot = structuredClone(s);
+    reduce(s, { type: "setSelection", ids: [1, 2] });
+    expect(s).toEqual(snapshot);
+  });
+});
