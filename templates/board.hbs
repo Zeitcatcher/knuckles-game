@@ -23,6 +23,7 @@
   {{/if}}
 
   <div class="kg-scoreboard">
+    <div class="kg-pcards">
     {{#each players}}
       <div class="kg-pcard{{#if isCurrent}} is-current{{/if}}{{#if isWinner}} is-winner{{/if}}">
         <div class="kg-pname">{{name}}{{#if isCurrent}} · {{localize "KNUCKLES.board.turn"}}{{/if}}</div>
@@ -32,6 +33,7 @@
         </div>
       </div>
     {{/each}}
+    </div>
     <div class="kg-target">
       <div class="kg-muted">{{localize "KNUCKLES.board.target"}}</div>
       <div class="kg-tval">{{targetScore}}</div>

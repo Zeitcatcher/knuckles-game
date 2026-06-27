@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6
+
+- Larger tables: the dice picker's character list scrolls vertically when there are more characters than fit (the hint and the Start / End buttons stay pinned), and the board scoreboard scrolls horizontally when there are more players than fit (the Target box stays pinned). Scrollbars appear only when needed, so the window no longer runs off-screen or wraps players into extra rows.
+
 ## 0.2.5
 
 - Board: the action log moved below all the buttons and is now a full-game "History" panel that scrolls inside the fixed window instead of resizing it. Previously it sat above the GM buttons and showed only the last three turns.
