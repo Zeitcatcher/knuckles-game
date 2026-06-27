@@ -96,6 +96,7 @@ export function buildBoardContext(state, user, ui) {
     tie: finished && !state.winnerId,
     isBustPhase: state.phase === "bust",
     canRoll: !finished && state.phase === "await-roll" && control,
+    canKeep: state.phase === "selecting" && control && !ui.heroMode,
     canKeepRoll: state.phase === "selecting" && control && sel.valid && !ui.heroMode,
     canKeepBank: state.phase === "selecting" && control && sel.valid && !ui.heroMode,
     canTakeBust: state.phase === "bust" && control,
