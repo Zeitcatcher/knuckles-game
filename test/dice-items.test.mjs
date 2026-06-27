@@ -9,6 +9,9 @@ import {
   prefillLoadout,
   clampLoadout,
   ownedSlotChoices,
+  orderIdsOwnedFirst,
+  freeCopies,
+  coverLoadout,
 } from "../src/foundry/dice-items.mjs";
 
 describe("dice-items identity", () => {
@@ -123,5 +126,75 @@ describe("ownedSlotChoices", () => {
   it("flags a placeholder when the slot holds an unowned die", () => {
     const { placeholder } = ownedSlotChoices(allIds, new Map([["07", 2]]), new Map(), "01");
     expect(placeholder).toBe(true);
+  });
+});
+
+describe("orderIdsOwnedFirst", () => {
+  const allIds = ["01", "02", "03", "04", "05"];
+
+  it("floats owned dice to the top, each group keeping catalog order", () => {
+    const owned = new Map([["03", 2], ["05", 1]]);
+    expect(orderIdsOwnedFirst(allIds, owned)).toEqual(["03", "05", "01", "02", "04"]);
+  });
+
+  it("is a no-op when nothing is owned", () => {
+    expect(orderIdsOwnedFirst(allIds, new Map())).toEqual(allIds);
+  });
+
+  it("returns all owned in order when everything is owned", () => {
+    const owned = new Map(allIds.map((id) => [id, 1]));
+    expect(orderIdsOwnedFirst(allIds, owned)).toEqual(allIds);
+  });
+});
+
+describe("freeCopies (free/total label)", () => {
+  it("subtracts copies used across ALL slots from the owned count", () => {
+    const owned = new Map([["07", 6]]);
+    expect(freeCopies(owned, new Map([["07", 6]]), "07")).toBe(0); // 6 owned, all 6 placed → 0
+    expect(freeCopies(owned, new Map([["07", 4]]), "07")).toBe(2);
+  });
+
+  it("never goes negative (over-placed)", () => {
+    expect(freeCopies(new Map([["07", 1]]), new Map([["07", 3]]), "07")).toBe(0);
+  });
+
+  it("is 0 for an unowned die", () => {
+    expect(freeCopies(new Map(), new Map([["07", 1]]), "07")).toBe(0);
+  });
+});
+
+describe("coverLoadout (block unless GM gifted six)", () => {
+  const six = (a) => a; // a 6-length dieIds array
+
+  it("covers fully-owned loadouts with nothing to grant and no shortfall", () => {
+    const owned = new Map([["01", 6]]);
+    const { toGrant, shortBy } = coverLoadout(six(["01", "01", "01", "01", "01", "01"]), [], owned);
+    expect(shortBy).toBe(0);
+    expect(toGrant.size).toBe(0);
+  });
+
+  it("grants the GM-gifted slots and reports no shortfall", () => {
+    const owned = new Map([["01", 4]]);
+    const gifts = [false, false, false, false, true, true]; // GM gifted slots 5 and 6
+    const dieIds = ["01", "01", "01", "01", "02", "22"];
+    const { toGrant, shortBy } = coverLoadout(dieIds, gifts, owned);
+    expect(shortBy).toBe(0);
+    expect(toGrant.get("02")).toBe(1);
+    expect(toGrant.get("22")).toBe(1);
+  });
+
+  it("reports a shortfall for unowned, un-gifted slots (the prefill pad case)", () => {
+    const owned = new Map([["07", 4]]);
+    const dieIds = ["07", "07", "07", "07", "01", "01"]; // two unowned "01" pads, not gifted
+    const { toGrant, shortBy } = coverLoadout(dieIds, [false, false, false, false, false, false], owned);
+    expect(shortBy).toBe(2);
+    expect(toGrant.size).toBe(0);
+  });
+
+  it("counts duplicate copies correctly (owned 1, placed twice)", () => {
+    const owned = new Map([["07", 1]]);
+    const dieIds = ["07", "07", "07", "07", "07", "07"]; // own 1, placed 6, none gifted
+    const { shortBy } = coverLoadout(dieIds, [], owned);
+    expect(shortBy).toBe(5); // first slot covered, other five short
   });
 });

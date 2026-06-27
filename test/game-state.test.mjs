@@ -312,3 +312,24 @@ describe("gmReroll (GM free re-roll, no Hero Point)", () => {
     expect(s).toEqual(snapshot);
   });
 });
+
+describe("setDieSlot gift tracking", () => {
+  const fresh = () => createGame({ players: [{ id: "a" }, { id: "b" }] });
+
+  it("createGame seeds gifts to all-false", () => {
+    expect(fresh().players[0].gifts).toEqual([false, false, false, false, false, false]);
+  });
+
+  it("records the die id and the gift flag for a GM gift", () => {
+    const s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
+    expect(s.players[0].dieIds[0]).toBe("07");
+    expect(s.players[0].gifts[0]).toBe(true);
+  });
+
+  it("clears the gift flag when the slot is re-picked without a gift", () => {
+    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 0, dieId: "03", gifted: false });
+    expect(s.players[0].dieIds[0]).toBe("03");
+    expect(s.players[0].gifts[0]).toBe(false);
+  });
+});

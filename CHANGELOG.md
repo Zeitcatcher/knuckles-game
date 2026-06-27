@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.6
+
+- **Picker polish and GM gifting (physical-dice mode).**
+  - **Owned dice come first, with a clearer count.** In the dice picker, the dice a character owns now float to the top of each dropdown, and the label shows **free / total** copies instead of a bare count — e.g. a die owned ×1 and already placed reads `0/1`, a spare reads `1/1`, six identical dice all placed read `0/6`. The redundant check-mark prefix is gone (the count and the slot marker already convey ownership).
+  - **The GM can gift dice a player doesn't own.** When the GM picks a die a player doesn't have, it's marked as a gift and **added to that player's inventory when the game starts** (the same way a token-NPC is stocked). A player still can't equip a die they don't own. The owned tally and "buy more" hint stay visible to the GM, so the economy is still readable at a glance, and the per-slot marker now distinguishes a gift ("will be added") from a slot that can't be fielded.
+  - **Start rule:** a player must have all six slots covered by dice they own **or** dice the GM gifted; otherwise the start is blocked with a notice. Nothing is auto-minted — only what the GM deliberately gifted is granted.
+
 ## 0.5.5
 
 - **GM tools and a combos reference.**

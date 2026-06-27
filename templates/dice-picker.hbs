@@ -17,7 +17,7 @@
           <label class="kg-dslot">
             <span class="kg-idx">#{{n}}</span>
             <select data-die-slot data-player-id="{{../id}}" data-slot="{{slot}}">
-              {{#each options}}<option value="{{id}}"{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}} title="{{flavor}}">{{#if check}}✓ {{/if}}{{label}}</option>{{/each}}
+              {{#each options}}<option value="{{id}}"{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}} title="{{flavor}}">{{label}}</option>{{/each}}
             </select>
             {{#if mark}}<span class="kg-owned {{mark.cls}}" title="{{mark.title}}"><i class="fa-solid {{mark.icon}}" aria-hidden="true"></i></span>{{/if}}
           </label>

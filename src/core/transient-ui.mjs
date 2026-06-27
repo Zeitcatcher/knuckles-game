@@ -27,6 +27,7 @@ export function pickerSignature(state, editableIds) {
       ready: Boolean(p.ready),
       type: p.type ?? "generic",
       dieIds: [...(p.dieIds ?? [])],
+      gifts: [...(p.gifts ?? [])], // GM gifts change a slot's marker even if the die id is unchanged
     }))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return JSON.stringify({ status: state.status ?? "", rows });
