@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.8
+
+- The active player is now shown by the card highlight alone; the "your turn" label next to the name was removed.
+
 ## 0.2.7
 
 - Fix: the active player's highlight is no longer clipped by the scoreboard's horizontal scroll — it is drawn inside the card now. When the turn passes to a player who is scrolled out of view, the scoreboard auto-scrolls to bring the active card into view.
