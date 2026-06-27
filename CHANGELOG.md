@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.8
+
+- **QA hardening across the 0.5.x batch.**
+  - **Security:** GM-only actions (start/end game, start play, GM re-roll, GM value override, GM dice gifting) are now authorised only on the GM's own client. socketlib forwards the sender id verbatim, so it was forgeable — a player could craft a socket message claiming a GM's id. GM authority now requires a *local* dispatch, which only a GM's client makes, so impersonation is no longer possible.
+  - **Selection no longer flashes stale:** committing a keep / bank / bust / re-roll within the brief sync window can no longer resurrect the previous dice highlight on the next roll.
+  - **Picker markers match the start:** the per-slot ownership marker now uses the exact same greedy allocation the launch check uses, so a slot can never show a green "owned" check (or a red "no die") that disagrees with what actually happens when the game starts. A GM die change made mid-game no longer leaves a stray "gift" flag.
+  - **Small fixes:** the Hero-Point re-roll now filters its die ids like the GM re-roll does; the combos toggle exposes `aria-expanded`; the wild row renders from the shared combos data; added render-gate and coverage unit tests.
+
 ## 0.5.7
 
 - **Default loadouts and quicker setup.**

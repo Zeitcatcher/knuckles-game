@@ -199,6 +199,16 @@ describe("coverLoadout (block unless GM gifted six)", () => {
     const { shortBy } = coverLoadout(dieIds, [], owned);
     expect(shortBy).toBe(5); // first slot covered, other five short
   });
+
+  it("reports greedy per-slot coverage that matches the launch outcome", () => {
+    const owned = new Map([["07", 2]]);
+    const gifts = [false, false, false, false, true, false];
+    const dieIds = ["07", "07", "07", "02", "02", "07"]; // slot4 "02" is a gift
+    const { slotCovered, shortBy, toGrant } = coverLoadout(dieIds, gifts, owned);
+    expect(slotCovered).toEqual([true, true, false, false, false, false]); // first two 07 covered
+    expect(shortBy).toBe(3); // slot2(07), slot3(02 not gifted), slot5(07)
+    expect(toGrant.get("02")).toBe(1); // slot4 gifted
+  });
 });
 
 describe("resolveLoadout (saved default → starting hand)", () => {

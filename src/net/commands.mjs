@@ -31,9 +31,15 @@ async function syncCurrentHeroPoints(state) {
 }
 
 /** @param {object} intent  @param {string} userId - the requesting user's id */
-export async function dispatchAsGM(intent, userId) {
+export async function dispatchAsGM(intent, userId, local = false) {
+  // GM authority requires a LOCAL (direct) call. A socket-forwarded userId is forgeable,
+  // but a socket call is never local — and a GM's own client dispatches directly — so a
+  // player cannot impersonate the GM. `requester` is still resolved for ownership checks.
+  const requester = game.users.get(userId);
+  const trustedGM = local && Boolean(requester?.isGM);
+
   if (intent.type === "startGame") {
-    if (!game.users.get(userId)?.isGM) throw new Error("only the GM can start a game");
+    if (!trustedGM) throw new Error("only the GM can start a game");
     const state = await buildNewGame(intent.config);
     await syncCurrentHeroPoints(state);
     await saveState(state);
@@ -43,12 +49,10 @@ export async function dispatchAsGM(intent, userId) {
   let state = loadState();
   if (!state) throw new Error("no active game");
 
-  const requester = game.users.get(userId);
-
   // End the game with no winner and no payout: clear the state so the launch
   // icon reverts to New Game setup. Allowed in any phase, GM only.
   if (intent.type === "endGame") {
-    if (!requester?.isGM) throw new Error("only the GM can end the game");
+    if (!trustedGM) throw new Error("only the GM can end the game");
     await saveState(null);
     return null;
   }
@@ -58,20 +62,20 @@ export async function dispatchAsGM(intent, userId) {
     const target = state.players.find((p) => p.id === intent.playerId);
     if (!target) throw new Error("unknown player");
     const allowed =
-      (state.status === "choosing" && canAct(requester, target)) ||
-      (state.status === "playing" && Boolean(requester?.isGM));
+      (state.status === "choosing" && canAct(requester, target, trustedGM)) ||
+      (state.status === "playing" && trustedGM);
     if (!allowed) throw new Error("you cannot change that die now");
     // Physical mode: a NON-GM may only equip a die the character owns (the picker greys
     // out the rest; this is the authoritative defence against a hand-crafted intent).
     // The GM MAY over-assign an unowned die to a PC — that is a GIFT, granted at launch.
     // NPCs may over-assign freely (auto-stocked); generic / token-less players are exempt.
+    // The gift flag is a pre-launch (choosing) concept only — a mid-game GM change of a
+    // die never grants an item (dice are frozen at launch).
     let gifted = false;
     if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid)) {
       const owns = (ownedDieCounts(inventoryActor(target)).get(intent.dieId) ?? 0) >= 1;
-      if (!owns) {
-        if (!requester?.isGM) throw new Error("you do not own that die");
-        gifted = true;
-      }
+      if (!owns && !trustedGM) throw new Error("you do not own that die");
+      gifted = !owns && trustedGM && state.status === "choosing";
     }
     state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId, gifted });
     await saveState(state);
@@ -83,13 +87,13 @@ export async function dispatchAsGM(intent, userId) {
     const target = state.players.find((p) => p.id === intent.playerId);
     if (!target) throw new Error("unknown player");
     const allowed =
-      (state.status === "choosing" && canAct(requester, target)) ||
-      (state.status === "playing" && Boolean(requester?.isGM));
+      (state.status === "choosing" && canAct(requester, target, trustedGM)) ||
+      (state.status === "playing" && trustedGM);
     if (!allowed) throw new Error("you cannot change those dice now");
     let ids = Array.isArray(intent.dieIds) ? intent.dieIds.slice(0, 6).map(String) : [];
     while (ids.length < 6) ids.push("01");
     // A non-GM may only field dice they own: re-seat the incoming hand onto owned copies.
-    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid) && !requester?.isGM) {
+    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid) && !trustedGM) {
       ids = clampLoadout(ids, ownedDieCounts(inventoryActor(target)));
     }
     state = reduce(state, { type: "setLoadout", playerId: intent.playerId, dieIds: ids });
@@ -99,13 +103,13 @@ export async function dispatchAsGM(intent, userId) {
   if (intent.type === "setReady") {
     if (state.status !== "choosing") throw new Error("the game has already started");
     const target = state.players.find((p) => p.id === intent.playerId);
-    if (!target || !canAct(requester, target)) throw new Error("not your player");
+    if (!target || !canAct(requester, target, trustedGM)) throw new Error("not your player");
     state = reduce(state, { type: "setReady", playerId: intent.playerId, ready: intent.ready });
     await saveState(state);
     return state;
   }
   if (intent.type === "startPlay") {
-    if (!requester?.isGM) throw new Error("only the GM can start play");
+    if (!trustedGM) throw new Error("only the GM can start play");
     if (state.status !== "choosing") throw new Error("the game has already started");
     if (state.physical) {
       if (launching) throw new Error("a game is already starting");
@@ -128,7 +132,7 @@ export async function dispatchAsGM(intent, userId) {
 
   // GM value override: replace an in-play die's face (no log, no payout, GM only).
   if (intent.type === "setDieValue") {
-    if (!requester?.isGM) throw new Error("only the GM can change a die");
+    if (!trustedGM) throw new Error("only the GM can change a die");
     if (state.status !== "playing") throw new Error("no active game");
     state = reduce(state, { type: "setDieValue", dieId: intent.dieId, value: intent.value });
     await saveState(state);
@@ -139,7 +143,7 @@ export async function dispatchAsGM(intent, userId) {
   // spent. GM-only, and handled here (before the turn gate) so it works on any turn.
   // specsForIds uses the current player's loaded-dice weights — the in-play pool is theirs.
   if (intent.type === "gmReroll") {
-    if (!requester?.isGM) throw new Error("only the GM can re-roll for free");
+    if (!trustedGM) throw new Error("only the GM can re-roll for free");
     if (state.status !== "playing") throw new Error("no active game");
     if (state.phase !== "selecting" && state.phase !== "bust") throw new Error("nothing to re-roll");
     const ids = (intent.rerollIds ?? []).filter((id) => Number.isInteger(id));
@@ -157,14 +161,14 @@ export async function dispatchAsGM(intent, userId) {
   // trigger the post-switch Hero-Point actor re-read. Gated to the current controller.
   if (intent.type === "setSelection") {
     if (state.status !== "playing") return state;
-    if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
+    if (!canAct(requester, currentPlayer(state), trustedGM)) throw new Error("it is not your turn");
     state = reduce(state, { type: "setSelection", ids: intent.ids });
     await saveState(state);
     return state;
   }
 
   if (state.status !== "playing") throw new Error("no active game");
-  if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
+  if (!canAct(requester, currentPlayer(state), trustedGM)) throw new Error("it is not your turn");
 
   switch (intent.type) {
     case "roll": {
@@ -209,9 +213,11 @@ export async function dispatchAsGM(intent, userId) {
       } else if ((player.heroPoints ?? 0) < 1) {
         throw new Error("no Hero Points to spend");
       }
-      const { values, roll } = await rollValues(intent.rerollIds.length, specsForIds(state, intent.rerollIds));
+      const rerollIds = (intent.rerollIds ?? []).filter((id) => Number.isInteger(id));
+      if (!rerollIds.length) throw new Error("select at least one die to re-roll");
+      const { values, roll } = await rollValues(rerollIds.length, specsForIds(state, rerollIds));
       await animateRoll(roll);
-      state = reduce(state, { type: "useHeroPoint", rerollIds: intent.rerollIds, values });
+      state = reduce(state, { type: "useHeroPoint", rerollIds, values });
       pushLog(state, "KNUCKLES.log.hero", { name });
       break;
     }
@@ -236,9 +242,9 @@ export async function dispatchAsGM(intent, userId) {
   return state;
 }
 
-function canAct(user, player) {
+function canAct(user, player, trustedGM = false) {
+  if (trustedGM) return true; // GM authority comes from a LOCAL call, never user.isGM (forgeable)
   if (!user) return false;
-  if (user.isGM) return true;
   // Resolve the actor the player would own — the token's actor if bound to one,
   // else the world actor. Generic / NPC players resolve to none → GM-driven.
   return inventoryActor(player)?.testUserPermission?.(user, "OWNER") ?? false;

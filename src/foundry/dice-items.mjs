@@ -162,14 +162,16 @@ export function freeCopies(ownedCounts, usedAll, id) {
 export function coverLoadout(dieIds, gifts, ownedCounts) {
   const remaining = new Map(ownedCounts);
   const toGrant = new Map();
+  const slotCovered = []; // per slot: true when backed by an owned copy (greedy, first-come)
   let shortBy = 0;
   (dieIds ?? []).forEach((dieId, i) => {
     const have = remaining.get(dieId) ?? 0;
-    if (have > 0) { remaining.set(dieId, have - 1); return; } // covered by an owned copy
+    if (have > 0) { remaining.set(dieId, have - 1); slotCovered[i] = true; return; } // covered by an owned copy
+    slotCovered[i] = false;
     if (gifts?.[i]) toGrant.set(dieId, (toGrant.get(dieId) ?? 0) + 1); // a GM gift → grant it
     else shortBy += 1; // unowned and not gifted → blocks
   });
-  return { toGrant, shortBy };
+  return { toGrant, shortBy, slotCovered };
 }
 
 const DEFAULT_LOADOUT_FLAG = "defaultLoadout";

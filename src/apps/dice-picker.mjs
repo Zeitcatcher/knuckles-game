@@ -63,12 +63,12 @@ function slotOptions({ mode, allIds, owned, usedAll, usedExcl, dieId, gifted, th
 }
 
 /** The per-slot ownership marker: { icon, cls, title } or null (virtual).
- *  check = a free owned copy; plus = will be added on start (NPC stock or a GM gift to a
- *  PC); warn = unowned and not gifted, so this slot can't be fielded (blocks the start). */
-function slotMark({ mode, owned, usedExcl, dieId, gifted, npc }) {
+ *  `covered` comes from coverLoadout's GREEDY per-slot allocation, so the marker matches
+ *  the launch outcome exactly. check = covered by an owned copy; plus = will be added on
+ *  start (NPC stock or a GM gift to a PC); warn = unowned and not gifted → blocks. */
+function slotMark({ mode, covered, gifted, npc }) {
   if (mode === "virtual") return null;
-  const hasFreeCopy = (owned.get(dieId) ?? 0) - (usedExcl.get(dieId) ?? 0) >= 1;
-  if (hasFreeCopy) return { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") };
+  if (covered) return { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") };
   if (npc || gifted) return { icon: "fa-plus", cls: "is-add", title: game.i18n.localize("KNUCKLES.dice.willAdd") };
   return { icon: "fa-triangle-exclamation", cls: "is-warn", title: game.i18n.localize("KNUCKLES.dice.noDieLeft") };
 }
@@ -119,22 +119,23 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       const used = new Map();
       for (const id of p.dieIds ?? []) used.set(id, (used.get(id) ?? 0) + 1);
 
+      // Greedy per-slot coverage — the SAME allocation launch enforcement uses — so the
+      // slot marker can never disagree with what happens on start. shortBy = the blockers.
+      const { shortBy, slotCovered } = coverLoadout(p.dieIds, gifts, owned);
+
       const slots = (p.dieIds ?? []).map((dieId, i) => {
         const usedExcl = new Map(used);
         usedExcl.set(dieId, (usedExcl.get(dieId) ?? 0) - 1);
         const gifted = Boolean(gifts[i]);
+        const covered = mode !== "virtual" && Boolean(slotCovered[i]);
         return {
           slot: i,
           n: i + 1,
           dieId,
-          mark: slotMark({ mode, owned, usedExcl, dieId, gifted, npc }),
+          mark: slotMark({ mode, covered, gifted, npc }),
           options: slotOptions({ mode, allIds, owned, usedAll: used, usedExcl, dieId, gifted, theme, lang }),
         };
       });
-
-      // "Short by" = slots covered by neither an owned copy nor a GM gift (the launch
-      // blockers). Drives the tally's ok-state and the buy/gift hint, live.
-      const { shortBy } = coverLoadout(p.dieIds, gifts, owned);
 
       // The owned tally / buy-hint stay visible to the GM too (the economy readout), for
       // inventory-backed PCs; NPCs auto-stock, so they show the stock note instead.

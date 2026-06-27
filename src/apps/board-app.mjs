@@ -33,6 +33,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     // One stable debounce per instance: a drag across several dice collapses into a
     // single setSelection write (and one cross-client re-render), not one per toggle.
     this._syncSelection = foundry.utils.debounce(() => {
+      if (!this._selectionDirty) return; // a committed action cancelled the pending sync
       this._selectionDirty = false;
       dispatch({ type: "setSelection", ids: [...this.selection] }).catch(reportError);
     }, 150);
@@ -127,6 +128,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static _onRoll() {
+    this._selectionDirty = false; // cancel any pending keep-selection sync before the phase changes
     dispatch({ type: "roll" }).catch(reportError);
   }
 
@@ -148,14 +150,19 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static _onKeepRoll() {
-    dispatch({ type: "keepAndRoll", ids: [...this.selection] }).catch(reportError);
+    const ids = [...this.selection];
+    this._selectionDirty = false; // committed; cancel the pending sync so it can't reappear next roll
+    dispatch({ type: "keepAndRoll", ids }).catch(reportError);
   }
 
   static _onKeepBank() {
-    dispatch({ type: "keepAndBank", ids: [...this.selection] }).catch(reportError);
+    const ids = [...this.selection];
+    this._selectionDirty = false;
+    dispatch({ type: "keepAndBank", ids }).catch(reportError);
   }
 
   static _onHeroOpen() {
+    this._selectionDirty = false; // leaving keep-selection for the reroll picker
     this.heroMode = true;
     this.rerollSelection.clear();
     this.render();
@@ -174,6 +181,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static _onGmRerollOpen() {
+    this._selectionDirty = false; // leaving keep-selection for the GM reroll picker
     this.gmRerollMode = true;
     this.rerollSelection.clear();
     this.render();
@@ -202,6 +210,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static _onTakeBust() {
+    this._selectionDirty = false;
     dispatch({ type: "takeBust" }).catch(reportError);
   }
 
