@@ -38,6 +38,10 @@ export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeC
     scope: "world", config: true, type: Boolean, default: false,
   });
 
+  // The scoring-combinations reference panel's open/collapsed state. Per-user, toggled
+  // from the board (not the settings menu), so config:false. Default open.
+  reg(SETTINGS.COMBOS_OPEN, { scope: "client", config: false, type: Boolean, default: true });
+
   reg(SETTINGS.THEME, {
     name: "KNUCKLES.settings.theme.name", hint: "KNUCKLES.settings.theme.hint",
     scope: "client", config: true, type: String, default: DEFAULTS.THEME,

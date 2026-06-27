@@ -112,6 +112,23 @@ export async function dispatchAsGM(intent, userId) {
     return state;
   }
 
+  // GM free re-roll: re-roll the active player's chosen in-play dice with NO Hero Point
+  // spent. GM-only, and handled here (before the turn gate) so it works on any turn.
+  // specsForIds uses the current player's loaded-dice weights — the in-play pool is theirs.
+  if (intent.type === "gmReroll") {
+    if (!requester?.isGM) throw new Error("only the GM can re-roll for free");
+    if (state.status !== "playing") throw new Error("no active game");
+    if (state.phase !== "selecting" && state.phase !== "bust") throw new Error("nothing to re-roll");
+    const ids = (intent.rerollIds ?? []).filter((id) => Number.isInteger(id));
+    if (!ids.length) throw new Error("select at least one die to re-roll");
+    const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
+    await animateRoll(roll);
+    state = reduce(state, { type: "gmReroll", rerollIds: ids, values });
+    pushLog(state, "KNUCKLES.log.gmReroll", { name: currentPlayer(state).name });
+    await saveState(state);
+    return state;
+  }
+
   // Shared keep-selection: the current controller (or GM) highlights dice for everyone.
   // Handled here — before the play-turn switch — so a high-frequency toggle doesn't
   // trigger the post-switch Hero-Point actor re-read. Gated to the current controller.

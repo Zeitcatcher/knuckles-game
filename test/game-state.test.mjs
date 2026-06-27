@@ -254,3 +254,61 @@ describe("setSelection (shared keep-selection)", () => {
     expect(s).toEqual(snapshot);
   });
 });
+
+describe("gmReroll (GM free re-roll, no Hero Point)", () => {
+  const scoring = (g) => reduce(g, { type: "roll", values: [1, 5, 2, 3, 4, 6] }); // selecting
+  const bust = (g) => reduce(g, { type: "roll", values: [2, 3, 4, 6, 2, 3] }); // bust
+
+  it("re-rolls without spending a Hero Point", () => {
+    let s = scoring(start(createGame({ players: [{ id: "a", heroPoints: 1 }, { id: "b" }] })));
+    s = reduce(s, { type: "gmReroll", rerollIds: [3], values: [5] });
+    expect(s.players[0].heroPoints).toBe(1); // unchanged
+    expect(s.pool.find((d) => d.id === 3).value).toBe(5);
+    expect(s.phase).toBe("selecting");
+  });
+
+  it("turns a bust into a score", () => {
+    let s = bust(two());
+    expect(s.phase).toBe("bust");
+    s = reduce(s, { type: "gmReroll", rerollIds: [1, 2, 3, 4, 5, 6], values: [1, 5, 2, 3, 4, 6] });
+    expect(s.phase).toBe("selecting");
+  });
+
+  it("turns a scoring throw into a bust", () => {
+    let s = scoring(two()); // #1=1, #2=5 score
+    s = reduce(s, { type: "gmReroll", rerollIds: [1, 2], values: [2, 3] }); // pool → 2,3,2,3,4,6
+    expect(s.phase).toBe("bust");
+  });
+
+  it("rejects an id that is not in play", () => {
+    let s = scoring(two());
+    s = reduce(s, { type: "keepAndRoll", ids: [1] }); // #1 kept, await-roll
+    s = reduce(s, { type: "roll", values: [5, 2, 3, 4, 6] }); // selecting; #1 kept
+    expect(() => reduce(s, { type: "gmReroll", rerollIds: [1], values: [3] })).toThrow();
+  });
+
+  it("rejects an empty selection", () => {
+    expect(() => reduce(scoring(two()), { type: "gmReroll", rerollIds: [], values: [] })).toThrow();
+  });
+
+  it("rejects a values/ids length mismatch", () => {
+    expect(() => reduce(scoring(two()), { type: "gmReroll", rerollIds: [1], values: [1, 2] })).toThrow();
+  });
+
+  it("rejects a re-roll outside the selecting / bust phase", () => {
+    expect(() => reduce(two(), { type: "gmReroll", rerollIds: [1], values: [1] })).toThrow();
+  });
+
+  it("clears the shared selection", () => {
+    let s = reduce(scoring(two()), { type: "setSelection", ids: [1, 2] });
+    s = reduce(s, { type: "gmReroll", rerollIds: [3], values: [5] });
+    expect(s.selection).toEqual([]);
+  });
+
+  it("does not mutate the input state", () => {
+    const s = scoring(two());
+    const snapshot = structuredClone(s);
+    reduce(s, { type: "gmReroll", rerollIds: [3], values: [5] });
+    expect(s).toEqual(snapshot);
+  });
+});

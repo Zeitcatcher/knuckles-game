@@ -8,6 +8,11 @@
 
 import { WILD } from "./dice-model.mjs";
 
+/** A single scoring 1 is worth 100, a single scoring 5 is worth 50. Single source of
+ *  truth for both the solver and the combos reference panel. */
+export const SINGLE_ONE = 100;
+export const SINGLE_FIVE = 50;
+
 /** Base value of a three-of-a-kind for a face. */
 export function baseTriple(face) {
   return face === 1 ? 1000 : face * 100;
@@ -19,7 +24,7 @@ export function nOfAKindValue(face, count) {
   return baseTriple(face) * 2 ** (count - 3);
 }
 
-const STRAIGHTS = [
+export const STRAIGHTS = [
   { faces: [1, 2, 3, 4, 5, 6], points: 1500 },
   { faces: [2, 3, 4, 5, 6], points: 750 },
   { faces: [1, 2, 3, 4, 5], points: 500 },
@@ -62,8 +67,8 @@ function* combos(c, allowDiscard) {
       yield { value: nOfAKindValue(f, k), take: t };
     }
   }
-  if (c[1] >= 1) { const t = blank(); t[1] = 1; yield { value: 100, take: t }; }
-  if (c[5] >= 1) { const t = blank(); t[5] = 1; yield { value: 50, take: t }; }
+  if (c[1] >= 1) { const t = blank(); t[1] = 1; yield { value: SINGLE_ONE, take: t }; }
+  if (c[5] >= 1) { const t = blank(); t[5] = 1; yield { value: SINGLE_FIVE, take: t }; }
   if (allowDiscard) {
     for (let f = 1; f <= 6; f++) if (c[f] >= 1) { const t = blank(); t[f] = 1; yield { value: 0, take: t }; }
   }
@@ -87,8 +92,8 @@ function solve(c, allowDiscard, memo) {
 
 // ---- wild-aware solver (each combo must include >= 1 real die) ------------------
 function* wildCombos(c, wilds, allowDiscard) {
-  if (c[1] >= 1) { const t = blank(); t[1] = 1; yield { value: 100, real: t, wild: 0 }; }
-  if (c[5] >= 1) { const t = blank(); t[5] = 1; yield { value: 50, real: t, wild: 0 }; }
+  if (c[1] >= 1) { const t = blank(); t[1] = 1; yield { value: SINGLE_ONE, real: t, wild: 0 }; }
+  if (c[5] >= 1) { const t = blank(); t[5] = 1; yield { value: SINGLE_FIVE, real: t, wild: 0 }; }
   for (let f = 1; f <= 6; f++) {
     for (let k = 3; k <= 6; k++) {
       const minReal = Math.max(1, k - wilds);

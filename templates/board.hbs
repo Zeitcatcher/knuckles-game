@@ -2,6 +2,7 @@
 {{#unless active}}
   <p class="kg-empty">{{localize "KNUCKLES.board.noGame"}}</p>
 {{else}}
+  <div class="kg-main">
 
   {{#if hasPot}}
     <div class="kg-pot">
@@ -81,6 +82,7 @@
 
     <p class="kg-hint">
       {{#if heroMode}}{{localize "KNUCKLES.board.heroHint"}}
+      {{else if gmRerollMode}}{{localize "KNUCKLES.board.gmRerollHint"}}
       {{else if showSelectionSum}}{{#if selectionByOther}}{{localize "KNUCKLES.board.selectedBy" name=selectionOwnerName}}: {{selectionPoints}}{{else}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}{{/if}}
     </p>
 
@@ -88,6 +90,9 @@
       {{#if heroMode}}
         <button type="button" class="kg-hero-btn" data-action="heroConfirm"{{#unless canHeroConfirm}} disabled{{/unless}}><i class="fa-solid fa-rotate" aria-hidden="true"></i> {{localize "KNUCKLES.board.confirmReroll"}} ({{rerollCount}})</button>
         <button type="button" data-action="heroCancel">{{localize "KNUCKLES.board.cancel"}}</button>
+      {{else if gmRerollMode}}
+        <button type="button" class="kg-gm-reroll" data-action="gmRerollConfirm"{{#unless canGmRerollConfirm}} disabled{{/unless}}><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.board.confirmReroll"}} ({{rerollCount}})</button>
+        <button type="button" data-action="gmRerollCancel">{{localize "KNUCKLES.board.cancel"}}</button>
       {{else}}
         {{#if inTurn}}
           <button type="button" data-action="roll"{{#unless canRoll}} disabled{{/unless}}><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.board.roll"}}</button>
@@ -96,6 +101,7 @@
         {{/if}}
         {{#if canTakeBust}}<button type="button" data-action="takeBust">{{localize "KNUCKLES.board.takeBust"}}</button>{{/if}}
         {{#if heroAvail}}<button type="button" class="kg-hero-btn" data-action="heroOpen"{{#unless canHeroOpen}} disabled{{/unless}}><i class="fa-solid fa-star" aria-hidden="true"></i> {{localize "KNUCKLES.board.useHero"}} ({{heroPoints}})</button>{{/if}}
+        {{#if canGmReroll}}<button type="button" class="kg-gm-reroll" data-action="gmRerollOpen"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.board.gmReroll"}}</button>{{/if}}
       {{/if}}
     </div>
   {{/unless}}
@@ -113,6 +119,36 @@
         {{#each log}}<div class="kg-log-line">{{this}}</div>{{/each}}
       </div>
     </div>
+  {{/if}}
+  </div>
+
+  {{#if combosOpen}}
+    <aside class="kg-combos">
+      <div class="kg-combos-head">
+        <span>{{localize "KNUCKLES.combos.title"}}</span>
+        <button type="button" class="kg-combos-x" data-action="toggleCombos" aria-label="{{localize 'KNUCKLES.combos.hide'}}"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <div class="kg-combos-body">
+        {{#each combos.singles}}
+          <div class="kg-combo-row"><span class="kg-combo-dice">{{#each dice}}<span class="kg-die kg-cmini{{#if isWild}} is-wild{{/if}}" data-value="{{value}}">{{#if isWild}}<i class="fa-solid fa-wand-sparkles kg-wild" aria-hidden="true"></i>{{else}}<span class="kg-die-num">{{value}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span>{{/if}}</span>{{/each}}</span><span class="kg-combo-pts">{{points}}</span></div>
+        {{/each}}
+        <div class="kg-combo-sec">{{localize "KNUCKLES.combos.triples"}}</div>
+        <div class="kg-combo-grid">
+          {{#each combos.triples}}
+            <div class="kg-combo-row"><span class="kg-combo-dice">{{#each dice}}<span class="kg-die kg-cmini" data-value="{{value}}"><span class="kg-die-num">{{value}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span></span>{{/each}}</span><span class="kg-combo-pts">{{points}}</span></div>
+          {{/each}}
+        </div>
+        <div class="kg-combo-note">{{localize "KNUCKLES.combos.nkind"}}: {{#each combos.nKind.mults}}{{n}}=×{{x}}{{#unless @last}} · {{/unless}}{{/each}}</div>
+        <div class="kg-combo-sec">{{localize "KNUCKLES.combos.straights"}}</div>
+        {{#each combos.straights}}
+          <div class="kg-combo-row"><span class="kg-combo-dice">{{#each dice}}<span class="kg-die kg-cmini" data-value="{{value}}"><span class="kg-die-num">{{value}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span></span>{{/each}}</span><span class="kg-combo-pts">{{points}}</span></div>
+        {{/each}}
+        <div class="kg-combo-sec">{{localize "KNUCKLES.combos.wild"}}</div>
+        <div class="kg-combo-row"><span class="kg-combo-dice"><span class="kg-die kg-cmini is-wild"><i class="fa-solid fa-wand-sparkles kg-wild" aria-hidden="true"></i></span></span><span class="kg-combo-txt">{{localize "KNUCKLES.combos.wildText"}}</span></div>
+      </div>
+    </aside>
+  {{else}}
+    <button type="button" class="kg-combos-tab" data-action="toggleCombos" aria-label="{{localize 'KNUCKLES.combos.show'}}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i><span class="kg-combos-tab-l">{{localize "KNUCKLES.combos.title"}}</span></button>
   {{/if}}
 {{/unless}}
 </div>

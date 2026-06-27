@@ -74,6 +74,7 @@ export function reduce(state, command) {
     case "keepAndRoll": return applyKeep(s, command, false);
     case "keepAndBank": return applyKeep(s, command, true);
     case "useHeroPoint": return applyHeroPoint(s, command);
+    case "gmReroll": return applyGmReroll(s, command);
     case "takeBust": return applyTakeBust(s);
     case "setDieValue": return applySetDieValue(s, command);
     case "setSelection": return applySetSelection(s, command);
@@ -132,6 +133,30 @@ function applyHeroPoint(s, { rerollIds, values }) {
   for (const d of s.pool) if (next.has(d.id)) d.value = next.get(d.id);
   p.heroPoints -= 1;
   s.selection = []; // re-rolled values invalidate the selection
+  s.phase = isBust(inPlay(s.pool).map((d) => d.value)) ? "bust" : "selecting";
+  return s;
+}
+
+/**
+ * GM free re-roll: like a Hero-Point re-roll but spends NO Hero Point. Re-rolls the
+ * given in-play dice (of the active player's pool), re-evaluates bust, and clears the
+ * shared selection. GM-only — the command handler enforces that.
+ */
+function applyGmReroll(s, { rerollIds, values }) {
+  if (s.phase !== "selecting" && s.phase !== "bust") {
+    throw new Error("dice can only be re-rolled right after a roll");
+  }
+  if (!rerollIds || rerollIds.length === 0) throw new Error("select at least one die to re-roll");
+  const inPlayIds = new Set(inPlay(s.pool).map((d) => d.id));
+  if (!rerollIds.every((id) => inPlayIds.has(id))) {
+    throw new Error("you can only re-roll dice that are in play");
+  }
+  if (!Array.isArray(values) || values.length !== rerollIds.length) {
+    throw new Error("re-roll values must match the selection");
+  }
+  const next = new Map(rerollIds.map((id, i) => [id, values[i]]));
+  for (const d of s.pool) if (next.has(d.id)) d.value = next.get(d.id);
+  s.selection = [];
   s.phase = isBust(inPlay(s.pool).map((d) => d.value)) ? "bust" : "selecting";
   return s;
 }
