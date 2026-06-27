@@ -18,7 +18,11 @@ export function setupSocket() {
     return;
   }
   socket = socketlib.registerModule(MODULE_ID);
-  socket.register(SOCKET.DISPATCH, dispatchAsGM);
+  // socketlib forwards the caller's args verbatim and does NOT inject the authenticated
+  // sender, so the passed userId is forgeable. We therefore mark every SOCKET-originated
+  // dispatch as NOT local: GM authority requires a LOCAL (direct) call, which only a GM's
+  // own client makes — a player can never reach the local path. (See dispatch() below.)
+  socket.register(SOCKET.DISPATCH, (intent, userId) => dispatchAsGM(intent, userId, false));
   socket.register(SOCKET.OPEN, openForState);
 }
 
@@ -27,7 +31,7 @@ export function setupSocket() {
  * The resulting state write propagates to all clients via the setting onChange.
  */
 export async function dispatch(intent) {
-  if (game.user.isGM) return dispatchAsGM(intent, game.user.id);
+  if (game.user.isGM) return dispatchAsGM(intent, game.user.id, true); // local GM call → GM-authoritative
   if (!socket) throw new Error("socketlib not ready");
   return socket.executeAsGM(SOCKET.DISPATCH, intent, game.user.id);
 }
