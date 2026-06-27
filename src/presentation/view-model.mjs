@@ -36,6 +36,7 @@ export function buildBoardContext(state, user, ui) {
   const dice = state.pool.map((d) => {
     const dieId = cur?.dieIds?.[d.id - 1] ?? "fair";
     const named = reveal && dieId !== "fair";
+    const showEdit = Boolean(user.isGM) && d.state === "in-play";
     const canEdit = canEditValues && d.state === "in-play";
     return {
       id: d.id,
@@ -49,6 +50,7 @@ export function buildBoardContext(state, user, ui) {
       label: named ? getDie(dieId).label : `#${d.id}`,
       named,
       flavor: named ? getDie(dieId).flavor : "",
+      showEdit,
       canEdit,
       editing: canEdit && ui.editDieId === d.id,
     };
