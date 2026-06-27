@@ -7,13 +7,19 @@
   {{#each players}}
     <div class="kg-dchar">
       <div class="kg-pname">{{name}}{{#if ready}} <i class="fa-solid fa-check" aria-hidden="true" style="color:var(--kg-win)"></i>{{/if}}</div>
+      {{#if ownsNone}}<div class="kg-buyhint"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> {{localize "KNUCKLES.dice.buyHint"}}</div>{{/if}}
       <div class="kg-dslots">
         {{#each slots}}
           <label class="kg-dslot">
             <span class="kg-idx">#{{n}}</span>
             <select data-die-slot data-player-id="{{../id}}" data-slot="{{slot}}">
-              {{#each ../../catalog}}<option value="{{id}}"{{#if (kgEq id ../dieId)}} selected{{/if}} title="{{flavor}}">{{label}}</option>{{/each}}
+              {{#each options}}<option value="{{id}}"{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}} title="{{flavor}}">{{#if check}}✓ {{/if}}{{label}}</option>{{/each}}
             </select>
+            {{#if ../phys}}
+              <span class="kg-owned{{#if owned}} is-owned{{/if}}" title="{{#if owned}}{{localize 'KNUCKLES.dice.inInv'}}{{else}}{{localize 'KNUCKLES.dice.notInInv'}}{{/if}}">
+                <i class="fa-solid {{#if owned}}fa-check{{else}}fa-minus{{/if}}" aria-hidden="true"></i>
+              </span>
+            {{/if}}
           </label>
         {{/each}}
       </div>
