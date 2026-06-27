@@ -71,7 +71,7 @@ export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeC
     onChange: () => onThemeChanged?.(),
   });
   reg(SETTINGS.LANGUAGE, {
-    scope: "client", config: false, type: String, default: "",
+    scope: "world", config: false, type: String, default: "",
     onChange: () => onThemeChanged?.(),
   });
 
@@ -81,6 +81,6 @@ export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeC
     hint: "KNUCKLES.themeLang.menuHint",
     icon: "fa-solid fa-language",
     type: ThemeLanguageConfig,
-    restricted: false,
+    restricted: true,
   });
 }

@@ -90,10 +90,10 @@
   "KNUCKLES.skins.numerals": "Цифры",
   "KNUCKLES.themeLang.menuName": "Тема и язык",
   "KNUCKLES.themeLang.menuLabel": "Настроить тему и язык",
-  "KNUCKLES.themeLang.menuHint": "Выберите тему костей (ГМ, общая) и свой язык для названий и описаний костей.",
+  "KNUCKLES.themeLang.menuHint": "Тема и язык костей для всего стола (только ГМ).",
   "KNUCKLES.themeLang.theme": "Тема (названия костей)",
-  "KNUCKLES.themeLang.language": "Мой язык",
-  "KNUCKLES.themeLang.hint": "ГМ задаёт тему для всех; каждый игрок выбирает свой язык из этой темы. Меняются только названия и описания костей.",
+  "KNUCKLES.themeLang.language": "Язык",
+  "KNUCKLES.themeLang.hint": "Тема и язык применяются ко всему столу. Меняются только названия и описания костей.",
   "KNUCKLES.themeLang.save": "Сохранить",
 
   "KNUCKLES.warn.needTwo": "Для игры нужно минимум два игрока.",

@@ -3,7 +3,7 @@
   "_key": "!items!kgdie05000000000",
   "name": "Nethys's Duality",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The All-Seeing Eye favors the lowest and the highest, and little between.</p>"

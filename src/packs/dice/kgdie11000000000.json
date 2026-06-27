@@ -3,7 +3,7 @@
   "_key": "!items!kgdie11000000000",
   "name": "Cayden's Barstool Bones",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Drunken Hero's dice: a one, a two, a five, and one more round.</p>"

@@ -9,6 +9,7 @@
  * as a fallback (both verified durable through a pf2e buy/sell round-trip).
  */
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
+import { dieName, dieDesc, activeTheme, activeLanguage } from "./themes.mjs";
 
 const SLUG_RE = /^knuckles-die-(\d{2})$/;
 const PACK_ID = `${MODULE_ID}.dice`;
@@ -150,9 +151,56 @@ async function diceSources() {
   return packCache;
 }
 
-/** Drop the cached pack sources (e.g. after a Rebuild). */
+/** Drop the cached pack sources. */
 export function clearDiceSourceCache() {
   packCache = null;
+}
+
+/** The themed name + description (HTML) for a die id, in the active theme + language. */
+function themedNameDesc(id) {
+  return {
+    name: dieName(activeTheme(), activeLanguage(), id),
+    desc: `<p>${dieDesc(activeTheme(), activeLanguage(), id)}</p>`,
+  };
+}
+
+/** Re-stamp one die item's name/description to the active theme + language (if it differs). GM-side. */
+export async function stampDie(item) {
+  const id = dieIdOf(item);
+  if (!id) return;
+  const { name, desc } = themedNameDesc(id);
+  if (item.name === name && (item.system?.description?.value ?? "") === desc) return;
+  await item.update({ name, "system.description.value": desc });
+}
+
+/** Re-stamp every knuckles die on one actor (one batched update). Returns the updated count. */
+async function stampActorDice(actor) {
+  const equipment = actor?.itemTypes?.equipment ?? actor?.items?.filter?.((i) => i.type === "equipment") ?? [];
+  const updates = [];
+  for (const it of equipment) {
+    const id = dieIdOf(it);
+    if (!id) continue;
+    const { name, desc } = themedNameDesc(id);
+    if (it.name !== name || (it.system?.description?.value ?? "") !== desc) {
+      updates.push({ _id: it.id, name, "system.description.value": desc });
+    }
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
+  return updates.length;
+}
+
+/** Re-stamp every die in the world (world actors + unlinked scene tokens) to the active
+ *  theme + language. GM-side; runs after a theme/language change. */
+export async function restampWorldDice() {
+  let n = 0;
+  for (const actor of game.actors ?? []) n += await stampActorDice(actor);
+  for (const scene of game.scenes ?? []) {
+    for (const token of scene.tokens ?? []) {
+      if (token.actorLink || !token.actor) continue; // linked tokens are covered via the world actor
+      n += await stampActorDice(token.actor);
+    }
+  }
+  return n;
 }
 
 /**
@@ -180,6 +228,10 @@ export async function grantDice(actor, missing) {
     delete data._id;
     delete data._key;
     foundry.utils.setProperty(data, "system.quantity", copies);
+    // born already named in the active theme + language (avoids a follow-up stamp)
+    const { name, desc } = themedNameDesc(id);
+    data.name = name;
+    foundry.utils.setProperty(data, "system.description.value", desc);
     creates.push(data);
   }
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });

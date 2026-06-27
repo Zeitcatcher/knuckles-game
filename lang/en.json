@@ -90,10 +90,10 @@
   "KNUCKLES.skins.numerals": "Numerals",
   "KNUCKLES.themeLang.menuName": "Theme & language",
   "KNUCKLES.themeLang.menuLabel": "Configure theme & language",
-  "KNUCKLES.themeLang.menuHint": "Choose the dice theme (GM, shared) and your own language for the dice names and descriptions.",
+  "KNUCKLES.themeLang.menuHint": "Set the dice theme and language for the whole table (GM only).",
   "KNUCKLES.themeLang.theme": "Theme (dice names)",
-  "KNUCKLES.themeLang.language": "My language",
-  "KNUCKLES.themeLang.hint": "The GM sets the theme for everyone; each player picks their own language from that theme. Only dice names and descriptions change.",
+  "KNUCKLES.themeLang.language": "Language",
+  "KNUCKLES.themeLang.hint": "The theme and language apply to the whole table. Only dice names and descriptions change.",
   "KNUCKLES.themeLang.save": "Save",
 
   "KNUCKLES.warn.needTwo": "A game needs at least two players.",

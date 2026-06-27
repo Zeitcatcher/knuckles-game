@@ -3,7 +3,7 @@
   "_key": "!items!kgdie23000000000",
   "name": "Irori's Theorem",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Master's perfect figures - two, three, four - and not one of them pays.</p>"

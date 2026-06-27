@@ -3,7 +3,7 @@
   "_key": "!items!kgdie14000000000",
   "name": "Brigh's Misfire",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>A clumsy counterweight pulls toward the empty two; only the one ever redeems it.</p>"

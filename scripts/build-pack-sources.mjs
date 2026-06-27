@@ -14,7 +14,7 @@
  * Names/descriptions are the neutral English snapshot for the SHOP SHEET only; the
  * Knuckles UI always resolves per-viewer names from the theme files at runtime.
  */
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,7 +26,15 @@ const flavor = read("themes/pathfinder/English.json");
 const macroJs = readFileSync(resolve(ROOT, "tools/testdice-macro/testdice-macro.js"), "utf8");
 
 const MODULE_ID = "knuckles-game";
-const PLACEHOLDER_IMG = "icons/dice/d6black.svg"; // Phase 4 replaces with assets/dice/<id>.webp
+const DEFAULT_IMG = `modules/${MODULE_ID}/assets/dice/default.webp`;
+
+/** Per-die art if present (assets/dice/<id>.webp|png), else the shared default. */
+function imgFor(id) {
+  for (const ext of ["webp", "png"]) {
+    if (existsSync(resolve(ROOT, `assets/dice/${id}.${ext}`))) return `modules/${MODULE_ID}/assets/dice/${id}.${ext}`;
+  }
+  return DEFAULT_IMG;
+}
 
 /** Stable 16-char Foundry id from a short prefix. */
 const makeId = (s) => s.replace(/[^A-Za-z0-9]/g, "").padEnd(16, "0").slice(0, 16);
@@ -53,7 +61,7 @@ function diceItem(die) {
     _key: `!items!${_id}`,
     name: f.name,
     type: "equipment",
-    img: PLACEHOLDER_IMG,
+    img: imgFor(id),
     system: {
       description: { value: `<p>${f.desc}</p>` },
       rules: [],
@@ -85,7 +93,7 @@ function testMacro() {
     _key: `!macros!${_id}`,
     name: "Knuckles — Test Dice",
     type: "script",
-    img: PLACEHOLDER_IMG,
+    img: DEFAULT_IMG,
     scope: "global",
     command: macroJs,
     flags: {},

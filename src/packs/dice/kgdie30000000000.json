@@ -3,7 +3,7 @@
   "_key": "!items!kgdie30000000000",
   "name": "Lantern King's Green Jest",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The same jest in green - drawn ever to the worthless two.</p>"

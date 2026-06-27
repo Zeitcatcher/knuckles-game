@@ -3,7 +3,7 @@
   "_key": "!items!kgdie18000000000",
   "name": "Shelyn's Brush",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Eternal Rose paints the five brightest, with the one and six in the margins.</p>"

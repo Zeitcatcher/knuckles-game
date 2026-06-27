@@ -3,7 +3,7 @@
   "_key": "!items!kgdie06000000000",
   "name": "Desna's Lucky Star",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Song of the Spheres lands the one or the five - the faces that always pay.</p>"

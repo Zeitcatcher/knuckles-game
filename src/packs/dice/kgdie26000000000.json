@@ -3,7 +3,7 @@
   "_key": "!items!kgdie26000000000",
   "name": "Angradd's War-Die",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Third of the forge-kin; the six its war-cry, the one unknown to it.</p>"

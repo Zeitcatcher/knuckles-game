@@ -2,3 +2,8 @@
 
 # Compiled LevelDB compendium packs are binary — never normalize line endings.
 packs/** binary
+
+# Image assets are binary.
+assets/** binary
+*.png binary
+*.webp binary

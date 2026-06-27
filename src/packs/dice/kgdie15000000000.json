@@ -3,7 +3,7 @@
   "_key": "!items!kgdie15000000000",
   "name": "Norgorber's Quiet Edge",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The cautious cheat: the one and the five, taken without a whisper.</p>"

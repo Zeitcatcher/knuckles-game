@@ -3,7 +3,7 @@
   "_key": "!items!kgdie32000000000",
   "name": "Lantern King's Cruel Jest",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Cruelest of the Eldest's pranks - the scoreless two, time after time.</p>"

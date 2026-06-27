@@ -3,7 +3,7 @@
   "_key": "!items!kgdie21000000000",
   "name": "Urgathoa's Feast",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Pallid Princess's greasy bone slips to the six, yet the odd faces still cling.</p>"

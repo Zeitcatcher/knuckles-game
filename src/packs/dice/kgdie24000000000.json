@@ -3,7 +3,7 @@
   "_key": "!items!kgdie24000000000",
   "name": "Torag's Foundation Stone",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Father of Creation lays the six like a cornerstone; the one he forgot.</p>"

@@ -3,7 +3,7 @@
   "_key": "!items!kgdie36000000000",
   "name": "Varisian Wanderer's Die",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>A wanderer's bone of threes and twos - many leagues travelled, no coin earned.</p>"

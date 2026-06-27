@@ -3,7 +3,7 @@
   "_key": "!items!kgdie12000000000",
   "name": "Besmara's Pearl",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Pirate Queen's pearl gleams on the one, the five, and the six.</p>"
