@@ -81,7 +81,7 @@
 
     <p class="kg-hint">
       {{#if heroMode}}{{localize "KNUCKLES.board.heroHint"}}
-      {{else if selectionValid}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}
+      {{else if canKeep}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}
     </p>
 
     <div class="kg-controls">
@@ -90,8 +90,10 @@
         <button type="button" class="kg-hero-btn" data-action="heroConfirm"{{#unless canHeroConfirm}} disabled{{/unless}}><i class="fa-solid fa-rotate" aria-hidden="true"></i> {{localize "KNUCKLES.board.confirmReroll"}} ({{rerollCount}})</button>
         <button type="button" data-action="heroCancel">{{localize "KNUCKLES.board.cancel"}}</button>
       {{else}}
-        {{#if canKeepRoll}}<button type="button" class="primary" data-action="keepRoll">{{localize "KNUCKLES.board.keepRoll"}}</button>{{/if}}
-        {{#if canKeepBank}}<button type="button" data-action="keepBank">{{localize "KNUCKLES.board.keepBank"}}</button>{{/if}}
+        {{#if canKeep}}
+          <button type="button" class="primary" data-action="keepRoll"{{#unless canKeepRoll}} disabled{{/unless}}>{{localize "KNUCKLES.board.keepRoll"}}</button>
+          <button type="button" data-action="keepBank"{{#unless canKeepBank}} disabled{{/unless}}>{{localize "KNUCKLES.board.keepBank"}}</button>
+        {{/if}}
         {{#if canTakeBust}}<button type="button" data-action="takeBust">{{localize "KNUCKLES.board.takeBust"}}</button>{{/if}}
         {{#if canHeroOpen}}<button type="button" class="kg-hero-btn" data-action="heroOpen"><i class="fa-solid fa-star" aria-hidden="true"></i> {{localize "KNUCKLES.board.useHero"}} ({{heroPoints}})</button>{{/if}}
       {{/if}}

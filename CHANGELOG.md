@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9
+
+- Selecting dice no longer shifts the board: during the selecting phase the "Selected: N" caption (0 when nothing is kept) and the Keep + roll on / Keep + bank buttons are always shown, with the buttons grayed and disabled until the selection scores.
+
 ## 0.2.8
 
 - The active player is now shown by the card highlight alone; the "your turn" label next to the name was removed.
