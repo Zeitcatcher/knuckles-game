@@ -6,9 +6,13 @@
   "description": "Knuckles Game — a Farkle-style dice game module for Foundry VTT (Pathfinder 2e).",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:pack-sources": "node scripts/build-pack-sources.mjs",
+    "build:packs": "node scripts/build-packs.mjs",
+    "build": "npm run build:pack-sources && npm run build:packs"
   },
   "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^3.0.3",
     "vitest": "^2.1.8"
   }
 }

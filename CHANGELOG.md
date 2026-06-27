@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Physical dice, part 1 — the foundation for an **optional** item-based dice economy. It is **off by default**, so the existing virtual game is unchanged. Adds a **Knuckles Dice** compendium of all 37 dice as real Pathfinder 2e `equipment` items — each with a price, a `knuckles-game.dieId` flag, and a stable `knuckles-die-NN` slug — priced from 5 cp (junk/trap dice) up to 850 gp (the strongest loaded die). Adds the **Physical dice (item economy)** world setting (default off) that will switch the game between virtual dice and inventory-owned dice in upcoming updates. Adds a **Knuckles Tools** compendium with a *Test Dice* GM macro for inspecting and granting dice. The dice catalog gains an agnostic copper `price` per die (schemaVersion 2). New build scripts compile the committed source documents into the packs (`npm run build`).
+
 ## 0.4.0
 
 - Dice themes and per-player language. Mechanics are now separated from flavor: a shared catalog (`data/dice-catalog.json`) holds the weights/joker, while each theme supplies die names + descriptions per language. In Foundry's settings ("Theme & language"), the GM picks the shared theme; every user (GM and players) picks their own language from that theme's languages — so each player sees the dice in their own language. Ships with two themes: Pathfinder 2e (public default — en/fr/de/es/uk) and The Shards (ru/uk). Only names and descriptions change; the board's look is unchanged. Third-party themes can register at runtime via `KnucklesGame.registerTheme(...)`.

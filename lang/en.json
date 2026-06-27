@@ -62,6 +62,8 @@
   "KNUCKLES.settings.defaultTarget.hint": "The score new games are played to by default. Can be changed per game.",
   "KNUCKLES.settings.npcHeroPool.name": "Hero Points for unlinked players",
   "KNUCKLES.settings.npcHeroPool.hint": "Hero Points granted to NPC / generic players that have no linked character. 0 disables Hero Points for them.",
+  "KNUCKLES.settings.physicalDice.name": "Physical dice (item economy)",
+  "KNUCKLES.settings.physicalDice.hint": "Off (default): the game uses virtual dice exactly as before. On: dice become real, buyable inventory items that a character must own to play them, using the bundled Knuckles Dice compendium. Two separate approaches — pick the one that fits your table.",
   "KNUCKLES.settings.theme.name": "Board theme",
   "KNUCKLES.settings.theme.hint": "Visual theme for the game board.",
   "KNUCKLES.settings.dieSkin.name": "Dice style",

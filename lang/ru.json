@@ -62,6 +62,8 @@
   "KNUCKLES.settings.defaultTarget.hint": "Счёт, до которого по умолчанию идёт игра. Можно менять для каждой игры.",
   "KNUCKLES.settings.npcHeroPool.name": "Hero Points для игроков без персонажа",
   "KNUCKLES.settings.npcHeroPool.hint": "Сколько Hero Points получают NPC / обычные игроки без привязанного персонажа. 0 — отключить.",
+  "KNUCKLES.settings.physicalDice.name": "Физические кости (экономика предметов)",
+  "KNUCKLES.settings.physicalDice.hint": "Выключено (по умолчанию): игра использует виртуальные кости как раньше. Включено: кости становятся реальными предметами инвентаря, которые можно покупать и которыми нужно владеть, чтобы играть (из встроенного компендиума Knuckles Dice). Два разных подхода — выберите подходящий вашему столу.",
   "KNUCKLES.settings.theme.name": "Тема доски",
   "KNUCKLES.settings.theme.hint": "Визуальная тема игровой доски.",
   "KNUCKLES.settings.dieSkin.name": "Стиль костей",

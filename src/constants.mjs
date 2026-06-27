@@ -14,6 +14,7 @@ export const SETTINGS = Object.freeze({
   COLOR_DIE: "colorDie",
   CONTENT_THEME: "contentTheme",
   LANGUAGE: "language",
+  PHYSICAL_DICE: "physicalDice",
 });
 
 export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN: "open" });

@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Compiled LevelDB compendium packs are binary — never normalize line endings.
+packs/** binary

@@ -5,3 +5,9 @@ coverage/
 .DS_Store
 .vscode/
 *.zip
+
+# Commit the compiled LevelDB compendium packs so they ship in the release
+# archive, but keep the runtime lock out and don't let the *.log rule above
+# drop the packs' own log files.
+!packs/**/*.log
+packs/**/LOCK
