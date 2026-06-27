@@ -3,7 +3,7 @@
   "_key": "!items!kgdie03000000000",
   "name": "Erastil's Humble Lot",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Old Deadeye gives the one freely, withholds the five entirely, and buries the six.</p>"

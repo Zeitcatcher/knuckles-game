@@ -3,7 +3,7 @@
   "_key": "!items!kgdie22000000000",
   "name": "Asmodeus's Pact",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Prince of Darkness's face completes any pact, yet alone it honors nothing.</p>"

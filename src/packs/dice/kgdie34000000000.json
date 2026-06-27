@@ -3,7 +3,7 @@
   "_key": "!items!kgdie34000000000",
   "name": "Fortune's Fool",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>It swears the two is certain luck; yet the two is empty as a beggar's purse.</p>"

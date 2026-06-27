@@ -3,7 +3,7 @@
   "_key": "!items!kgdie29000000000",
   "name": "Lantern King's Blue Jest",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Eldest paints a merry blue two that mocks the eye and pays nothing.</p>"

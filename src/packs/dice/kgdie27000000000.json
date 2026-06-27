@@ -3,7 +3,7 @@
   "_key": "!items!kgdie27000000000",
   "name": "Razmir's Crown",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Living God's die rings royal - four, three, two - and pays a pauper's sum.</p>"

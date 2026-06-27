@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Physical dice, part 4. A real dice **icon** (one shared `.webp` for all dice for now; drop `assets/dice/<id>.webp` later for per-die art and it's picked up automatically). **Localization is simplified**: the dice **theme and language are now both GM-set world settings** that apply to the whole table — the per-player language picker is gone. And the dice items' **shop-sheet name/description are kept in the table's theme + language automatically**: a die is named correctly the moment it's granted or bought, and changing the theme or language re-stamps every die in the world. No manual rebuild step. (The board/picker already localized live; this brings the pf2e inventory/shop sheet in line.)
+
 ## 0.5.2
 
 - Physical dice, part 3 — the write side, with **copy-based** ownership (still off by default). Each of the six slots now consumes one physical die, so **you need six dice to play**; the picker shows how many copies of each die you own (`×N`), greys a die out once all its copies are placed, and shows an "N of 6" tally with a "buy more dice" prompt when you're short. When a game starts: a token-NPC is **auto-granted the missing copies** of whatever the GM picked (written to that token's own inventory), a PC short of six dice **blocks the start** with a notice, and a PC whose dice changed mid-choosing is re-seated onto a legal hand. New games **pre-fill** each player's slots from the dice they own. New-game setup gains an **Add selected tokens** button that turns the tokens you've selected on the canvas into participants bound to that specific token (shown by a `token` badge) — so unlinked NPCs get their dice in the right inventory. A GM-side guard prevents a double-click on Start from double-granting. Generic/token-less players and the virtual game are unchanged.

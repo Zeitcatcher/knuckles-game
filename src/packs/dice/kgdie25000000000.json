@@ -3,7 +3,7 @@
   "_key": "!items!kgdie25000000000",
   "name": "Folgrit's Hearthstone",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Hearth-sister to the forge-stone - the same steadfast, solitary six.</p>"

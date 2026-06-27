@@ -3,7 +3,7 @@
   "_key": "!items!kgdie17000000000",
   "name": "Pharasma's Three Doors",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Lady of Graves opens the third door most, the first and second at times.</p>"

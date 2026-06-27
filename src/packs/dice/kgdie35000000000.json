@@ -3,7 +3,7 @@
   "_key": "!items!kgdie35000000000",
   "name": "Ghlaunder's Grime",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Filth-caked by the Gossamer King, yet the five glints through - with a clinging two.</p>"

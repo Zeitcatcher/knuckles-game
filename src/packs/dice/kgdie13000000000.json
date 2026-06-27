@@ -3,7 +3,7 @@
   "_key": "!items!kgdie13000000000",
   "name": "Sczarni Sharper's Die",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>A Varisian sharper's bone - chiefly the one, gilded now and then with five or six.</p>"

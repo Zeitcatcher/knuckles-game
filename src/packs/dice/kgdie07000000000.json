@@ -3,7 +3,7 @@
   "_key": "!items!kgdie07000000000",
   "name": "Calistria's Three Stings",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>Three stings from the wasp-queen: one, three, five - never an even mercy.</p>"

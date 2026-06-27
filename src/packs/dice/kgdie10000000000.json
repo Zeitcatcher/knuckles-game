@@ -3,7 +3,7 @@
   "_key": "!items!kgdie10000000000",
   "name": "Lamashtu's Crooked Bone",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Mother of Monsters births only the odd - one, three, and five.</p>"

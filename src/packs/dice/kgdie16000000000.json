@@ -3,7 +3,7 @@
   "_key": "!items!kgdie16000000000",
   "name": "Droskar's Toil",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The Dark Smith hoards sixes that, standing alone, are worth nothing - and a stray one.</p>"

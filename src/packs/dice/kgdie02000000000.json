@@ -3,7 +3,7 @@
   "_key": "!items!kgdie02000000000",
   "name": "Norgorber's Favor",
   "type": "equipment",
-  "img": "icons/dice/d6black.svg",
+  "img": "modules/knuckles-game/assets/dice/default.webp",
   "system": {
     "description": {
       "value": "<p>The thief-god's thumb pins the one face down; the rest scarcely dare rise.</p>"

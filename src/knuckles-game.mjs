@@ -13,6 +13,7 @@ import { openDicePicker, refreshDicePicker } from "./apps/dice-picker.mjs";
 import { loadState, clearState } from "./foundry/state-store.mjs";
 import { loadDiceCatalog } from "./foundry/dice-data.mjs";
 import { loadThemes, preloadTheme, registerTheme, activeTheme, activeLanguage } from "./foundry/themes.mjs";
+import { stampDie, restampWorldDice } from "./foundry/dice-items.mjs";
 
 /** Launch handler for the icon / macro / public API — state-aware. */
 function open() {
@@ -54,9 +55,14 @@ async function loadContent() {
   await preloadTheme(activeTheme(), activeLanguage());
 }
 
-/** Theme/language changed: load the new language file, then refresh open windows. */
+/** Theme/language changed: load the new language file, refresh open windows, and (GM)
+ *  re-stamp the world's dice items so their shop-sheet text follows the new theme. */
 function onThemeChanged() {
-  preloadTheme(activeTheme(), activeLanguage()).then(() => { refreshDicePicker(); refreshBoard(); });
+  preloadTheme(activeTheme(), activeLanguage()).then(() => {
+    refreshDicePicker();
+    refreshBoard();
+    if (game.user.isGM) restampWorldDice().catch((err) => console.error("knuckles-game | restampWorldDice", err));
+  });
 }
 
 Hooks.once("init", () => {
@@ -90,6 +96,8 @@ Hooks.once("ready", async () => {
     await ensureLauncherMacro();
     // Start each session fresh: a previous game is not resumed or saved.
     if (loadState()) await clearState();
+    // A new die (granted, bought, dragged) is named in the table's theme + language.
+    Hooks.on("createItem", (item) => stampDie(item).catch((err) => console.error("knuckles-game | stampDie", err)));
   }
   // The board stays hidden on load — it opens only via the launch icon / macro.
 });
