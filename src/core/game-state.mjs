@@ -29,7 +29,7 @@ export function createGame({ players, targetScore = 2000 } = {}) {
       actorUuid: p.actorUuid ?? null,
       total: 0,
       heroPoints: p.heroPoints ?? 0,
-      dieIds: Array.from({ length: 6 }, (_, s) => p.dieIds?.[s] ?? "fair"),
+      dieIds: Array.from({ length: 6 }, (_, s) => p.dieIds?.[s] ?? "01"),
       ready: false,
       bet: {
         sun: Number(p.bet?.sun) || 0,

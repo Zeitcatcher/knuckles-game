@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "the-shards",
+  "name": "The Shards",
+  "baseLanguage": "Russian",
+  "languages": [
+    { "name": "Russian", "code": "ru" },
+    { "name": "Ukrainian", "code": "uk" }
+  ],
+  "publishSafe": false,
+  "note": "Private campaign theme. Each language is labeled by its full name; the file is themes/the-shards/<name>.json. The code is the ISO key Foundry's game.i18n.lang reports. Exposes 37 dice (no cosmetic fairs - trimmed). Russian is the source; Ukrainian transliterates the in-world proper names. Not for public release."
+}

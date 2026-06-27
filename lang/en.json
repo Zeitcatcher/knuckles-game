@@ -76,6 +76,13 @@
   "KNUCKLES.themes.darkTavern": "Dark tavern",
   "KNUCKLES.skins.pips": "Pips",
   "KNUCKLES.skins.numerals": "Numerals",
+  "KNUCKLES.themeLang.menuName": "Theme & language",
+  "KNUCKLES.themeLang.menuLabel": "Configure theme & language",
+  "KNUCKLES.themeLang.menuHint": "Choose the dice theme (GM, shared) and your own language for the dice names and descriptions.",
+  "KNUCKLES.themeLang.theme": "Theme (dice names)",
+  "KNUCKLES.themeLang.language": "My language",
+  "KNUCKLES.themeLang.hint": "The GM sets the theme for everyone; each player picks their own language from that theme. Only dice names and descriptions change.",
+  "KNUCKLES.themeLang.save": "Save",
 
   "KNUCKLES.warn.needTwo": "A game needs at least two players.",
   "KNUCKLES.warn.gmOnly": "Only the GM can start a game."

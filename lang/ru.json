@@ -76,6 +76,13 @@
   "KNUCKLES.themes.darkTavern": "Тёмная таверна",
   "KNUCKLES.skins.pips": "Точки",
   "KNUCKLES.skins.numerals": "Цифры",
+  "KNUCKLES.themeLang.menuName": "Тема и язык",
+  "KNUCKLES.themeLang.menuLabel": "Настроить тему и язык",
+  "KNUCKLES.themeLang.menuHint": "Выберите тему костей (ГМ, общая) и свой язык для названий и описаний костей.",
+  "KNUCKLES.themeLang.theme": "Тема (названия костей)",
+  "KNUCKLES.themeLang.language": "Мой язык",
+  "KNUCKLES.themeLang.hint": "ГМ задаёт тему для всех; каждый игрок выбирает свой язык из этой темы. Меняются только названия и описания костей.",
+  "KNUCKLES.themeLang.save": "Сохранить",
 
   "KNUCKLES.warn.needTwo": "Для игры нужно минимум два игрока.",
   "KNUCKLES.warn.gmOnly": "Только ГМ может начать игру."

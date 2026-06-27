@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "pathfinder",
+  "name": "Pathfinder 2e (Golarion)",
+  "baseLanguage": "English",
+  "languages": [
+    { "name": "English", "code": "en" },
+    { "name": "French", "code": "fr" },
+    { "name": "German", "code": "de" },
+    { "name": "Spanish", "code": "es" },
+    { "name": "Ukrainian", "code": "uk" }
+  ],
+  "publishSafe": true,
+  "note": "Public default theme. Each language is labeled by its full name; the file is themes/pathfinder/<name>.json. The code is the ISO key Foundry's game.i18n.lang reports - the loader maps it to the full-name file. Deity proper names stay canonical across languages; only descriptions are localized (Ukrainian transliterates the names). Resolution: player's language, then baseLanguage, then the die id."
+}

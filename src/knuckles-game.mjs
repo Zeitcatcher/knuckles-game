@@ -11,6 +11,8 @@ import { openBoard, refreshBoard } from "./apps/board-app.mjs";
 import { openSetup } from "./apps/setup-app.mjs";
 import { openDicePicker, refreshDicePicker } from "./apps/dice-picker.mjs";
 import { loadState, clearState } from "./foundry/state-store.mjs";
+import { loadDiceCatalog } from "./foundry/dice-data.mjs";
+import { loadThemes, preloadTheme, registerTheme, activeTheme, activeLanguage } from "./foundry/themes.mjs";
 
 /** Launch handler for the icon / macro / public API — state-aware. */
 function open() {
@@ -45,6 +47,18 @@ async function testWeightedRoll(weights = [10, 1, 1, 1, 1, 1], n = 1, animate = 
   return { counts, weights, totalDice };
 }
 
+/** Load the bundled dice mechanics + themes, then preload the active language. */
+async function loadContent() {
+  await loadDiceCatalog();
+  await loadThemes();
+  await preloadTheme(activeTheme(), activeLanguage());
+}
+
+/** Theme/language changed: load the new language file, then refresh open windows. */
+function onThemeChanged() {
+  preloadTheme(activeTheme(), activeLanguage()).then(() => { refreshDicePicker(); refreshBoard(); });
+}
+
 Hooks.once("init", () => {
   Handlebars.registerHelper("kgEq", (a, b) => a === b);
   Handlebars.registerHelper("kgRange", (n) => Array.from({ length: Number(n) || 0 }, (_, i) => i));
@@ -52,19 +66,21 @@ Hooks.once("init", () => {
   registerSettings({
     onStateChanged: () => { refreshDicePicker(); refreshBoard(); },
     onAppearanceChanged: () => { refreshDicePicker(); refreshBoard(); },
+    onThemeChanged,
   });
 
   registerControls(open);
 
   const mod = game.modules.get(MODULE_ID);
-  mod.api = { open, openSetup, openBoard, dispatch, getState: loadState, testWeightedRoll };
+  mod.api = { open, openSetup, openBoard, dispatch, getState: loadState, testWeightedRoll, registerTheme };
   globalThis.KnucklesGame = mod.api;
 
   console.log("knuckles-game | initialised");
 });
 
 Hooks.once("setup", async () => {
-  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP, TEMPLATES.DICE]);
+  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP, TEMPLATES.DICE, TEMPLATES.THEME_LANG]);
+  await loadContent();
 });
 
 Hooks.once("socketlib.ready", () => setupSocket());

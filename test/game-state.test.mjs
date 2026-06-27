@@ -118,15 +118,15 @@ describe("dice selection (choosing phase)", () => {
   it("starts in choosing with six fair dice each", () => {
     const s = createGame({ players: [{ id: "a" }, { id: "b" }] });
     expect(s.status).toBe("choosing");
-    expect(s.players[0].dieIds).toEqual(["fair", "fair", "fair", "fair", "fair", "fair"]);
+    expect(s.players[0].dieIds).toEqual(["01", "01", "01", "01", "01", "01"]);
     expect(s.players[0].ready).toBe(false);
   });
 
   it("sets a single slot's die", () => {
     let s = createGame({ players: [{ id: "a" }, { id: "b" }] });
-    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 2, dieId: "weighted" });
-    expect(s.players[0].dieIds[2]).toBe("weighted");
-    expect(s.players[0].dieIds[0]).toBe("fair");
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 2, dieId: "02" });
+    expect(s.players[0].dieIds[2]).toBe("02");
+    expect(s.players[0].dieIds[0]).toBe("01");
   });
 
   it("setReady marks a player ready; startPlay begins play", () => {

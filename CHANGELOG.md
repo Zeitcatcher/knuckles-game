@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Dice themes and per-player language. Mechanics are now separated from flavor: a shared catalog (`data/dice-catalog.json`) holds the weights/joker, while each theme supplies die names + descriptions per language. In Foundry's settings ("Theme & language"), the GM picks the shared theme; every user (GM and players) picks their own language from that theme's languages — so each player sees the dice in their own language. Ships with two themes: Pathfinder 2e (public default — en/fr/de/es/uk) and The Shards (ru/uk). Only names and descriptions change; the board's look is unchanged. Third-party themes can register at runtime via `KnucklesGame.registerTheme(...)`.
+
 ## 0.3.3
 
 - Loaded-die labels: a die's name now wraps to a maximum of two lines, centered horizontally and vertically in a fixed-height field, instead of being truncated to one line. The dice are about 20% larger, and every slot is a fixed width so the spacing between dice is uniform.

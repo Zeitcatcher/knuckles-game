@@ -1,12 +1,14 @@
 import { MODULE_ID, SETTINGS, DEFAULTS } from "../constants.mjs";
+import { ThemeLanguageConfig } from "../apps/theme-language-config.mjs";
 
 /**
  * Register all module settings.
  * @param {object} cb
  * @param {(state:object|null)=>void} cb.onStateChanged  - fired when the synced game state changes
  * @param {()=>void} cb.onAppearanceChanged              - fired when theme / skin / colour changes
+ * @param {()=>void} cb.onThemeChanged                   - fired when the dice theme / language changes
  */
-export function registerSettings({ onStateChanged, onAppearanceChanged }) {
+export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeChanged }) {
   const reg = (key, data) => game.settings.register(MODULE_ID, key, data);
 
   reg(SETTINGS.GAME_STATE, {
@@ -53,4 +55,24 @@ export function registerSettings({ onStateChanged, onAppearanceChanged }) {
       onChange: () => onAppearanceChanged?.(),
     });
   }
+
+  // Dice content theme (GM-set, world-shared) + per-user language. Managed by the
+  // submenu below, so these stay out of the inline settings list (config: false).
+  reg(SETTINGS.CONTENT_THEME, {
+    scope: "world", config: false, type: String, default: "",
+    onChange: () => onThemeChanged?.(),
+  });
+  reg(SETTINGS.LANGUAGE, {
+    scope: "client", config: false, type: String, default: "",
+    onChange: () => onThemeChanged?.(),
+  });
+
+  game.settings.registerMenu(MODULE_ID, "themeLanguage", {
+    name: "KNUCKLES.themeLang.menuName",
+    label: "KNUCKLES.themeLang.menuLabel",
+    hint: "KNUCKLES.themeLang.menuHint",
+    icon: "fa-solid fa-language",
+    type: ThemeLanguageConfig,
+    restricted: false,
+  });
 }
