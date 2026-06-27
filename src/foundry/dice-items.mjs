@@ -137,6 +137,41 @@ export function ownedSlotChoices(allIds, ownedCounts, usedExcl, dieId) {
   return { ids, placeholder: (ownedCounts.get(dieId) ?? 0) === 0 };
 }
 
+/** Re-order catalog ids so OWNED dice (count>0) come first; each group keeps catalog
+ *  order. Used for the GM's full-catalog picker so a token's few owned dice float to
+ *  the top. Pure. */
+export function orderIdsOwnedFirst(allIds, ownedCounts) {
+  const ownedIds = [];
+  const rest = [];
+  for (const id of allIds) ((ownedCounts.get(id) ?? 0) > 0 ? ownedIds : rest).push(id);
+  return [...ownedIds, ...rest];
+}
+
+/** Free copies of a die for the picker's "free/total" label: owned minus the copies
+ *  used across ALL six slots (this slot included), floored at 0. Pure. */
+export function freeCopies(ownedCounts, usedAll, id) {
+  return Math.max(0, (ownedCounts.get(id) ?? 0) - (usedAll.get(id) ?? 0));
+}
+
+/**
+ * Walk a six-slot loadout against owned copies + per-slot GM gift flags. Returns the
+ * copies to GRANT (gifted slots with no owned copy) and how many slots are neither owned
+ * nor gifted (`shortBy`, the launch blockers). Pure — encodes the "block unless GM gifted
+ * six" rule, shared by launch enforcement and the picker's live tally.
+ */
+export function coverLoadout(dieIds, gifts, ownedCounts) {
+  const remaining = new Map(ownedCounts);
+  const toGrant = new Map();
+  let shortBy = 0;
+  (dieIds ?? []).forEach((dieId, i) => {
+    const have = remaining.get(dieId) ?? 0;
+    if (have > 0) { remaining.set(dieId, have - 1); return; } // covered by an owned copy
+    if (gifts?.[i]) toGrant.set(dieId, (toGrant.get(dieId) ?? 0) + 1); // a GM gift → grant it
+    else shortBy += 1; // unowned and not gifted → blocks
+  });
+  return { toGrant, shortBy };
+}
+
 let packCache = null; // Map(dieId -> source object)
 
 async function diceSources() {

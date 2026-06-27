@@ -32,6 +32,7 @@ export function createGame({ players, targetScore = 2000, physical = false } = {
       total: 0,
       heroPoints: p.heroPoints ?? 0,
       dieIds: Array.from({ length: 6 }, (_, s) => p.dieIds?.[s] ?? "01"),
+      gifts: Array.from({ length: 6 }, (_, s) => Boolean(p.gifts?.[s])), // GM placed an unowned die here → granted at launch
       ready: false,
       bet: {
         sun: Number(p.bet?.sun) || 0,
@@ -195,10 +196,15 @@ function applySetSelection(s, { ids }) {
   return s;
 }
 
-/** Choose the catalog die for one of a player's six slots. */
-function applySetDieSlot(s, { playerId, slot, dieId }) {
+/** Choose the catalog die for one of a player's six slots. `gifted` marks a GM-placed
+ *  die the actor doesn't own (granted at launch); cleared for an owned / player pick. */
+function applySetDieSlot(s, { playerId, slot, dieId, gifted }) {
   const p = s.players.find((pl) => pl.id === playerId);
-  if (p && Number.isInteger(slot) && slot >= 0 && slot < 6) p.dieIds[slot] = dieId ?? "01";
+  if (p && Number.isInteger(slot) && slot >= 0 && slot < 6) {
+    p.dieIds[slot] = dieId ?? "01";
+    if (!Array.isArray(p.gifts)) p.gifts = [false, false, false, false, false, false];
+    p.gifts[slot] = Boolean(gifted);
+  }
   return s;
 }
 

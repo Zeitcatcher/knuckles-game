@@ -13,7 +13,7 @@ import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
 import { getDieSpec } from "../foundry/dice-data.mjs";
-import { isPhysicalMode, inventoryActor, ownedDieCounts, ownedTotal, missingDieCopies, grantDice, prefillLoadout, clampLoadout } from "../foundry/dice-items.mjs";
+import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, coverLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
@@ -61,15 +61,19 @@ export async function dispatchAsGM(intent, userId) {
       (state.status === "choosing" && canAct(requester, target)) ||
       (state.status === "playing" && Boolean(requester?.isGM));
     if (!allowed) throw new Error("you cannot change that die now");
-    // Physical mode: a PC may only equip a die it owns. Defense-in-depth — the picker
-    // already greys out the rest, and an illegal hand is re-seated at launch — but the
-    // authoritative handler shouldn't trust a hand-crafted intent. NPCs may over-assign
-    // (auto-granted on start); generic / token-less players are exempt.
+    // Physical mode: a NON-GM may only equip a die the character owns (the picker greys
+    // out the rest; this is the authoritative defence against a hand-crafted intent).
+    // The GM MAY over-assign an unowned die to a PC — that is a GIFT, granted at launch.
+    // NPCs may over-assign freely (auto-stocked); generic / token-less players are exempt.
+    let gifted = false;
     if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid)) {
-      const owned = ownedDieCounts(inventoryActor(target));
-      if ((owned.get(intent.dieId) ?? 0) < 1) throw new Error("you do not own that die");
+      const owns = (ownedDieCounts(inventoryActor(target)).get(intent.dieId) ?? 0) >= 1;
+      if (!owns) {
+        if (!requester?.isGM) throw new Error("you do not own that die");
+        gifted = true;
+      }
     }
-    state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId });
+    state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId, gifted });
     await saveState(state);
     return state;
   }
@@ -270,8 +274,11 @@ async function enforcePhysicalLaunch(state) {
       const missing = missingDieCopies(p.dieIds, owned);
       if (missing.size) await grantDice(actor, missing);
     } else {
-      if (ownedTotal(owned) < 6) { blockers.push(p.name); continue; }
-      p.dieIds = clampLoadout(p.dieIds, owned);
+      // PC: every slot must be covered by an OWNED copy or a GM GIFT. Grant the gifts;
+      // block if any slot holds an unowned, un-gifted die ("block unless GM gifted six").
+      const { toGrant, shortBy } = coverLoadout(p.dieIds, p.gifts, owned);
+      if (shortBy > 0) { blockers.push(p.name); continue; }
+      if (toGrant.size) await grantDice(actor, toGrant);
     }
   }
   return blockers;
