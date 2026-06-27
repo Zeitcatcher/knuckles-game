@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+
+- Physical dice, part 3 — the write side, with **copy-based** ownership (still off by default). Each of the six slots now consumes one physical die, so **you need six dice to play**; the picker shows how many copies of each die you own (`×N`), greys a die out once all its copies are placed, and shows an "N of 6" tally with a "buy more dice" prompt when you're short. When a game starts: a token-NPC is **auto-granted the missing copies** of whatever the GM picked (written to that token's own inventory), a PC short of six dice **blocks the start** with a notice, and a PC whose dice changed mid-choosing is re-seated onto a legal hand. New games **pre-fill** each player's slots from the dice they own. New-game setup gains an **Add selected tokens** button that turns the tokens you've selected on the canvas into participants bound to that specific token (shown by a `token` badge) — so unlinked NPCs get their dice in the right inventory. A GM-side guard prevents a double-click on Start from double-granting. Generic/token-less players and the virtual game are unchanged.
+
 ## 0.5.1
 
 - Physical dice, part 2 — the owned-dice picker (read-only; still off by default). When **Physical dice** is on, a player choosing dice now sees only the dice their character actually owns, and the GM sees the full catalog with a green check on the dice each character owns plus a per-slot in-inventory marker. A character that owns nothing shows a "buy dice to play" hint. Because the picker keeps native dropdowns, a slot is the same height whether a character owns 0 or 37 dice — no layout shift — and the markers refresh live if dice are added or removed while the window is open. No inventory is written yet (NPC auto-stocking and launch validation come next). Off-pf2e systems and the default virtual mode are unchanged.

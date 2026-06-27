@@ -1,15 +1,17 @@
 /**
  * pf2e adapter for the optional physical-dice economy. All inventory/item coupling
  * lives here, behind a thin capability surface so the picker and command handler
- * never touch pf2e item types directly. Synchronous + in-memory: no compendium load.
+ * never touch pf2e item types directly.
  *
- * Identity is the catalog die id, read from flags["knuckles-game"].dieId first and
- * the `knuckles-die-NN` system slug as a fallback (both verified durable through a
- * pf2e buy/sell round-trip in the Phase 0 probe).
+ * Ownership is COPY-BASED: each of a character's six slots consumes one physical
+ * die, so the unit is `Map(dieId -> quantity owned)`. Identity is the catalog die
+ * id, read from flags["knuckles-game"].dieId first and the `knuckles-die-NN` slug
+ * as a fallback (both verified durable through a pf2e buy/sell round-trip).
  */
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
 
 const SLUG_RE = /^knuckles-die-(\d{2})$/;
+const PACK_ID = `${MODULE_ID}.dice`;
 
 /** The catalog die id parsed from a slug string, or null. Pure. */
 export function dieIdFromSlug(slug) {
@@ -43,15 +45,143 @@ export function isPhysicalMode() {
   return game.system?.id === "pf2e";
 }
 
-/** The set of catalog die ids an actor owns (a die at quantity >= 1). In-memory. */
-export function ownedDieIds(actor) {
-  const owned = new Set();
-  if (!actor) return owned;
+/** The actor whose inventory matters: the token's actor if bound to one (falling back
+ *  to the world actor if the token can't be resolved), else the world actor. */
+export function inventoryActor(player) {
+  if (player?.tokenUuid) {
+    const tokenActor = fromUuidSync(player.tokenUuid)?.actor;
+    if (tokenActor) return tokenActor;
+  }
+  if (player?.actorUuid) return fromUuidSync(player.actorUuid) ?? null;
+  return null;
+}
+
+/** Map(dieId -> total quantity) an actor owns. Synchronous, in-memory. */
+export function ownedDieCounts(actor) {
+  const counts = new Map();
+  if (!actor) return counts;
   const equipment = actor.itemTypes?.equipment ?? actor.items?.filter?.((i) => i.type === "equipment") ?? [];
   for (const item of equipment) {
-    if ((item.system?.quantity ?? 1) < 1) continue;
     const id = dieIdOf(item);
-    if (id) owned.add(id);
+    if (!id) continue;
+    const q = Math.max(0, Math.trunc(item.system?.quantity ?? 1));
+    if (q > 0) counts.set(id, (counts.get(id) ?? 0) + q);
   }
-  return owned;
+  return counts;
+}
+
+/** Total dice (copies) an actor owns. */
+export function ownedTotal(counts) {
+  let n = 0;
+  for (const q of counts.values()) n += q;
+  return n;
+}
+
+/**
+ * Pure: given the six chosen slot ids and the owned counts, how many extra COPIES
+ * of each die must be granted so the assignment is legal. Map(dieId -> copies>0).
+ */
+export function missingDieCopies(slotDieIds, ownedCounts) {
+  const used = new Map();
+  for (const id of slotDieIds ?? []) used.set(id, (used.get(id) ?? 0) + 1);
+  const missing = new Map();
+  for (const [id, need] of used) {
+    const have = ownedCounts.get?.(id) ?? 0;
+    if (need > have) missing.set(id, need - have);
+  }
+  return missing;
+}
+
+/** Pre-fill six slots greedily from owned copies (catalog-id order); pad unfilled with "01". Pure. */
+export function prefillLoadout(ownedCounts) {
+  const flat = [];
+  for (const id of [...ownedCounts.keys()].sort()) {
+    const n = ownedCounts.get(id);
+    for (let k = 0; k < n && flat.length < 6; k++) flat.push(id);
+  }
+  while (flat.length < 6) flat.push("01");
+  return flat.slice(0, 6);
+}
+
+/** Re-seat a six-slot loadout into a legal assignment over owned copies (new array). Pure. */
+export function clampLoadout(dieIds, ownedCounts) {
+  const remaining = new Map(ownedCounts);
+  const kept = (dieIds ?? []).map((id) => {
+    if ((remaining.get(id) ?? 0) > 0) {
+      remaining.set(id, remaining.get(id) - 1);
+      return id;
+    }
+    return null;
+  });
+  const pool = [];
+  for (const [id, n] of remaining) for (let k = 0; k < n; k++) pool.push(id);
+  let pi = 0;
+  return kept.map((id) => id ?? pool[pi++] ?? "01");
+}
+
+/**
+ * Per-slot option structure for a PC's owned dice (no labels — pure & testable).
+ * `usedExcl` is the count of each die used by the OTHER five slots. A die is disabled
+ * when it has no free copy left and isn't this slot's current pick; `placeholder` is
+ * true when the slot currently holds a die the actor doesn't own.
+ */
+export function ownedSlotChoices(allIds, ownedCounts, usedExcl, dieId) {
+  const ids = allIds
+    .filter((id) => (ownedCounts.get(id) ?? 0) > 0)
+    .map((id) => {
+      const free = (ownedCounts.get(id) ?? 0) - (usedExcl.get(id) ?? 0);
+      const isCur = id === dieId;
+      return { id, selected: isCur, disabled: free < 1 && !isCur };
+    });
+  return { ids, placeholder: (ownedCounts.get(dieId) ?? 0) === 0 };
+}
+
+let packCache = null; // Map(dieId -> source object)
+
+async function diceSources() {
+  if (packCache) return packCache;
+  packCache = new Map();
+  const pack = game.packs.get(PACK_ID);
+  if (!pack) return packCache;
+  for (const doc of await pack.getDocuments()) {
+    const id = dieIdOf(doc);
+    if (id) packCache.set(id, doc.toObject());
+  }
+  return packCache;
+}
+
+/** Drop the cached pack sources (e.g. after a Rebuild). */
+export function clearDiceSourceCache() {
+  packCache = null;
+}
+
+/**
+ * Grant missing copies to an actor (GM-side). `missing` is Map(dieId -> copies).
+ * Explicitly bumps an existing stack's quantity or creates a fresh item — we do NOT
+ * rely on pf2e's auto-stack-on-create merge (its match heuristic and +N vs +1 merge
+ * behaviour vary by version), so the granted total is always exactly right.
+ */
+export async function grantDice(actor, missing) {
+  if (!actor || !missing || missing.size === 0) return;
+  const sources = await diceSources();
+  const equipment = actor.itemTypes?.equipment ?? actor.items?.filter?.((i) => i.type === "equipment") ?? [];
+  const updates = [];
+  const creates = [];
+  for (const [id, copies] of missing) {
+    if (copies <= 0) continue;
+    const existing = equipment.find((it) => dieIdOf(it) === id);
+    if (existing) {
+      updates.push({ _id: existing.id, "system.quantity": (existing.system?.quantity ?? 0) + copies });
+      continue;
+    }
+    const src = sources.get(id);
+    if (!src) continue;
+    const data = foundry.utils.deepClone(src);
+    delete data._id;
+    delete data._key;
+    foundry.utils.setProperty(data, "system.quantity", copies);
+    creates.push(data);
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
+  if (creates.length) await actor.createEmbeddedDocuments("Item", creates, { render: false });
 }

@@ -7,6 +7,7 @@ import { scoreSelection } from "../core/scoring.mjs";
 import { computePool } from "../core/game-state.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { DEFAULT_DIE_ID } from "../foundry/dice-data.mjs";
+import { inventoryActor } from "../foundry/dice-items.mjs";
 import { WILD } from "../core/dice-model.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
@@ -15,11 +16,7 @@ const pips = (n, max) => Array.from({ length: max }, (_, i) => ({ on: i < n }));
 function canControl(user, player) {
   if (!user || !player) return false;
   if (user.isGM) return true;
-  if (player.actorUuid) {
-    const actor = fromUuidSync(player.actorUuid);
-    return actor?.testUserPermission?.(user, "OWNER") ?? false;
-  }
-  return false; // generic / NPC players are driven by the GM
+  return inventoryActor(player)?.testUserPermission?.(user, "OWNER") ?? false;
 }
 
 export function buildBoardContext(state, user, ui) {

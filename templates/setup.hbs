@@ -10,13 +10,15 @@
           <div class="kg-combo" data-combo>
             <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.searchChar'}}" autocomplete="off" />
             <input type="hidden" name="actorUuid" value="{{actorUuid}}" />
+            <input type="hidden" name="tokenUuid" value="{{tokenUuid}}" />
             <div class="kg-combo-list" hidden>
               {{#each ../actors}}
                 <button type="button" class="kg-combo-item" data-uuid="{{uuid}}" data-name="{{name}}">{{name}}</button>
               {{/each}}
             </div>
           </div>
-          <button type="button" class="kg-icon" data-action="removePlayer" data-index="{{@index}}" aria-label="Remove"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+          {{#if tokenUuid}}<span class="kg-token-badge" title="{{localize 'KNUCKLES.setup.tokenTitle'}}"><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i> {{localize 'KNUCKLES.setup.tokenBadge'}}</span>{{/if}}
+          <button type="button" class="kg-icon" data-action="removePlayer" data-index="{{@index}}" aria-label="{{localize 'KNUCKLES.setup.remove'}}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
         </div>
         <div class="kg-bets">
           <span class="kg-bet-label">{{localize "KNUCKLES.setup.bet"}}</span>
@@ -29,7 +31,10 @@
     {{/each}}
   </div>
 
-  <button type="button" data-action="addPlayer"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "KNUCKLES.setup.addPlayer"}}</button>
+  <div class="kg-setup-actions">
+    <button type="button" data-action="addPlayer"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "KNUCKLES.setup.addPlayer"}}</button>
+    <button type="button" data-action="addTokens"><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i> {{localize "KNUCKLES.setup.addTokens"}}</button>
+  </div>
 
   <div class="kg-target-row">
     <label>{{localize "KNUCKLES.setup.playTo"}}</label>

@@ -13,9 +13,11 @@ import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
 import { getDieSpec } from "../foundry/dice-data.mjs";
+import { isPhysicalMode, inventoryActor, ownedDieCounts, ownedTotal, missingDieCopies, grantDice, prefillLoadout, clampLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
+let launching = false; // GM-side guard: one startPlay at a time, so auto-grant can't double-fire
 
 /** Log entries are stored as {key, data} and localized per client in the view-model. */
 function pushLog(state, key, data) {
@@ -59,6 +61,14 @@ export async function dispatchAsGM(intent, userId) {
       (state.status === "choosing" && canAct(requester, target)) ||
       (state.status === "playing" && Boolean(requester?.isGM));
     if (!allowed) throw new Error("you cannot change that die now");
+    // Physical mode: a PC may only equip a die it owns. Defense-in-depth — the picker
+    // already greys out the rest, and an illegal hand is re-seated at launch — but the
+    // authoritative handler shouldn't trust a hand-crafted intent. NPCs may over-assign
+    // (auto-granted on start); generic / token-less players are exempt.
+    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid)) {
+      const owned = ownedDieCounts(inventoryActor(target));
+      if ((owned.get(intent.dieId) ?? 0) < 1) throw new Error("you do not own that die");
+    }
     state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId });
     await saveState(state);
     return state;
@@ -74,6 +84,19 @@ export async function dispatchAsGM(intent, userId) {
   if (intent.type === "startPlay") {
     if (!requester?.isGM) throw new Error("only the GM can start play");
     if (state.status !== "choosing") throw new Error("the game has already started");
+    if (state.physical) {
+      if (launching) throw new Error("a game is already starting");
+      launching = true;
+      try {
+        const blockers = await enforcePhysicalLaunch(state);
+        if (blockers.length) {
+          ui.notifications?.warn(game.i18n.format("KNUCKLES.warn.needSix", { names: blockers.join(", ") }));
+          throw new Error("some players do not have six dice");
+        }
+      } finally {
+        launching = false;
+      }
+    }
     state = reduce(state, { type: "startPlay" });
     await syncCurrentHeroPoints(state);
     await saveState(state);
@@ -165,11 +188,9 @@ export async function dispatchAsGM(intent, userId) {
 function canAct(user, player) {
   if (!user) return false;
   if (user.isGM) return true;
-  if (player.actorUuid) {
-    const actor = fromUuidSync(player.actorUuid);
-    return actor?.testUserPermission?.(user, "OWNER") ?? false;
-  }
-  return false; // generic / NPC players are driven by the GM
+  // Resolve the actor the player would own — the token's actor if bound to one,
+  // else the world actor. Generic / NPC players resolve to none → GM-driven.
+  return inventoryActor(player)?.testUserPermission?.(user, "OWNER") ?? false;
 }
 
 /** Per-die specs for the current player, aligned with the given slot ids (1..6). */
@@ -179,6 +200,7 @@ function specsForIds(state, ids) {
 }
 
 async function buildNewGame(config) {
+  const physical = isPhysicalMode();
   const players = [];
   let i = 0;
   for (const p of config.players ?? []) {
@@ -189,10 +211,40 @@ async function buildNewGame(config) {
     if (p.actorUuid) {
       const actor = await fromUuid(p.actorUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
-      name = actor?.name ?? name; // the participant's name follows the linked character
+      if (!p.tokenUuid) name = actor?.name ?? name; // actor-bound follows the actor; token-bound keeps the token name
       heroPoints = await getHeroPoints(p.actorUuid);
     }
-    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, heroPoints, bet: p.bet });
+    // Physical mode: start each player's six slots from the dice they own, so they
+    // begin with a valid hand and just customise. Virtual mode keeps the "01" default.
+    let dieIds;
+    if (physical) {
+      const owned = ownedDieCounts(inventoryActor({ tokenUuid: p.tokenUuid, actorUuid: p.actorUuid }));
+      dieIds = prefillLoadout(owned);
+    }
+    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, tokenUuid: p.tokenUuid ?? null, heroPoints, bet: p.bet, dieIds });
   }
-  return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET });
+  return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET, physical });
+}
+
+/**
+ * Physical-mode launch enforcement (GM-side). Token-NPCs are auto-granted the copies
+ * they're short; PCs must own six dice and a legal assignment (clamped if a die was
+ * sold mid-choosing). Returns the names of players who can't field a hand.
+ */
+async function enforcePhysicalLaunch(state) {
+  const blockers = [];
+  for (const p of state.players) {
+    if (!p.actorUuid && !p.tokenUuid) continue; // generic: economy-exempt
+    const actor = inventoryActor(p);
+    if (!actor) { blockers.push(p.name); continue; }
+    const owned = ownedDieCounts(actor);
+    if (p.type === "npc") {
+      const missing = missingDieCopies(p.dieIds, owned);
+      if (missing.size) await grantDice(actor, missing);
+    } else {
+      if (ownedTotal(owned) < 6) { blockers.push(p.name); continue; }
+      p.dieIds = clampLoadout(p.dieIds, owned);
+    }
+  }
+  return blockers;
 }

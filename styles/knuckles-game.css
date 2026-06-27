@@ -33,8 +33,16 @@
 /* physical mode: fixed-width ownership marker — always present, only its glyph/colour
    changes, so an owned vs unowned slot is pixel-identical (no layout shift). */
 .knuckles-game .kg-dslot .kg-owned { width: 18px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--kg-muted); }
-.knuckles-game .kg-dslot .kg-owned.is-owned { color: var(--kg-win); }
-.knuckles-game .kg-buyhint { display: flex; align-items: center; gap: 7px; font-size: 12px; color: color-mix(in srgb, var(--kg-bust) 70%, var(--kg-text)); background: color-mix(in srgb, var(--kg-bust) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kg-bust) 30%, transparent); border-radius: 6px; padding: 6px 9px; margin: 6px 0 2px; }
+.knuckles-game .kg-dslot .kg-owned.is-ok { color: var(--kg-win); }
+.knuckles-game .kg-dslot .kg-owned.is-warn { color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); }
+.knuckles-game .kg-dslot .kg-owned.is-add { color: var(--kg-muted); }
+.knuckles-game .kg-dchar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.knuckles-game .kg-dchar-head .kg-pname { flex: 1 1 auto; min-width: 0; }
+.knuckles-game .kg-tally { flex: 0 0 auto; font-size: 11px; color: var(--kg-win); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.knuckles-game .kg-tally.is-short { color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); }
+.knuckles-game .kg-stocknote { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--kg-muted); margin: 6px 0 2px; }
+/* always rendered in owned mode (height reserved) so the window never resizes when the buy prompt toggles */
+.knuckles-game .kg-buyhint { display: flex; align-items: center; gap: 7px; min-height: 18px; font-size: 12px; color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); margin: 6px 0 2px; }
 .knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 
 /* theme & language settings submenu */
@@ -88,11 +96,13 @@
 
 /* setup window */
 .knuckles-game .kg-players { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
-.knuckles-game .kg-prow { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+.knuckles-game .kg-prow { display: flex; gap: 6px; align-items: center; }
 .knuckles-game .kg-prow > * { min-width: 0; }
+.knuckles-game .kg-setup-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.knuckles-game .kg-token-badge { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--kg-accent); background: color-mix(in srgb, var(--kg-accent) 16%, transparent); border: 1px solid color-mix(in srgb, var(--kg-accent) 40%, transparent); border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
 .knuckles-game .kg-prow input, .knuckles-game .kg-prow select { width: 100%; box-sizing: border-box; }
 .knuckles-game .kg-prow-head { padding: 0 2px; margin-bottom: 2px; }
-.knuckles-game .kg-combo { position: relative; }
+.knuckles-game .kg-combo { position: relative; flex: 1 1 auto; min-width: 0; }
 .knuckles-game .kg-combo-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin-top: 3px; max-height: 200px; overflow-y: auto; background: var(--kg-board-bg); border: 1px solid var(--kg-surface-2); border-radius: var(--kg-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 .knuckles-game .kg-combo-list[hidden] { display: none; }
 .knuckles-game .kg-combo-item { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 0; padding: 5px 9px; font-size: 13px; color: var(--kg-text); cursor: pointer; }

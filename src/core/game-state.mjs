@@ -17,16 +17,18 @@ import { validateKeep, isBust, hasReachedTarget, determineWinner } from "./rules
 export const currentPlayer = (s) => s.players[s.turnIndex];
 
 /** Build a new match. */
-export function createGame({ players, targetScore = 2000 } = {}) {
+export function createGame({ players, targetScore = 2000, physical = false } = {}) {
   if (!players || players.length < 2) throw new Error("a match needs at least two players");
   return {
     status: "choosing", // choosing → playing → finished
+    physical: Boolean(physical), // item-economy mode, snapshot at creation (so a mid-game setting flip can't change a running game)
     targetScore,
     players: players.map((p, i) => ({
       id: p.id ?? `p${i + 1}`,
       name: p.name ?? `Player ${i + 1}`,
       type: p.type ?? "generic",
       actorUuid: p.actorUuid ?? null,
+      tokenUuid: p.tokenUuid ?? null,
       total: 0,
       heroPoints: p.heroPoints ?? 0,
       dieIds: Array.from({ length: 6 }, (_, s) => p.dieIds?.[s] ?? "01"),
@@ -153,7 +155,7 @@ function applySetDieValue(s, { dieId, value }) {
 /** Choose the catalog die for one of a player's six slots. */
 function applySetDieSlot(s, { playerId, slot, dieId }) {
   const p = s.players.find((pl) => pl.id === playerId);
-  if (p && Number.isInteger(slot) && slot >= 0 && slot < 6) p.dieIds[slot] = dieId ?? "fair";
+  if (p && Number.isInteger(slot) && slot >= 0 && slot < 6) p.dieIds[slot] = dieId ?? "01";
   return s;
 }
 
