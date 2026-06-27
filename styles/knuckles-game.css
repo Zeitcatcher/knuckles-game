@@ -50,6 +50,7 @@
 .knuckles-game .kg-edit { margin-top: 2px; font-size: 11px; line-height: 1; color: var(--kg-accent); background: transparent; border: 1px solid color-mix(in srgb, var(--kg-accent) 50%, transparent); border-radius: 6px; padding: 2px 7px; cursor: pointer; }
 .knuckles-game .kg-edit:hover { background: color-mix(in srgb, var(--kg-accent) 14%, transparent); }
 .knuckles-game .kg-edit.on { background: color-mix(in srgb, var(--kg-accent) 24%, transparent); }
+.knuckles-game .kg-edit:disabled { opacity: 0.4; pointer-events: none; }
 .knuckles-game .kg-valpop { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 9px; width: 184px; background: var(--kg-board-bg); border: 1px solid var(--kg-surface-2); border-radius: 10px; padding: 11px; z-index: 10; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 .knuckles-game .kg-valpop-arr { position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 11px; height: 11px; background: var(--kg-board-bg); border-left: 1px solid var(--kg-surface-2); border-top: 1px solid var(--kg-surface-2); }
 .knuckles-game .kg-valpop-h { font-size: 11.5px; color: var(--kg-muted); text-align: center; margin-bottom: 9px; }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- The GM die-edit pencils no longer pop in after the roll: for the GM a grayed, disabled pencil sits under every die from the start of the turn and lights up once the dice are rolled, so the dice tray height stays fixed.
+
 ## 0.3.1
 
 - The controls no longer jump at the roll: the "Selected: N" caption and the Roll / Keep + roll on / Keep + bank buttons (plus Use Hero Points for characters with Hero Points) are shown from the start of the turn, grayed and disabled until usable — rolling and selecting only toggle their state. Blank, unrolled dice are no longer clickable.

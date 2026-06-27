@@ -58,8 +58,8 @@
                data-die-id="{{id}}" data-value="{{value}}"{{#if inPlay}}{{#unless blank}} data-action="toggleDie"{{/unless}}{{/if}}>
             {{#if isWild}}<i class="fa-solid fa-wand-sparkles kg-wild" aria-hidden="true"></i>{{else}}<span class="kg-die-num">{{value}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span>{{/if}}
           </div>
-          {{#if canEdit}}
-            <button type="button" class="kg-edit{{#if editing}} on{{/if}}" data-action="editDie" data-die-id="{{id}}" aria-label="{{localize 'KNUCKLES.board.editDie'}}"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+          {{#if showEdit}}
+            <button type="button" class="kg-edit{{#if editing}} on{{/if}}" data-action="editDie" data-die-id="{{id}}" aria-label="{{localize 'KNUCKLES.board.editDie'}}"{{#unless canEdit}} disabled{{/unless}}><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
           {{/if}}
           {{#if editing}}
             <div class="kg-valpop">
