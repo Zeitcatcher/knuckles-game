@@ -29,7 +29,12 @@
 .knuckles-game .kg-dslots { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
 .knuckles-game .kg-dslot { display: flex; align-items: center; gap: 8px; }
 .knuckles-game .kg-dslot .kg-idx { width: 26px; flex: 0 0 auto; }
-.knuckles-game .kg-dslot select { flex: 1; box-sizing: border-box; }
+.knuckles-game .kg-dslot select { flex: 1; box-sizing: border-box; min-width: 0; }
+/* physical mode: fixed-width ownership marker — always present, only its glyph/colour
+   changes, so an owned vs unowned slot is pixel-identical (no layout shift). */
+.knuckles-game .kg-dslot .kg-owned { width: 18px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--kg-muted); }
+.knuckles-game .kg-dslot .kg-owned.is-owned { color: var(--kg-win); }
+.knuckles-game .kg-buyhint { display: flex; align-items: center; gap: 7px; font-size: 12px; color: color-mix(in srgb, var(--kg-bust) 70%, var(--kg-text)); background: color-mix(in srgb, var(--kg-bust) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kg-bust) 30%, transparent); border-radius: 6px; padding: 6px 9px; margin: 6px 0 2px; }
 .knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 
 /* theme & language settings submenu */
