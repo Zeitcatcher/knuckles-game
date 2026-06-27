@@ -2,7 +2,8 @@ import { TEMPLATES, MODULE_ID } from "../constants.mjs";
 import { loadState } from "../foundry/state-store.mjs";
 import { dispatch, broadcastOpen } from "../net/socket.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
-import { DICE_CATALOG } from "../core/dice-catalog.mjs";
+import { diceIds } from "../foundry/dice-data.mjs";
+import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -36,11 +37,13 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     const state = loadState();
     if (!state) return { active: false };
     const editable = state.players.filter((p) => canControl(game.user, p));
+    const theme = activeTheme();
+    const lang = activeLanguage();
     return {
       active: editable.length > 0,
       choosing: state.status === "choosing",
       isGM: Boolean(game.user.isGM),
-      catalog: DICE_CATALOG.map((d) => ({ id: d.id, label: d.label, flavor: d.flavor })),
+      catalog: diceIds().map((id) => ({ id, label: dieName(theme, lang, id), flavor: dieDesc(theme, lang, id) })),
       players: editable.map((p) => ({
         id: p.id,
         name: p.name,

@@ -12,6 +12,8 @@ export const SETTINGS = Object.freeze({
   COLOR_ACCENT: "colorAccent",
   COLOR_BOARD: "colorBoard",
   COLOR_DIE: "colorDie",
+  CONTENT_THEME: "contentTheme",
+  LANGUAGE: "language",
 });
 
 export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN: "open" });
@@ -27,6 +29,7 @@ export const TEMPLATES = Object.freeze({
   BOARD: `modules/${MODULE_ID}/templates/board.hbs`,
   SETUP: `modules/${MODULE_ID}/templates/setup.hbs`,
   DICE: `modules/${MODULE_ID}/templates/dice-picker.hbs`,
+  THEME_LANG: `modules/${MODULE_ID}/templates/theme-language.hbs`,
 });
 
 /** pf2e actor data path for Hero Points. */

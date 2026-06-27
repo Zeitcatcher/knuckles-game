@@ -12,7 +12,7 @@ import { rollValues } from "../foundry/dice-roller.mjs";
 import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
-import { getDieSpec } from "../core/dice-catalog.mjs";
+import { getDieSpec } from "../foundry/dice-data.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
@@ -175,7 +175,7 @@ function canAct(user, player) {
 /** Per-die specs for the current player, aligned with the given slot ids (1..6). */
 function specsForIds(state, ids) {
   const p = currentPlayer(state);
-  return ids.map((id) => getDieSpec(p.dieIds?.[id - 1] ?? "fair"));
+  return ids.map((id) => getDieSpec(p.dieIds?.[id - 1] ?? "01"));
 }
 
 async function buildNewGame(config) {

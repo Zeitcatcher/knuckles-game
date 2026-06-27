@@ -31,6 +31,13 @@
 .knuckles-game .kg-dslot .kg-idx { width: 26px; flex: 0 0 auto; }
 .knuckles-game .kg-dslot select { flex: 1; box-sizing: border-box; }
 .knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+
+/* theme & language settings submenu */
+.knuckles-game .kg-tl { padding: 4px 2px; }
+.knuckles-game .kg-tl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.knuckles-game .kg-tl-row select { width: 100%; }
+.knuckles-game .kg-tl-hint { font-size: 12px; color: var(--kg-muted); margin: 6px 0 10px; }
+.knuckles-game .kg-tl-foot { display: flex; justify-content: flex-end; }
 .knuckles-game .kg-target { flex: 0 0 auto; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; text-align: center; }
 .knuckles-game .kg-tval { font-size: 22px; font-weight: 600; }
 

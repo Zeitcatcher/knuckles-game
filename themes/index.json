@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "note": "Theme registry. The module reads this to populate the theme dropdown, then loads themes/<dir>/theme.json for each. Third-party theme packs can register at runtime via the public API instead of being listed here.",
+  "default": "pathfinder",
+  "themes": [
+    { "id": "pathfinder", "dir": "pathfinder" },
+    { "id": "the-shards", "dir": "the-shards" }
+  ]
+}

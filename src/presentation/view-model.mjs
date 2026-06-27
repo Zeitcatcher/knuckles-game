@@ -5,7 +5,8 @@
 
 import { scoreSelection } from "../core/scoring.mjs";
 import { computePool } from "../core/game-state.mjs";
-import { getDie } from "../core/dice-catalog.mjs";
+import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
+import { DEFAULT_DIE_ID } from "../foundry/dice-data.mjs";
 import { WILD } from "../core/dice-model.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
@@ -31,11 +32,13 @@ export function buildBoardContext(state, user, ui) {
   // The current player's controller (or the GM) sees die names + loaded styling;
   // everyone else sees plain #n. The rolled face — including a wild — shows to all.
   const reveal = control;
+  const theme = activeTheme();
+  const lang = activeLanguage();
   // GM only, while a roll is on the table: a per-die value-override picker.
   const canEditValues = Boolean(user.isGM) && (state.phase === "selecting" || state.phase === "bust");
   const dice = state.pool.map((d) => {
-    const dieId = cur?.dieIds?.[d.id - 1] ?? "fair";
-    const named = reveal && dieId !== "fair";
+    const dieId = cur?.dieIds?.[d.id - 1] ?? DEFAULT_DIE_ID;
+    const named = reveal && dieId !== DEFAULT_DIE_ID;
     const showEdit = Boolean(user.isGM) && d.state === "in-play";
     const canEdit = canEditValues && d.state === "in-play";
     return {
@@ -47,9 +50,9 @@ export function buildBoardContext(state, user, ui) {
       reroll: ui.heroMode && ui.rerollSelection.has(d.id),
       blank: d.value === null,
       isWild: d.value === WILD,
-      label: named ? getDie(dieId).label : `#${d.id}`,
+      label: named ? dieName(theme, lang, dieId) : `#${d.id}`,
       named,
-      flavor: named ? getDie(dieId).flavor : "",
+      flavor: named ? dieDesc(theme, lang, dieId) : "",
       showEdit,
       canEdit,
       editing: canEdit && ui.editDieId === d.id,

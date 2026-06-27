@@ -1,0 +1,20 @@
+<div class="kg-tl">
+  {{#if isGM}}
+    <div class="kg-tl-row">
+      <label>{{localize "KNUCKLES.themeLang.theme"}}</label>
+      <select name="theme">
+        {{#each themes}}<option value="{{id}}"{{#if (kgEq id ../currentTheme)}} selected{{/if}}>{{name}}</option>{{/each}}
+      </select>
+    </div>
+  {{/if}}
+  <div class="kg-tl-row">
+    <label>{{localize "KNUCKLES.themeLang.language"}}</label>
+    <select name="language">
+      {{#each langs}}<option value="{{code}}"{{#if (kgEq code ../currentLang)}} selected{{/if}}>{{name}}</option>{{/each}}
+    </select>
+  </div>
+  <p class="kg-tl-hint">{{localize "KNUCKLES.themeLang.hint"}}</p>
+  <footer class="kg-tl-foot">
+    <button type="submit" class="primary"><i class="fa-solid fa-check" aria-hidden="true"></i> {{localize "KNUCKLES.themeLang.save"}}</button>
+  </footer>
+</div>
