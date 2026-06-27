@@ -66,6 +66,11 @@
 .knuckles-game .kg-dchar-head .kg-pname { flex: 1 1 auto; min-width: 0; }
 .knuckles-game .kg-tally { flex: 0 0 auto; font-size: 11px; color: var(--kg-win); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .knuckles-game .kg-tally.is-short { color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); }
+.knuckles-game .kg-defbtns { display: inline-flex; gap: 5px; flex: 0 0 auto; }
+.knuckles-game .kg-defbtn { font-size: 11px; color: var(--kg-accent); background: transparent; border: 1px solid color-mix(in srgb, var(--kg-accent) 45%, transparent); border-radius: 6px; padding: 2px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.knuckles-game .kg-defbtn:hover { background: color-mix(in srgb, var(--kg-accent) 14%, transparent); }
+.knuckles-game .kg-defbtn.ghost { color: var(--kg-muted); border-color: var(--kg-surface-2); }
+.knuckles-game .kg-defbtn.ghost:hover { color: var(--kg-text); }
 .knuckles-game .kg-stocknote { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--kg-muted); margin: 6px 0 2px; }
 /* always rendered in owned mode (height reserved) so the window never resizes when the buy prompt toggles */
 .knuckles-game .kg-buyhint { display: flex; align-items: center; gap: 7px; min-height: 18px; font-size: 12px; color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); margin: 6px 0 2px; }
@@ -138,10 +143,11 @@
 .knuckles-game .kg-target-row input { width: 120px; }
 .knuckles-game .kg-setup-foot { margin-top: 14px; display: flex; justify-content: flex-end; }
 .knuckles-game .kg-pblock { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px; }
-.knuckles-game .kg-bets { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-.knuckles-game .kg-bet-label { font-size: 12px; color: var(--kg-muted); }
-.knuckles-game .kg-bet { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--kg-muted); }
-.knuckles-game .kg-bet input { width: 66px; }
+/* one compact line: a small fixed-width input per coin, no wrapping, no empty sprawl */
+.knuckles-game .kg-bets { display: flex; align-items: center; gap: 7px; margin-top: 6px; flex-wrap: nowrap; }
+.knuckles-game .kg-bet-label { font-size: 11px; color: var(--kg-muted); white-space: nowrap; flex: 0 0 auto; }
+.knuckles-game .kg-bet { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--kg-muted); white-space: nowrap; flex: 0 0 auto; }
+.knuckles-game .kg-bet input { width: 44px; flex: 0 0 auto; }
 
 .knuckles-game .kg-pot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; margin-bottom: 12px; }
 .knuckles-game .kg-coin { font-size: 14px; font-weight: 500; }

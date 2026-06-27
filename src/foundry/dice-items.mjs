@@ -172,6 +172,39 @@ export function coverLoadout(dieIds, gifts, ownedCounts) {
   return { toGrant, shortBy };
 }
 
+const DEFAULT_LOADOUT_FLAG = "defaultLoadout";
+
+/** A player's saved default six-die loadout from an actor flag, or null if absent / malformed. */
+export function readDefaultLoadout(actor) {
+  const saved = actor?.getFlag?.(MODULE_ID, DEFAULT_LOADOUT_FLAG);
+  if (!Array.isArray(saved) || saved.length !== 6 || saved.some((id) => typeof id !== "string")) return null;
+  return [...saved];
+}
+
+/** Save a six-die default loadout to an actor flag. Foundry enforces OWNER/GM server-side,
+ *  so a client-side write here is the real permission boundary (the button is UX only). */
+export async function saveDefaultLoadout(actor, dieIds) {
+  if (!actor?.setFlag || !Array.isArray(dieIds) || dieIds.length !== 6) return;
+  await actor.setFlag(MODULE_ID, DEFAULT_LOADOUT_FLAG, dieIds.map(String));
+}
+
+/** Forget the saved default loadout. */
+export async function clearDefaultLoadout(actor) {
+  await actor?.unsetFlag?.(MODULE_ID, DEFAULT_LOADOUT_FLAG);
+}
+
+/**
+ * Resolve a starting six-slot loadout from a saved default. Pure — `validIds` (the catalog
+ * id set) is passed in so this stays Foundry-free. Returns null when there is no usable
+ * default (the caller then falls back to the prefill / "01"). An unknown id becomes "01";
+ * in physical mode the hand is clamped onto the owned copies so it is legal.
+ */
+export function resolveLoadout(saved, ownedCounts, { physical = false, validIds } = {}) {
+  if (!Array.isArray(saved) || saved.length !== 6) return null;
+  const valid = saved.map((id) => (validIds && !validIds.has(id) ? "01" : id));
+  return physical ? clampLoadout(valid, ownedCounts) : valid;
+}
+
 let packCache = null; // Map(dieId -> source object)
 
 async function diceSources() {

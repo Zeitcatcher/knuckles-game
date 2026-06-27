@@ -12,8 +12,8 @@ import { rollValues } from "../foundry/dice-roller.mjs";
 import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
-import { getDieSpec } from "../foundry/dice-data.mjs";
-import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, coverLoadout } from "../foundry/dice-items.mjs";
+import { getDieSpec, diceIds } from "../foundry/dice-data.mjs";
+import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, coverLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
@@ -74,6 +74,25 @@ export async function dispatchAsGM(intent, userId) {
       }
     }
     state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId, gifted });
+    await saveState(state);
+    return state;
+  }
+  // Apply a whole six-die loadout at once ("reset to my saved default"): one write, one
+  // re-render, atomic — unlike six setDieSlot calls.
+  if (intent.type === "setLoadout") {
+    const target = state.players.find((p) => p.id === intent.playerId);
+    if (!target) throw new Error("unknown player");
+    const allowed =
+      (state.status === "choosing" && canAct(requester, target)) ||
+      (state.status === "playing" && Boolean(requester?.isGM));
+    if (!allowed) throw new Error("you cannot change those dice now");
+    let ids = Array.isArray(intent.dieIds) ? intent.dieIds.slice(0, 6).map(String) : [];
+    while (ids.length < 6) ids.push("01");
+    // A non-GM may only field dice they own: re-seat the incoming hand onto owned copies.
+    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid) && !requester?.isGM) {
+      ids = clampLoadout(ids, ownedDieCounts(inventoryActor(target)));
+    }
+    state = reduce(state, { type: "setLoadout", playerId: intent.playerId, dieIds: ids });
     await saveState(state);
     return state;
   }
@@ -246,13 +265,13 @@ async function buildNewGame(config) {
       if (!p.tokenUuid) name = actor?.name ?? name; // actor-bound follows the actor; token-bound keeps the token name
       heroPoints = await getHeroPoints(p.actorUuid);
     }
-    // Physical mode: start each player's six slots from the dice they own, so they
-    // begin with a valid hand and just customise. Virtual mode keeps the "01" default.
-    let dieIds;
-    if (physical) {
-      const owned = ownedDieCounts(inventoryActor({ tokenUuid: p.tokenUuid, actorUuid: p.actorUuid }));
-      dieIds = prefillLoadout(owned);
-    }
+    // Seed the six slots: a saved default loadout if the actor has one (applies in BOTH
+    // virtual and physical mode), else physical pre-fills from owned dice and virtual
+    // leaves it undefined for createGame to "01"-fill.
+    const invActor = inventoryActor({ tokenUuid: p.tokenUuid, actorUuid: p.actorUuid });
+    const owned = physical ? ownedDieCounts(invActor) : new Map();
+    let dieIds = resolveLoadout(readDefaultLoadout(invActor), owned, { physical, validIds: new Set(diceIds()) });
+    if (!dieIds && physical) dieIds = prefillLoadout(owned);
     players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, tokenUuid: p.tokenUuid ?? null, heroPoints, bet: p.bet, dieIds });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET, physical });
