@@ -7,11 +7,12 @@
 .knuckles-game .kg-muted { color: var(--kg-muted); font-size: 12px; }
 .knuckles-game .kg-empty { color: var(--kg-muted); text-align: center; padding: 18px 0; }
 
-.knuckles-game .kg-scoreboard { display: flex; gap: var(--kg-gap); margin-bottom: 12px; flex-wrap: wrap; }
-.knuckles-game .kg-pcard { flex: 1 1 120px; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; }
+.knuckles-game .kg-scoreboard { display: flex; gap: var(--kg-gap); margin-bottom: 12px; }
+.knuckles-game .kg-pcards { display: flex; gap: var(--kg-gap); flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+.knuckles-game .kg-pcard { flex: 1 0 130px; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; }
 .knuckles-game .kg-pcard.is-current { outline: 2px solid var(--kg-accent); }
 .knuckles-game .kg-pcard.is-winner { outline: 2px solid var(--kg-win); }
-.knuckles-game .kg-pname { font-size: 13px; }
+.knuckles-game .kg-pname { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .knuckles-game .kg-ptotal { font-size: 22px; font-weight: 600; }
 .knuckles-game .kg-hero { margin-top: 5px; display: flex; gap: 3px; align-items: center; min-height: 12px; }
 .knuckles-game .kg-pip-hp { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--kg-accent); }
@@ -23,13 +24,14 @@
 
 /* dice picker */
 .knuckles-game .kg-dice { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); }
+.knuckles-game .kg-dchars { max-height: 50vh; overflow-y: auto; }
 .knuckles-game .kg-dchar { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; margin-bottom: 8px; }
 .knuckles-game .kg-dslots { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
 .knuckles-game .kg-dslot { display: flex; align-items: center; gap: 8px; }
 .knuckles-game .kg-dslot .kg-idx { width: 26px; flex: 0 0 auto; }
 .knuckles-game .kg-dslot select { flex: 1; box-sizing: border-box; }
 .knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
-.knuckles-game .kg-target { background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; text-align: center; }
+.knuckles-game .kg-target { flex: 0 0 auto; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 12px; text-align: center; }
 .knuckles-game .kg-tval { font-size: 22px; font-weight: 600; }
 
 .knuckles-game .kg-turn { margin: 6px 0 8px; }
