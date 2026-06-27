@@ -29,6 +29,12 @@ export function buildBoardContext(state, user, ui) {
   // The current player's controller (or the GM) sees die names + loaded styling;
   // everyone else sees plain #n. The rolled face — including a wild — shows to all.
   const reveal = control;
+  // The keep-selection is shared via state.selection so every viewer (players AND
+  // spectators) sees the same highlight + running sum. The current controller also
+  // sees their own in-flight toggles immediately (optimistic local echo) before the
+  // debounced sync lands.
+  const sharedSel = new Set(state.selection ?? []);
+  const effSel = control ? new Set([...sharedSel, ...ui.selection]) : sharedSel;
   const theme = activeTheme();
   const lang = activeLanguage();
   // GM only, while a roll is on the table: a per-die value-override picker.
@@ -43,7 +49,7 @@ export function buildBoardContext(state, user, ui) {
       value: d.value,
       inPlay: d.state === "in-play",
       kept: d.state === "kept",
-      selected: !ui.heroMode && ui.selection.has(d.id),
+      selected: !ui.heroMode && effSel.has(d.id),
       reroll: ui.heroMode && ui.rerollSelection.has(d.id),
       blank: d.value === null,
       isWild: d.value === WILD,
@@ -57,7 +63,7 @@ export function buildBoardContext(state, user, ui) {
   });
 
   const selValues = state.pool
-    .filter((d) => d.state === "in-play" && d.value !== null && ui.selection.has(d.id))
+    .filter((d) => d.state === "in-play" && d.value !== null && effSel.has(d.id))
     .map((d) => d.value);
   const sel = selValues.length ? scoreSelection(selValues) : { valid: false, points: 0 };
 
@@ -91,6 +97,11 @@ export function buildBoardContext(state, user, ui) {
     heroMode: ui.heroMode,
     selectionValid: sel.valid,
     selectionPoints: sel.points,
+    // The running sum + highlight are shown to EVERYONE while selecting; non-controllers
+    // see it attributed ("Selected by NAME") since it isn't their pick.
+    showSelectionSum: state.phase === "selecting" && effSel.size > 0,
+    selectionByOther: !control,
+    selectionOwnerName: cur?.name ?? "",
     rerollCount: ui.rerollSelection.size,
     heroPoints: cur?.heroPoints ?? 0,
     finalRound: state.finalRound,

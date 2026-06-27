@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.4
+
+- **Concurrency & live visibility.** Two fixes built on one shared non-destructive render gate.
+  - **The dice picker no longer jumps when someone else picks.** While everyone is choosing their dice, another player changing a slot used to scroll your list back to the top and close any dropdown you had open. Now a sync that doesn't affect your own characters is skipped entirely, and when the window does refresh it preserves your scroll position and keeps an open dropdown open (the re-render waits until you commit or click away). The GM, who sees everyone, keeps watching picks come in live without losing their place.
+  - **Everyone sees the selected dice and the running total.** When the active player (or the GM) clicks dice to keep, the gold highlight and the "Selected: N" sum are now visible to every player and spectator at the table — attributed as "Selected by NAME" to onlookers — instead of only the person whose turn it is. The selection is part of the synced game state (cleared on every roll, keep, re-roll, and turn change), so a spectator who opens the board mid-turn sees the current pick too.
+
 ## 0.5.3
 
 - Physical dice, part 4. A real dice **icon** (one shared `.webp` for all dice for now; drop `assets/dice/<id>.webp` later for per-die art and it's picked up automatically). **Localization is simplified**: the dice **theme and language are now both GM-set world settings** that apply to the whole table — the per-player language picker is gone. And the dice items' **shop-sheet name/description are kept in the table's theme + language automatically**: a die is named correctly the moment it's granted or bought, and changing the theme or language re-stamps every die in the world. No manual rebuild step. (The board/picker already localized live; this brings the pf2e inventory/shop sheet in line.)

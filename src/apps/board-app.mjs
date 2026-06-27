@@ -4,6 +4,7 @@ import { loadState } from "../foundry/state-store.mjs";
 import { dispatch } from "../net/socket.mjs";
 import { buildBoardContext } from "../presentation/view-model.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
+import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -19,6 +20,18 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   rerollSelection = new Set();
   /** die id whose GM value-override picker is open (transient, client-local) */
   editDieId = null;
+  /** true while a local keep-toggle has an unflushed setSelection write in flight */
+  _selectionDirty = false;
+
+  constructor(options) {
+    super(options);
+    // One stable debounce per instance: a drag across several dice collapses into a
+    // single setSelection write (and one cross-client re-render), not one per toggle.
+    this._syncSelection = foundry.utils.debounce(() => {
+      this._selectionDirty = false;
+      dispatch({ type: "setSelection", ids: [...this.selection] }).catch(reportError);
+    }, 150);
+  }
 
   static DEFAULT_OPTIONS = {
     id: `${MODULE_ID}-board`,
@@ -44,6 +57,12 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static PARTS = { board: { template: TEMPLATES.BOARD } };
 
+  /** Snapshot scroll + focus before the DOM swap (the gate restores them in _onRender). */
+  async _preRender(context, options) {
+    await super._preRender?.(context, options);
+    snapshotRender(this, [".kg-log-lines"]);
+  }
+
   async _prepareContext() {
     return buildBoardContext(loadState(), game.user, {
       selection: this.selection,
@@ -55,6 +74,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _onRender() {
     applyAppearance(this.element);
+    restoreRender(this); // re-apply scroll/focus captured before this re-render
 
     // Auto-scroll the scoreboard so the active player's card is always in view
     // (only when the row actually overflows).
@@ -91,10 +111,19 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static _onToggleDie(event, target) {
     const id = Number(target.dataset.dieId);
-    const set = this.heroMode ? this.rerollSelection : this.selection;
-    if (set.has(id)) set.delete(id);
-    else set.add(id);
+    if (this.heroMode) {
+      if (this.rerollSelection.has(id)) this.rerollSelection.delete(id);
+      else this.rerollSelection.add(id);
+      this.render();
+      return;
+    }
+    // Keep-selection is shared: echo locally for instant feedback, then sync it
+    // (debounced) so every viewer sees the same highlight + running sum.
+    if (this.selection.has(id)) this.selection.delete(id);
+    else this.selection.add(id);
+    this._selectionDirty = true;
     this.render();
+    this._syncSelection();
   }
 
   static _onKeepRoll() {
@@ -170,20 +199,24 @@ export function openBoard() {
   return instance;
 }
 
-export function refreshBoard() {
+export function refreshBoard(force = false) {
   // Never auto-open a hidden board; only re-render if it is already open.
   if (!instance || !instance.rendered) return;
   // The game was ended/cleared: close the board everywhere (the launch icon
   // then reverts to New Game setup for the GM).
-  if (!loadState()) {
+  const state = loadState();
+  if (!state) {
     instance.close();
     return;
   }
-  // Any synced state change resets transient UI: the keep-selection and the
-  // Hero-Point re-roll mode (so after a re-roll the board returns to normal).
-  instance.selection.clear();
+  // Hydrate the shared keep-selection from synced state so every viewer (players and
+  // spectators) shows the same highlight — UNLESS this client has a local toggle still
+  // in flight, in which case the controller's optimistic Set wins until it flushes
+  // (so the round-trip echo can't yank their in-progress selection).
+  if (!instance._selectionDirty) instance.selection = new Set(state.selection ?? []);
+  // Hero-Point re-roll mode and the GM value-override are private/transient: reset them.
   instance.heroMode = false;
   instance.rerollSelection.clear();
   instance.editDieId = null;
-  instance.render();
+  scheduleRender(instance, { force });
 }

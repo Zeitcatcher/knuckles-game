@@ -59,8 +59,8 @@ async function loadContent() {
  *  re-stamp the world's dice items so their shop-sheet text follows the new theme. */
 function onThemeChanged() {
   preloadTheme(activeTheme(), activeLanguage()).then(() => {
-    refreshDicePicker();
-    refreshBoard();
+    refreshDicePicker(true); // a theme/language change invalidates every rendered label
+    refreshBoard(true);
     if (game.user.isGM) restampWorldDice().catch((err) => console.error("knuckles-game | restampWorldDice", err));
   });
 }
@@ -71,7 +71,7 @@ Hooks.once("init", () => {
 
   registerSettings({
     onStateChanged: () => { refreshDicePicker(); refreshBoard(); },
-    onAppearanceChanged: () => { refreshDicePicker(); refreshBoard(); },
+    onAppearanceChanged: () => { refreshDicePicker(true); refreshBoard(true); },
     onThemeChanged,
   });
 

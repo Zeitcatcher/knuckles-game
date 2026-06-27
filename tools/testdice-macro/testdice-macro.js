@@ -31,18 +31,27 @@ if (!actor) {
     if (!pack) {
       ui.notifications.error(`Knuckles Test Dice: compendium "${PACK}" not found.`);
     } else {
-      const docs = await pack.getDocuments();
-      const src = docs.find((d) => d.getFlag(KG, "dieId") === id || slugId(d) === id)?.toObject() ?? null;
-      if (!src) {
-        ui.notifications.error(`Knuckles Test Dice: die "${id}" not found in ${PACK}.`);
-      } else {
-        try {
-          await actor.createEmbeddedDocuments("Item", [src]);
-          ui.notifications.info(`Knuckles Test Dice: granted die ${id} (${src.name}) to ${actor.name}.`);
-        } catch (err) {
-          console.error("Knuckles Test Dice | grant failed", err);
-          ui.notifications.error("Knuckles Test Dice: grant failed — see console (F12).");
+      try {
+        // Stack onto an existing copy if there is one, else create — same as the game's grant.
+        const equipment = actor.itemTypes?.equipment ?? actor.items.filter((i) => i.type === "equipment");
+        const existing = equipment.find((it) => dieIdOf(it) === id);
+        if (existing) {
+          const q = (existing.system?.quantity ?? 0) + 1;
+          await existing.update({ "system.quantity": q });
+          ui.notifications.info(`Knuckles Test Dice: ${existing.name} → ×${q} on ${actor.name}.`);
+        } else {
+          const docs = await pack.getDocuments();
+          const src = docs.find((d) => d.getFlag(KG, "dieId") === id || slugId(d) === id)?.toObject() ?? null;
+          if (!src) {
+            ui.notifications.error(`Knuckles Test Dice: die "${id}" not found in ${PACK}.`);
+          } else {
+            await actor.createEmbeddedDocuments("Item", [src]);
+            ui.notifications.info(`Knuckles Test Dice: granted die ${id} (${src.name}) to ${actor.name}.`);
+          }
         }
+      } catch (err) {
+        console.error("Knuckles Test Dice | grant failed", err);
+        ui.notifications.error("Knuckles Test Dice: grant failed — see console (F12).");
       }
     }
   }

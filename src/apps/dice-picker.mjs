@@ -5,6 +5,8 @@ import { applyAppearance } from "../presentation/theme.mjs";
 import { diceIds } from "../foundry/dice-data.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices } from "../foundry/dice-items.mjs";
+import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
+import { pickerSignature } from "../core/transient-ui.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -131,28 +133,46 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       };
     });
 
+    // The signature of what we're about to render — refreshDicePicker compares the
+    // next state's signature against this to skip renders that wouldn't change our slice.
+    this._kgSig = pickerSignature(state, editable.map((p) => p.id));
     return { active: editable.length > 0, choosing: state.status === "choosing", isGM: Boolean(game.user.isGM), players };
+  }
+
+  /** Snapshot the list scroll + the focused slot-select before the DOM swap. */
+  async _preRender(context, options) {
+    await super._preRender?.(context, options);
+    snapshotRender(this, [".kg-dchars"]);
   }
 
   _onRender() {
     applyAppearance(this.element);
     for (const sel of this.element.querySelectorAll("select[data-die-slot]")) {
+      // While a dropdown is open the gate defers a foreign sync (no yanked pick / scroll
+      // jump); committing (change) or leaving (blur) clears the lock and flushes it.
+      sel.addEventListener("focus", () => { this._kgSelectBusy = true; });
       sel.addEventListener("change", (ev) => {
+        this._kgSelectBusy = false;
         dispatch({
           type: "setDieSlot",
           playerId: ev.target.dataset.playerId,
           slot: Number(ev.target.dataset.slot),
           dieId: ev.target.value,
         }).catch(reportError);
+        scheduleRender(this); // flush any render deferred while this select was open
       });
+      sel.addEventListener("blur", () => { this._kgSelectBusy = false; scheduleRender(this); });
     }
     if (loadState()?.physical) this._ensureItemHooks();
     else this._dropItemHooks();
+    restoreRender(this); // re-apply the scroll/focus captured in _preRender
   }
 
   _ensureItemHooks() {
     if (this._itemHooks) return;
-    const refresh = foundry.utils.debounce(() => { if (this.rendered) this.render(); }, 150);
+    // Owned-count changes aren't in the picker signature, so refresh through the gate
+    // directly (lock-aware: it won't close a dropdown the user has open).
+    const refresh = foundry.utils.debounce(() => scheduleRender(this), 150);
     const onChange = (item) => {
       if (!isDieItem(item)) return;
       const state = loadState();
@@ -222,12 +242,18 @@ export function openDicePicker() {
   return instance;
 }
 
-export function refreshDicePicker() {
+export function refreshDicePicker(force = false) {
   if (!instance || !instance.rendered) return;
   const state = loadState();
   if (!state || (state.status !== "choosing" && !game.user.isGM)) {
     instance.close();
     return;
   }
-  instance.render();
+  // Theme / appearance changes invalidate every label but don't touch the signature —
+  // they force-render. A plain state sync is gated: skip it if THIS client's editable
+  // slice is unchanged (so another player's pick can't thrash my window).
+  if (force) { scheduleRender(instance, { force: true }); return; }
+  const editableIds = state.players.filter((p) => canControl(game.user, p)).map((p) => p.id);
+  if (pickerSignature(state, editableIds) === instance._kgSig) return;
+  scheduleRender(instance);
 }

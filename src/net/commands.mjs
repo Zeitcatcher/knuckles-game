@@ -112,6 +112,17 @@ export async function dispatchAsGM(intent, userId) {
     return state;
   }
 
+  // Shared keep-selection: the current controller (or GM) highlights dice for everyone.
+  // Handled here — before the play-turn switch — so a high-frequency toggle doesn't
+  // trigger the post-switch Hero-Point actor re-read. Gated to the current controller.
+  if (intent.type === "setSelection") {
+    if (state.status !== "playing") return state;
+    if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
+    state = reduce(state, { type: "setSelection", ids: intent.ids });
+    await saveState(state);
+    return state;
+  }
+
   if (state.status !== "playing") throw new Error("no active game");
   if (!canAct(requester, currentPlayer(state))) throw new Error("it is not your turn");
 

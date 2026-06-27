@@ -81,7 +81,7 @@
 
     <p class="kg-hint">
       {{#if heroMode}}{{localize "KNUCKLES.board.heroHint"}}
-      {{else if inTurn}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}
+      {{else if showSelectionSum}}{{#if selectionByOther}}{{localize "KNUCKLES.board.selectedBy" name=selectionOwnerName}}: {{selectionPoints}}{{else}}{{localize "KNUCKLES.board.selected"}}: {{selectionPoints}}{{/if}}{{/if}}
     </p>
 
     <div class="kg-controls">
