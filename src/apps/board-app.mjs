@@ -1,4 +1,4 @@
-import { TEMPLATES, MODULE_ID } from "../constants.mjs";
+import { TEMPLATES, MODULE_ID, SETTINGS } from "../constants.mjs";
 import { WILD } from "../core/dice-model.mjs";
 import { loadState } from "../foundry/state-store.mjs";
 import { dispatch } from "../net/socket.mjs";
@@ -10,13 +10,18 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 let instance = null;
 
+/** Extra window width taken by the combos reference panel when it is open. */
+const COMBOS_W = 212;
+
 /** The shared game board. A singleton, re-rendered whenever the synced state changes. */
 export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** dice ids selected to keep (transient, client-local) */
   selection = new Set();
   /** whether the Hero-Point re-roll picker is open */
   heroMode = false;
-  /** dice ids selected to re-roll with a Hero Point */
+  /** whether the GM free-reroll picker is open (GM only; reuses rerollSelection) */
+  gmRerollMode = false;
+  /** dice ids selected to re-roll (Hero-Point or GM free re-roll) */
   rerollSelection = new Set();
   /** die id whose GM value-override picker is open (transient, client-local) */
   editDieId = null;
@@ -37,7 +42,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-board`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.title", icon: "fa-solid fa-dice-d6", resizable: true },
-    position: { width: 580, height: 600 },
+    position: { width: 792, height: 600 }, // 580 board + 212 combos panel (open by default)
     actions: {
       roll: BoardApp._onRoll,
       toggleDie: BoardApp._onToggleDie,
@@ -46,6 +51,10 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       heroOpen: BoardApp._onHeroOpen,
       heroCancel: BoardApp._onHeroCancel,
       heroConfirm: BoardApp._onHeroConfirm,
+      gmRerollOpen: BoardApp._onGmRerollOpen,
+      gmRerollCancel: BoardApp._onGmRerollCancel,
+      gmRerollConfirm: BoardApp._onGmRerollConfirm,
+      toggleCombos: BoardApp._onToggleCombos,
       takeBust: BoardApp._onTakeBust,
       editDie: BoardApp._onEditDie,
       setDieValue: BoardApp._onSetDieValue,
@@ -63,10 +72,20 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     snapshotRender(this, [".kg-log-lines"]);
   }
 
+  /** Widen the window once if the combos panel starts open (its default), so the board
+   *  isn't squeezed. Done on first render only, so manual resizing afterward is kept. */
+  _onFirstRender(context, options) {
+    super._onFirstRender?.(context, options);
+    if (!game.settings.get(MODULE_ID, SETTINGS.COMBOS_OPEN)) {
+      this.setPosition({ width: (this.position?.width ?? 792) - COMBOS_W });
+    }
+  }
+
   async _prepareContext() {
     return buildBoardContext(loadState(), game.user, {
       selection: this.selection,
       heroMode: this.heroMode,
+      gmRerollMode: this.gmRerollMode,
       rerollSelection: this.rerollSelection,
       editDieId: this.editDieId,
     });
@@ -90,7 +109,9 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     // Keep the GM value-override popover inside the board; an edge die (e.g. #1)
     // would otherwise centre the popover past the window edge and clip it.
     const pop = this.element.querySelector(".kg-valpop");
-    const board = this.element.querySelector(".kg-board");
+    // Clamp within the dice column (.kg-main), not the whole board, so the combos
+    // panel's width doesn't let the popover drift over the reference panel.
+    const board = this.element.querySelector(".kg-main");
     if (!pop || !board) return;
     const pad = 8;
     const b = board.getBoundingClientRect();
@@ -111,7 +132,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static _onToggleDie(event, target) {
     const id = Number(target.dataset.dieId);
-    if (this.heroMode) {
+    if (this.heroMode || this.gmRerollMode) {
       if (this.rerollSelection.has(id)) this.rerollSelection.delete(id);
       else this.rerollSelection.add(id);
       this.render();
@@ -150,6 +171,34 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const rerollIds = [...this.rerollSelection];
     if (!rerollIds.length) return;
     dispatch({ type: "useHeroPoint", rerollIds }).catch(reportError);
+  }
+
+  static _onGmRerollOpen() {
+    this.gmRerollMode = true;
+    this.rerollSelection.clear();
+    this.render();
+  }
+
+  static _onGmRerollCancel() {
+    this.gmRerollMode = false;
+    this.rerollSelection.clear();
+    this.render();
+  }
+
+  static _onGmRerollConfirm() {
+    const rerollIds = [...this.rerollSelection];
+    if (!rerollIds.length) return;
+    dispatch({ type: "gmReroll", rerollIds }).catch(reportError);
+  }
+
+  /** Toggle the combos reference panel: persist the client setting, resize the window
+   *  by the panel's width (so it doesn't squeeze the board), and re-render. */
+  static async _onToggleCombos() {
+    const open = game.settings.get(MODULE_ID, SETTINGS.COMBOS_OPEN);
+    await game.settings.set(MODULE_ID, SETTINGS.COMBOS_OPEN, !open);
+    const w = this.position?.width ?? 580;
+    this.setPosition({ width: open ? w - COMBOS_W : w + COMBOS_W });
+    this.render();
   }
 
   static _onTakeBust() {
@@ -214,8 +263,9 @@ export function refreshBoard(force = false) {
   // in flight, in which case the controller's optimistic Set wins until it flushes
   // (so the round-trip echo can't yank their in-progress selection).
   if (!instance._selectionDirty) instance.selection = new Set(state.selection ?? []);
-  // Hero-Point re-roll mode and the GM value-override are private/transient: reset them.
+  // Hero-Point / GM re-roll modes and the GM value-override are private/transient: reset.
   instance.heroMode = false;
+  instance.gmRerollMode = false;
   instance.rerollSelection.clear();
   instance.editDieId = null;
   scheduleRender(instance, { force });

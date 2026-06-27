@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.5
+
+- **GM tools and a combos reference.**
+  - **GM free re-roll.** A GM-only "GM re-roll" button now appears during a turn (on any player's turn): pick any of the current player's dice and re-roll them for free — the same mechanic as a Hero-Point re-roll, but no Hero Point is spent. The value-override pencils step aside while you're choosing dice to re-roll.
+  - **Scoring-combinations panel.** A reference panel on the right of the board lists every scoring combination — singles, three-of-a-kind, the "each extra die doubles" rule, straights, and the wild — drawn with actual dice. It's open by default and collapses to a slim tab with one click (your choice is remembered per user). The board window widens to fit it and shrinks back when you collapse it.
+
 ## 0.5.4
 
 - **Concurrency & live visibility.** Two fixes built on one shared non-destructive render gate.

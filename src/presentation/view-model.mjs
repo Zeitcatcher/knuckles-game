@@ -5,11 +5,12 @@
 
 import { scoreSelection } from "../core/scoring.mjs";
 import { computePool } from "../core/game-state.mjs";
+import { buildCombos } from "../core/combos.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { DEFAULT_DIE_ID } from "../foundry/dice-data.mjs";
 import { inventoryActor } from "../foundry/dice-items.mjs";
 import { WILD } from "../core/dice-model.mjs";
-import { DEFAULTS } from "../constants.mjs";
+import { DEFAULTS, MODULE_ID, SETTINGS } from "../constants.mjs";
 
 const pips = (n, max) => Array.from({ length: max }, (_, i) => ({ on: i < n }));
 
@@ -42,15 +43,17 @@ export function buildBoardContext(state, user, ui) {
   const dice = state.pool.map((d) => {
     const dieId = cur?.dieIds?.[d.id - 1] ?? DEFAULT_DIE_ID;
     const named = reveal && dieId !== DEFAULT_DIE_ID;
-    const showEdit = Boolean(user.isGM) && d.state === "in-play";
+    // The value-override pencils are hidden while a re-roll picker is open, so the two
+    // GM tools never fight over the same dice; they return on confirm/cancel.
+    const showEdit = Boolean(user.isGM) && d.state === "in-play" && !ui.gmRerollMode && !ui.heroMode;
     const canEdit = canEditValues && d.state === "in-play";
     return {
       id: d.id,
       value: d.value,
       inPlay: d.state === "in-play",
       kept: d.state === "kept",
-      selected: !ui.heroMode && effSel.has(d.id),
-      reroll: ui.heroMode && ui.rerollSelection.has(d.id),
+      selected: !ui.heroMode && !ui.gmRerollMode && effSel.has(d.id),
+      reroll: (ui.heroMode || ui.gmRerollMode) && ui.rerollSelection.has(d.id),
       blank: d.value === null,
       isWild: d.value === WILD,
       label: named ? dieName(theme, lang, dieId) : `#${d.id}`,
@@ -95,6 +98,14 @@ export function buildBoardContext(state, user, ui) {
     turnScore: state.turnScore,
     dice,
     heroMode: ui.heroMode,
+    // GM free re-roll (no Hero Point): the entry button shows to the GM on any turn
+    // during selecting/bust; the picker reuses the dashed reroll highlight.
+    gmRerollMode: ui.gmRerollMode,
+    canGmReroll: Boolean(user.isGM) && !ui.heroMode && !ui.gmRerollMode && (state.phase === "selecting" || state.phase === "bust"),
+    canGmRerollConfirm: ui.gmRerollMode && Boolean(user.isGM) && ui.rerollSelection.size > 0,
+    // Scoring-combinations reference panel (collapsible, per-user, default open).
+    combos: buildCombos(),
+    combosOpen: game.settings.get(MODULE_ID, SETTINGS.COMBOS_OPEN) ?? true,
     selectionValid: sel.valid,
     selectionPoints: sel.points,
     // The running sum + highlight are shown to EVERYONE while selecting; non-controllers
