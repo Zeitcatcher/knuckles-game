@@ -74,10 +74,16 @@
 
 /* setup window */
 .knuckles-game .kg-players { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
-.knuckles-game .kg-prow { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
+.knuckles-game .kg-prow { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
 .knuckles-game .kg-prow > * { min-width: 0; }
 .knuckles-game .kg-prow input, .knuckles-game .kg-prow select { width: 100%; box-sizing: border-box; }
 .knuckles-game .kg-prow-head { padding: 0 2px; margin-bottom: 2px; }
+.knuckles-game .kg-combo { position: relative; }
+.knuckles-game .kg-combo-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin-top: 3px; max-height: 200px; overflow-y: auto; background: var(--kg-board-bg); border: 1px solid var(--kg-surface-2); border-radius: var(--kg-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+.knuckles-game .kg-combo-list[hidden] { display: none; }
+.knuckles-game .kg-combo-item { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 0; padding: 5px 9px; font-size: 13px; color: var(--kg-text); cursor: pointer; }
+.knuckles-game .kg-combo-item:hover { background: color-mix(in srgb, var(--kg-accent) 18%, transparent); }
+.knuckles-game .kg-combo-item[hidden] { display: none; }
 .knuckles-game .kg-target-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 .knuckles-game .kg-target-row input { width: 120px; }
 .knuckles-game .kg-setup-foot { margin-top: 14px; display: flex; justify-content: flex-end; }

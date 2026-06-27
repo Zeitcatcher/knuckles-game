@@ -1,6 +1,5 @@
 <div class="kg-setup">
   <div class="kg-prow kg-prow-head">
-    <span class="kg-muted">{{localize "KNUCKLES.setup.name"}}</span>
     <span class="kg-muted">{{localize "KNUCKLES.setup.character"}}</span>
     <span></span>
   </div>
@@ -8,13 +7,15 @@
     {{#each players}}
       <div class="kg-pblock" data-player-block data-index="{{@index}}">
         <div class="kg-prow">
-          <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.name'}}" />
-          <select name="actorUuid">
-            <option value="">{{localize "KNUCKLES.setup.noCharacter"}}</option>
-            {{#each ../actors}}
-              <option value="{{uuid}}"{{#if (kgEq uuid ../actorUuid)}} selected{{/if}}>{{name}}</option>
-            {{/each}}
-          </select>
+          <div class="kg-combo" data-combo>
+            <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.searchChar'}}" autocomplete="off" />
+            <input type="hidden" name="actorUuid" value="{{actorUuid}}" />
+            <div class="kg-combo-list" hidden>
+              {{#each ../actors}}
+                <button type="button" class="kg-combo-item" data-uuid="{{uuid}}" data-name="{{name}}">{{name}}</button>
+              {{/each}}
+            </div>
+          </div>
           <button type="button" class="kg-icon" data-action="removePlayer" data-index="{{@index}}" aria-label="Remove"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
         </div>
         <div class="kg-bets">

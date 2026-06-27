@@ -43,14 +43,37 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /** Auto-fill a row's name from the character chosen in its dropdown. */
+  /** Wire each row's character combobox: type to filter, click to pick. */
   _onRender() {
-    for (const select of this.element.querySelectorAll("select[name='actorUuid']")) {
-      select.addEventListener("change", (ev) => {
-        if (!ev.target.value) return;
-        const block = ev.target.closest("[data-player-block]");
-        const nameInput = block?.querySelector("input[name='name']");
-        if (nameInput) nameInput.value = ev.target.selectedOptions[0]?.textContent.trim() ?? "";
-      });
+    for (const combo of this.element.querySelectorAll("[data-combo]")) {
+      const input = combo.querySelector("input[name='name']");
+      const hidden = combo.querySelector("input[name='actorUuid']");
+      const list = combo.querySelector(".kg-combo-list");
+      const items = [...combo.querySelectorAll(".kg-combo-item")];
+
+      const refresh = () => {
+        const q = input.value.trim().toLowerCase();
+        let shown = 0;
+        for (const it of items) {
+          const match = it.dataset.name.toLowerCase().includes(q);
+          it.hidden = !match;
+          if (match) shown += 1;
+        }
+        list.hidden = shown === 0;
+      };
+
+      input.addEventListener("focus", refresh);
+      input.addEventListener("input", () => { hidden.value = ""; refresh(); });
+      input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; }, 150));
+
+      for (const it of items) {
+        it.addEventListener("mousedown", (ev) => {
+          ev.preventDefault(); // select before the input's blur fires
+          input.value = it.dataset.name;
+          hidden.value = it.dataset.uuid;
+          list.hidden = true;
+        });
+      }
     }
   }
 

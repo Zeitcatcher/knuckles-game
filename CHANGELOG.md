@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- New-game setup: the character field is now a search box. Type a letter or part of a name to filter the world's actors live, then click to pick; a name that matches nothing still creates a token-less player. Replaces the long scrolling dropdown.
+
 ## 0.2.9
 
 - Selecting dice no longer shifts the board: during the selecting phase the "Selected: N" caption (0 when nothing is kept) and the Keep + roll on / Keep + bank buttons are always shown, with the buttons grayed and disabled until the selection scores.
