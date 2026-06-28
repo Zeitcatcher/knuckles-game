@@ -175,15 +175,19 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       sel.addEventListener("focus", () => { this._kgSelectBusy = true; });
       sel.addEventListener("change", (ev) => {
         this._kgSelectBusy = false;
+        // The native <select> already shows the new value. Persist it, then re-render from
+        // the SAVED state once the dispatch resolves. Rendering BEFORE it lands would repaint
+        // the old value and visually "eat" the first change (needing a second pick).
         dispatch({
           type: "setDieSlot",
           playerId: ev.target.dataset.playerId,
           slot: Number(ev.target.dataset.slot),
           dieId: ev.target.value,
-        }).catch(reportError);
-        scheduleRender(this); // flush any render deferred while this select was open
+        }).then(() => { if (this.rendered) this.render(); }).catch(reportError);
       });
-      sel.addEventListener("blur", () => { this._kgSelectBusy = false; scheduleRender(this); });
+      // Flush a render that was DEFERRED while this dropdown was open (e.g. another player's
+      // change) once it closes — but don't force a fresh render here (that's the change path).
+      sel.addEventListener("blur", () => { this._kgSelectBusy = false; if (this._kgPending) scheduleRender(this); });
     }
     if (loadState()?.physical) this._ensureItemHooks();
     else this._dropItemHooks();
