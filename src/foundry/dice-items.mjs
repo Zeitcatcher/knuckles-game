@@ -274,6 +274,37 @@ export async function restampWorldDice() {
 }
 
 /**
+ * Re-stamp the bundled dice **compendium** items to the active theme + language (GM-side),
+ * so the GM's Compendium browser matches the table — the shipped pack ships as a neutral
+ * English snapshot. Only writes when something differs; unlocks the pack for the update and
+ * restores its prior lock state. After a module reinstall the pack resets to English and the
+ * next call (on `ready` / a theme change) re-localizes it. Returns the updated count.
+ */
+export async function restampCompendium() {
+  const pack = game.packs.get(PACK_ID);
+  if (!pack) return 0;
+  const updates = [];
+  for (const doc of await pack.getDocuments()) {
+    const id = dieIdOf(doc);
+    if (!id) continue;
+    const { name, desc } = themedNameDesc(id);
+    if (doc.name !== name || (doc.system?.description?.value ?? "") !== desc) {
+      updates.push({ _id: doc.id, name, "system.description.value": desc });
+    }
+  }
+  if (!updates.length) return 0;
+  const wasLocked = pack.locked;
+  if (wasLocked) await pack.configure({ locked: false });
+  try {
+    await pack.documentClass.updateDocuments(updates, { pack: pack.collection });
+  } finally {
+    if (wasLocked) await pack.configure({ locked: true });
+  }
+  clearDiceSourceCache(); // the granted-die source cache held the old names
+  return updates.length;
+}
+
+/**
  * Grant missing copies to an actor (GM-side). `missing` is Map(dieId -> copies).
  * Explicitly bumps an existing stack's quantity or creates a fresh item — we do NOT
  * rely on pf2e's auto-stack-on-create merge (its match heuristic and +N vs +1 merge
