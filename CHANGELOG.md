@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.13
+
+- **The dice compendium now matches your theme/language.** The bundled **Knuckles Dice** compendium ships as a neutral English (Pathfinder) snapshot; it's now re-stamped to the table's theme + language on load and whenever you change theme/language, so the Compendium browser reads "Кость Шамаса", not "Abadar's Ledger", when you've chosen The Shards / Russian. (GM-only; the pack is unlocked just for the update and re-locked. A module reinstall resets it to English and the next load re-localizes it.)
+
 ## 0.5.12
 
 - **Gifting dice to players is now one click.** In physical-dice mode, starting a game with a player who is short of dice no longer blocks or makes you re-pick: the dice currently shown in their slots (their defaults, or whatever the GM set) are **added to their inventory on start**, just like a token-NPC is stocked. The red "N of 6" tally and the "buy more dice to play" hint still show (so you know the character is short), and a per-slot marker now reads "will be added" instead of a blocking warning.
