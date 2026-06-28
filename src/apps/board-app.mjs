@@ -10,8 +10,10 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 let instance = null;
 
-/** Extra window width taken by the combos reference panel when it is open. */
-const COMBOS_W = 212;
+/** Width the window grows/shrinks by when toggling the combos panel: the difference
+ *  between the open panel (232 + 10 gap = 242) and the collapsed tab (28 + 10 = 38), so
+ *  the board column (.kg-main) keeps the same width in both states. */
+const COMBOS_W = 204;
 
 /** The shared game board. A singleton, re-rendered whenever the synced state changes. */
 export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -43,7 +45,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-board`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.title", icon: "fa-solid fa-dice-d6", resizable: true },
-    position: { width: 792, height: 600 }, // 580 board + 212 combos panel (open by default)
+    position: { width: 822, height: 600 }, // 580 board column + 242 open combos panel (default open)
     actions: {
       roll: BoardApp._onRoll,
       toggleDie: BoardApp._onToggleDie,

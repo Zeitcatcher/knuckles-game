@@ -5,7 +5,7 @@
 .knuckles-game .kg-main > * { flex-shrink: 0; }
 
 /* combos reference panel (right) */
-.knuckles-game .kg-combos { flex: 0 0 192px; align-self: stretch; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; display: flex; flex-direction: column; min-height: 0; }
+.knuckles-game .kg-combos { flex: 0 0 232px; align-self: stretch; background: var(--kg-surface); border-radius: var(--kg-radius); padding: 8px 10px; display: flex; flex-direction: column; min-height: 0; }
 .knuckles-game .kg-combos-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--kg-muted); margin-bottom: 6px; flex: 0 0 auto; }
 .knuckles-game .kg-combos-x { background: transparent; border: 0; color: var(--kg-muted); cursor: pointer; padding: 2px 4px; font-size: 12px; }
 .knuckles-game .kg-combos-x:hover { color: var(--kg-text); }
@@ -15,18 +15,20 @@
 .knuckles-game .kg-combo-pts { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--kg-accent); white-space: nowrap; }
 .knuckles-game .kg-combo-txt { font-size: 11px; color: var(--kg-muted); }
 .knuckles-game .kg-combo-sec { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--kg-muted); margin: 9px 0 5px; }
-.knuckles-game .kg-combo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+.knuckles-game .kg-combo-grid { display: grid; grid-template-columns: 1fr; gap: 4px; }
 .knuckles-game .kg-combo-grid .kg-combo-row { margin-bottom: 0; }
 .knuckles-game .kg-combo-note { font-size: 11px; color: var(--kg-muted); margin: 5px 0 2px; }
-.knuckles-game .kg-die.kg-cmini { width: 18px; height: 18px; border-radius: 4px; }
-.knuckles-game .kg-die.kg-cmini .kg-pips { inset: 3px; }
-.knuckles-game .kg-die.kg-cmini .kg-pip { width: 3px; height: 3px; }
-.knuckles-game .kg-die.kg-cmini .kg-die-num { font-size: 11px; }
-.knuckles-game .kg-die.kg-cmini .kg-wild { font-size: 12px; }
-/* collapsed tab (re-open) */
-.knuckles-game .kg-combos-tab { flex: 0 0 26px; align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 9px 2px; background: var(--kg-surface); border: 0; border-radius: var(--kg-radius); color: var(--kg-muted); cursor: pointer; }
+/* combos-panel dice ~50% larger than before (18px → 27px) */
+.knuckles-game .kg-die.kg-cmini { width: 27px; height: 27px; border-radius: 5px; }
+.knuckles-game .kg-die.kg-cmini .kg-pips { inset: 5px; }
+.knuckles-game .kg-die.kg-cmini .kg-pip { width: 4px; height: 4px; }
+.knuckles-game .kg-die.kg-cmini .kg-die-num { font-size: 16px; }
+.knuckles-game .kg-die.kg-cmini .kg-wild { font-size: 18px; }
+/* collapsed tab (re-open). height:auto + overflow:hidden override Foundry's default button
+   height so the stretched vertical label fits the full-height button instead of spilling. */
+.knuckles-game .kg-combos-tab { flex: 0 0 28px; align-self: stretch; height: auto; min-height: 0; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; padding: 10px 2px; background: var(--kg-surface); border: 0; border-radius: var(--kg-radius); color: var(--kg-muted); cursor: pointer; }
 .knuckles-game .kg-combos-tab:hover { color: var(--kg-text); }
-.knuckles-game .kg-combos-tab-l { writing-mode: vertical-rl; font-size: 11px; }
+.knuckles-game .kg-combos-tab-l { writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap; line-height: 1; font-size: 11px; }
 .knuckles-game .kg-gm-reroll { background: color-mix(in srgb, var(--kg-reroll) 32%, transparent); }
 /* Fixed-size board: the dark panel fills the window; oversized games scroll inside. */
 #knuckles-game-board .window-content { overflow: hidden auto; }

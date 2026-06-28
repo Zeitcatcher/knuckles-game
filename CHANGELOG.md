@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.10
+
+- **Dice-picker and combos-panel fixes.**
+  - **Choosing a die now applies on the first click.** Picking a replacement die in the loadout window took two attempts — the window repainted the old value before the change was saved. It now re-renders from the saved state after the pick lands.
+  - **Bigger combo dice.** The dice in the combinations reference panel are about 50% larger and easier to read; the panel is a little wider and the three-of-a-kind rows stack in one column to fit them.
+  - **Collapsed panel tab fixed.** When the combinations panel is collapsed, its vertical label and arrow no longer overflow the tab.
+
 ## 0.5.9
 
 - **Follow-ups from review.**
