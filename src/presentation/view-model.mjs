@@ -81,7 +81,7 @@ export function buildBoardContext(state, user, ui) {
     id: p.id,
     name: p.name,
     total: p.total,
-    isCurrent: i === state.turnIndex,
+    isCurrent: i === state.turnIndex && !finished, // at game end show only the winner ring, not the turn ring
     isWinner: finished && p.id === state.winnerId,
     showHero: p.type === "pc" || (p.heroPoints ?? 0) > 0,
     heroPips: pips(p.heroPoints ?? 0, DEFAULTS.MAX_HERO_POINTS),

@@ -11,9 +11,11 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 let instance = null;
 
 /** Width the window grows/shrinks by when toggling the combos panel: the difference
- *  between the open panel (232 + 10 gap = 242) and the collapsed tab (28 + 10 = 38), so
+ *  between the open panel (248 + 10 gap = 258) and the collapsed tab (28 + 10 = 38), so
  *  the board column (.kg-main) keeps the same width in both states. */
-const COMBOS_W = 204;
+const COMBOS_W = 220;
+/** Board window width with the combos panel open (580 board column + 258 panel). */
+const BOARD_W_OPEN = 838;
 
 /** The shared game board. A singleton, re-rendered whenever the synced state changes. */
 export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -45,7 +47,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-board`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.title", icon: "fa-solid fa-dice-d6", resizable: true },
-    position: { width: 822, height: 600 }, // 580 board column + 242 open combos panel (default open)
+    position: { width: BOARD_W_OPEN, height: 600 }, // 580 board column + 258 open combos panel (default open)
     actions: {
       roll: BoardApp._onRoll,
       toggleDie: BoardApp._onToggleDie,
@@ -80,7 +82,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   _onFirstRender(context, options) {
     super._onFirstRender?.(context, options);
     if (!game.settings.get(MODULE_ID, SETTINGS.COMBOS_OPEN)) {
-      this.setPosition({ width: (this.position?.width ?? 792) - COMBOS_W });
+      this.setPosition({ width: (this.position?.width ?? BOARD_W_OPEN) - COMBOS_W });
     }
   }
 
@@ -206,7 +208,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async _onToggleCombos() {
     const open = game.settings.get(MODULE_ID, SETTINGS.COMBOS_OPEN);
     await game.settings.set(MODULE_ID, SETTINGS.COMBOS_OPEN, !open);
-    const w = this.position?.width ?? 580;
+    const w = this.position?.width ?? BOARD_W_OPEN;
     this.setPosition({ width: open ? w - COMBOS_W : w + COMBOS_W });
     this.render();
   }

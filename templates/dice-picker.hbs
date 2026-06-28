@@ -20,10 +20,10 @@
         {{#each slots}}
           <label class="kg-dslot">
             <span class="kg-idx">#{{n}}</span>
-            <select data-die-slot data-player-id="{{../id}}" data-slot="{{slot}}">
+            <select data-die-slot data-player-id="{{../id}}" data-slot="{{slot}}" aria-label="{{localize 'KNUCKLES.dice.slotLabel'}} {{n}}">
               {{#each options}}<option value="{{id}}"{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}} title="{{flavor}}">{{label}}</option>{{/each}}
             </select>
-            {{#if mark}}<span class="kg-owned {{mark.cls}}" title="{{mark.title}}"><i class="fa-solid {{mark.icon}}" aria-hidden="true"></i></span>{{/if}}
+            {{#if mark}}<span class="kg-owned {{mark.cls}}" role="img" aria-label="{{mark.title}}" title="{{mark.title}}"><i class="fa-solid {{mark.icon}}" aria-hidden="true"></i></span>{{/if}}
           </label>
         {{/each}}
       </div>

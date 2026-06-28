@@ -82,7 +82,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-dice`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.dice.title", icon: "fa-solid fa-dice-d6" },
-    position: { width: 580, height: "auto" },
+    position: { width: 620, height: "auto" },
     actions: {
       ready: DicePicker._onReady,
       startPlay: DicePicker._onStartPlay,
@@ -175,15 +175,17 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       sel.addEventListener("focus", () => { this._kgSelectBusy = true; });
       sel.addEventListener("change", (ev) => {
         this._kgSelectBusy = false;
-        // The native <select> already shows the new value. Persist it, then re-render from
-        // the SAVED state once the dispatch resolves. Rendering BEFORE it lands would repaint
-        // the old value and visually "eat" the first change (needing a second pick).
+        // The native <select> already shows the new value. Persist it; then, ONLY on the GM's
+        // own client (where loadState() is fresh the instant the dispatch resolves), re-render
+        // from the saved state via the lock-aware gate. A remote player's loadState() lags the
+        // socket return, so they're driven by the authoritative onChange → refreshDicePicker
+        // (their native <select> keeps showing the pick until that lands — no "eaten" change).
         dispatch({
           type: "setDieSlot",
           playerId: ev.target.dataset.playerId,
           slot: Number(ev.target.dataset.slot),
           dieId: ev.target.value,
-        }).then(() => { if (this.rendered) this.render(); }).catch(reportError);
+        }).then(() => { if (game.user.isGM) scheduleRender(this); }).catch(reportError);
       });
       // Flush a render that was DEFERRED while this dropdown was open (e.g. another player's
       // change) once it closes — but don't force a fresh render here (that's the change path).

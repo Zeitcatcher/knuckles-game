@@ -8,12 +8,12 @@
       <div class="kg-pblock" data-player-block data-index="{{@index}}">
         <div class="kg-prow">
           <div class="kg-combo" data-combo>
-            <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.searchChar'}}" autocomplete="off" />
+            <input type="text" name="name" value="{{name}}" placeholder="{{localize 'KNUCKLES.setup.searchChar'}}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" />
             <input type="hidden" name="actorUuid" value="{{actorUuid}}" />
             <input type="hidden" name="tokenUuid" value="{{tokenUuid}}" />
-            <div class="kg-combo-list" hidden>
+            <div class="kg-combo-list" role="listbox" hidden>
               {{#each ../actors}}
-                <button type="button" class="kg-combo-item" data-uuid="{{uuid}}" data-name="{{name}}">{{name}}</button>
+                <button type="button" class="kg-combo-item" role="option" data-uuid="{{uuid}}" data-name="{{name}}">{{name}}</button>
               {{/each}}
             </div>
           </div>
