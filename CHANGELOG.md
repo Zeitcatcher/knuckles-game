@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.9
+
+- **Follow-ups from review.**
+  - **Token-bound participants are now fully consistent.** For a player bound to an unlinked token, Hero Points and the coin pot payout now use that token's own actor — the same actor the dice inventory reads from — instead of the underlying world actor. Linked tokens are unaffected.
+  - **The GM can gift extra copies of a die a player already owns.** Previously gifting only worked for dice a character owned none of; now any die the GM places (that isn't covered by an owned copy) is granted on start, including a second copy of something they already have one of.
+  - **Tests:** added a command-handler test suite covering GM-authority (including the forged-id rejection), player-turn permission, shared-selection gating, and the physical-mode gift/launch flow.
+
 ## 0.5.8
 
 - **QA hardening across the 0.5.x batch.**

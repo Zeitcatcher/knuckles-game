@@ -24,10 +24,18 @@ function pushLog(state, key, data) {
   state.log = [...(state.log ?? []), { key, data }].slice(-LOG_MAX);
 }
 
-/** Re-read the active player's Hero Points from their linked actor (may have changed). */
+/** The actor a participant's Hero Points and coin payout act on. Token-first: the token's
+ *  actor when token-bound (so Hero Points / coins use the SAME actor as the dice inventory),
+ *  else the world actor. Linked tokens resolve to the same actor either way. */
+function participantActorUuid(player) {
+  return inventoryActor(player)?.uuid ?? player?.actorUuid ?? null;
+}
+
+/** Re-read the active player's Hero Points from their (token-first) actor (may have changed). */
 async function syncCurrentHeroPoints(state) {
   const p = currentPlayer(state);
-  if (p?.actorUuid) p.heroPoints = await getHeroPoints(p.actorUuid);
+  const uuid = participantActorUuid(p);
+  if (uuid) p.heroPoints = await getHeroPoints(uuid);
 }
 
 /** @param {object} intent  @param {string} userId - the requesting user's id */
@@ -67,15 +75,16 @@ export async function dispatchAsGM(intent, userId, local = false) {
     if (!allowed) throw new Error("you cannot change that die now");
     // Physical mode: a NON-GM may only equip a die the character owns (the picker greys
     // out the rest; this is the authoritative defence against a hand-crafted intent).
-    // The GM MAY over-assign an unowned die to a PC — that is a GIFT, granted at launch.
-    // NPCs may over-assign freely (auto-stocked); generic / token-less players are exempt.
-    // The gift flag is a pre-launch (choosing) concept only — a mid-game GM change of a
-    // die never grants an item (dice are frozen at launch).
+    // ANY GM placement during choosing is a deliberate GIFT — granted at launch for every
+    // slot not backed by an owned copy. coverLoadout allocates owned copies first (order-
+    // independently), so this also gifts EXTRA copies of an already-owned die. A mid-game
+    // GM change grants nothing (dice are frozen at launch). NPCs over-assign freely;
+    // generic / token-less players are exempt.
     let gifted = false;
     if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid)) {
       const owns = (ownedDieCounts(inventoryActor(target)).get(intent.dieId) ?? 0) >= 1;
       if (!owns && !trustedGM) throw new Error("you do not own that die");
-      gifted = !owns && trustedGM && state.status === "choosing";
+      gifted = trustedGM && state.status === "choosing";
     }
     state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId, gifted });
     await saveState(state);
@@ -208,8 +217,9 @@ export async function dispatchAsGM(intent, userId, local = false) {
     case "useHeroPoint": {
       const player = currentPlayer(state);
       const { name } = player;
-      if (player.actorUuid) {
-        if (!(await spendHeroPoint(player.actorUuid))) throw new Error("no Hero Points to spend");
+      const heroUuid = participantActorUuid(player);
+      if (heroUuid) {
+        if (!(await spendHeroPoint(heroUuid))) throw new Error("no Hero Points to spend");
       } else if ((player.heroPoints ?? 0) < 1) {
         throw new Error("no Hero Points to spend");
       }
@@ -229,8 +239,9 @@ export async function dispatchAsGM(intent, userId, local = false) {
     const w = state.winnerId ? state.players.find((p) => p.id === state.winnerId) : null;
     if (w && state.log?.[state.log.length - 1]?.key !== "KNUCKLES.log.wins") {
       pushLog(state, "KNUCKLES.log.wins", { name: w.name });
-      // Award the pot to the winner only if they are linked to an actor ("a token").
-      if (w.actorUuid && (await awardCoins(w.actorUuid, computePool(state.players)))) {
+      // Award the pot to the winner only if they resolve to an actor (token-first).
+      const winUuid = participantActorUuid(w);
+      if (winUuid && (await awardCoins(winUuid, computePool(state.players)))) {
         pushLog(state, "KNUCKLES.log.pot", { name: w.name });
       }
     }
@@ -269,7 +280,7 @@ async function buildNewGame(config) {
       const actor = await fromUuid(p.actorUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
       if (!p.tokenUuid) name = actor?.name ?? name; // actor-bound follows the actor; token-bound keeps the token name
-      heroPoints = await getHeroPoints(p.actorUuid);
+      heroPoints = await getHeroPoints(participantActorUuid(p)); // token-first (unlinked tokens use their own actor)
     }
     // Seed the six slots: a saved default loadout if the actor has one (applies in BOTH
     // virtual and physical mode), else physical pre-fills from owned dice and virtual
