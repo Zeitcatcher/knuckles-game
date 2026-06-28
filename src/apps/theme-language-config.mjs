@@ -1,5 +1,6 @@
 import { TEMPLATES, MODULE_ID, SETTINGS } from "../constants.mjs";
 import { listThemes, themeLanguages, activeTheme, activeLanguage } from "../foundry/themes.mjs";
+import { applyAppearance } from "../presentation/theme.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -32,6 +33,7 @@ export class ThemeLanguageConfig extends HandlebarsApplicationMixin(ApplicationV
 
   /** Repopulate the language dropdown when the GM changes the theme. */
   _onRender() {
+    applyAppearance(this.element); // match the table's theme/skin like the board + picker
     const themeSel = this.element.querySelector("select[name='theme']");
     const langSel = this.element.querySelector("select[name='language']");
     if (!themeSel || !langSel) return;

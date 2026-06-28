@@ -6,6 +6,7 @@
   - **Choosing a die now applies on the first click.** Picking a replacement die in the loadout window took two attempts — the window repainted the old value before the change was saved. It now re-renders from the saved state after the pick lands.
   - **Bigger combo dice.** The dice in the combinations reference panel are about 50% larger and easier to read; the panel is a little wider and the three-of-a-kind rows stack in one column to fit them.
   - **Collapsed panel tab fixed.** When the combinations panel is collapsed, its vertical label and arrow no longer overflow the tab.
+  - **Theme/contrast and polish (from a UI review).** The setup and theme/language windows now follow the chosen board theme (they were stuck on the dark default); the pot's gold/silver/copper coins are now readable on the light Parchment theme; dropdowns in the picker are themed; the combinations panel is a touch wider so a full six-die straight fits one row; the new-game window is a little wider so a long character name isn't squeezed by the Save/Reset buttons; the GM control buttons are more compact so they fit one row in Russian; a winner card no longer loses its highlight; and accessibility was improved (the character search box is keyboard-usable, die-slot dropdowns and ownership markers are labelled).
 
 ## 0.5.9
 

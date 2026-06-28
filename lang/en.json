@@ -72,6 +72,7 @@
   "KNUCKLES.dice.willAdd": "Will be added on start",
   "KNUCKLES.dice.buyMore": "Buy more dice to play — short by {n}.",
   "KNUCKLES.dice.stockNote": "Unowned dice are stocked to this token when the game starts.",
+  "KNUCKLES.dice.slotLabel": "Die slot",
   "KNUCKLES.dice.saveDefault": "Save default",
   "KNUCKLES.dice.saveDefaultHint": "Remember these six dice as this character's default loadout (survives restarts).",
   "KNUCKLES.dice.resetDefault": "Reset",

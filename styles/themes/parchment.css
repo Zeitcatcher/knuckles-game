@@ -13,4 +13,8 @@
   --kg-die-bg: #fbf7ec;
   --kg-die-face: #3a2f1d;
   --kg-pip: #3a2f1d;
+  /* darker coin colours so the pot reads on the light parchment surface */
+  --kg-coin-gold: #8a6a14;
+  --kg-coin-silver: #5f656c;
+  --kg-coin-copper: #8a4f23;
 }

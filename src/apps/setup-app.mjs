@@ -1,5 +1,6 @@
 import { TEMPLATES, MODULE_ID, SETTINGS, DEFAULTS } from "../constants.mjs";
 import { dispatch, broadcastOpen } from "../net/socket.mjs";
+import { applyAppearance } from "../presentation/theme.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -60,12 +61,23 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Auto-fill a row's name from the character chosen in its dropdown. */
   /** Wire each row's character combobox: type to filter, click to pick. */
   _onRender() {
+    applyAppearance(this.element); // match the table's theme/skin like the board + picker
     for (const combo of this.element.querySelectorAll("[data-combo]")) {
       const input = combo.querySelector("input[name='name']");
       const hidden = combo.querySelector("input[name='actorUuid']");
       const tokenHidden = combo.querySelector("input[name='tokenUuid']");
       const list = combo.querySelector(".kg-combo-list");
       const items = [...combo.querySelectorAll(".kg-combo-item")];
+
+      const visibleItems = () => items.filter((it) => !it.hidden);
+      const pick = (it) => {
+        if (!it) return;
+        input.value = it.dataset.name;
+        hidden.value = it.dataset.uuid;
+        if (tokenHidden) tokenHidden.value = ""; // a world-actor pick clears any token binding
+        list.hidden = true;
+        input.setAttribute("aria-expanded", "false");
+      };
 
       const refresh = () => {
         const q = input.value.trim().toLowerCase();
@@ -76,19 +88,23 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
           if (match) shown += 1;
         }
         list.hidden = shown === 0;
+        input.setAttribute("aria-expanded", String(shown > 0));
       };
 
       input.addEventListener("focus", refresh);
       input.addEventListener("input", () => { hidden.value = ""; refresh(); });
-      input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; }, 150));
+      input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; input.setAttribute("aria-expanded", "false"); }, 150));
+      // Keyboard: Enter picks the single/first visible match so the combobox is usable
+      // without a mouse; Escape closes the list.
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") { const vis = visibleItems(); if (vis.length) { ev.preventDefault(); pick(vis[0]); } }
+        else if (ev.key === "Escape") { list.hidden = true; input.setAttribute("aria-expanded", "false"); }
+      });
 
       for (const it of items) {
         it.addEventListener("mousedown", (ev) => {
           ev.preventDefault(); // select before the input's blur fires
-          input.value = it.dataset.name;
-          hidden.value = it.dataset.uuid;
-          if (tokenHidden) tokenHidden.value = ""; // a world-actor pick clears any token binding
-          list.hidden = true;
+          pick(it);
         });
       }
     }
