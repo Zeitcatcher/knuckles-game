@@ -135,26 +135,15 @@ describe("physical-mode gifting + launch (block unless GM gifted six)", () => {
     expect(h.state.players[0].gifts[1]).toBe(true);
   });
 
-  it("launch grants the gifted shortfall and blocks an un-gifted shortfall", async () => {
+  it("auto-stocks a PC's missing slot dice on start, with no block (gifts irrelevant)", async () => {
     h.physical = true;
-    // Alice: all six slots gifted (owns nothing) → granted, launches.
     h.state = createGame({ players: [{ id: "a", type: "pc", actorUuid: "actorAlice" }, { id: "b", type: "pc", actorUuid: "actorBob" }], physical: true });
-    h.owned = new Map();
-    h.state.players[0].dieIds = ["07", "07", "07", "07", "07", "07"];
-    h.state.players[0].gifts = [true, true, true, true, true, true];
-    h.state.players[1].dieIds = ["07", "07", "07", "07", "07", "07"];
-    h.state.players[1].gifts = [true, true, true, true, true, true];
+    h.owned = new Map(); // alice owns nothing — just the default slot dice are shown
+    h.state.players[0].dieIds = ["07", "07", "07", "07", "07", "07"]; // not gifted, owns none
+    h.state.players[1].dieIds = ["02", "02", "02", "02", "02", "02"];
     const launched = await dispatchAsGM({ type: "startPlay" }, "gm", true);
-    expect(launched.status).toBe("playing");
-    expect(h.granted.length).toBeGreaterThan(0); // dice were granted
-
-    // Now an un-gifted shortfall blocks.
-    h.granted = [];
-    h.state = createGame({ players: [{ id: "a", type: "pc", actorUuid: "actorAlice" }, { id: "b", type: "pc", actorUuid: "actorBob" }], physical: true });
-    h.owned = new Map();
-    h.state.players[0].dieIds = ["07", "07", "07", "07", "07", "07"];
-    h.state.players[0].gifts = [false, false, false, false, false, false]; // not gifted
-    await expect(dispatchAsGM({ type: "startPlay" }, "gm", true)).rejects.toThrow();
+    expect(launched.status).toBe("playing"); // starts immediately, no block
+    expect(h.granted.length).toBeGreaterThan(0); // the missing dice were granted (gifted on start)
   });
 });
 

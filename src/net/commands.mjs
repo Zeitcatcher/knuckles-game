@@ -13,7 +13,7 @@ import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins } from "../foundry/currency.mjs";
 import { getDieSpec, diceIds } from "../foundry/dice-data.mjs";
-import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, coverLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
+import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
@@ -298,9 +298,11 @@ async function buildNewGame(config) {
 }
 
 /**
- * Physical-mode launch enforcement (GM-side). Token-NPCs are auto-granted the copies
- * they're short; PCs must own six dice and a legal assignment (clamped if a die was
- * sold mid-choosing). Returns the names of players who can't field a hand.
+ * Physical-mode launch enforcement (GM-side). Any inventory-backed participant — NPC or
+ * PC — is auto-stocked the dice in its slots that it doesn't own: starting the game IS the
+ * GM's act of gifting, so the dice currently shown in the picker are granted, with no
+ * re-pick required and no block. (The picker's red "N of 6" tally + "buy more" hint stay
+ * as an informational cue.) Only a participant whose actor/token can't resolve blocks.
  */
 async function enforcePhysicalLaunch(state) {
   const blockers = [];
@@ -308,17 +310,8 @@ async function enforcePhysicalLaunch(state) {
     if (!p.actorUuid && !p.tokenUuid) continue; // generic: economy-exempt
     const actor = inventoryActor(p);
     if (!actor) { blockers.push(p.name); continue; }
-    const owned = ownedDieCounts(actor);
-    if (p.type === "npc") {
-      const missing = missingDieCopies(p.dieIds, owned);
-      if (missing.size) await grantDice(actor, missing);
-    } else {
-      // PC: every slot must be covered by an OWNED copy or a GM GIFT. Grant the gifts;
-      // block if any slot holds an unowned, un-gifted die ("block unless GM gifted six").
-      const { toGrant, shortBy } = coverLoadout(p.dieIds, p.gifts, owned);
-      if (shortBy > 0) { blockers.push(p.name); continue; }
-      if (toGrant.size) await grantDice(actor, toGrant);
-    }
+    const missing = missingDieCopies(p.dieIds, ownedDieCounts(actor));
+    if (missing.size) await grantDice(actor, missing);
   }
   return blockers;
 }
