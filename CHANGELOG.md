@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.11
+
+- **Two visual fixes.**
+  - **Readable dice dropdowns.** The dice-picker dropdowns opened with a white background and light grey text (hard to read). They now use a solid themed background for both the closed control and the open option list, in every theme.
+  - **Combinations panel no longer scrolls.** The board window is taller by default (and has a minimum height) so the full combinations reference panel always fits without an internal scroll, for every player and the GM. The panel's own layout is unchanged.
+
 ## 0.5.10
 
 - **Dice-picker and combos-panel fixes.**
