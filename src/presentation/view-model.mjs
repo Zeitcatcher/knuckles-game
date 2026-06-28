@@ -47,11 +47,18 @@ export function buildBoardContext(state, user, ui) {
     // GM tools never fight over the same dice; they return on confirm/cancel.
     const showEdit = Boolean(user.isGM) && d.state === "in-play" && !ui.gmRerollMode && !ui.heroMode;
     const canEdit = canEditValues && d.state === "in-play";
+    // Only the user who can act on this die may toggle it — keep-select (controller, while
+    // selecting), hero re-roll (controller), or GM re-roll (GM). Spectators / non-controllers
+    // get no toggle action, so a click can't fire a setSelection the GM would just reject.
+    const canToggle = d.state === "in-play" && d.value !== null && (
+      ui.gmRerollMode ? Boolean(user.isGM) : ui.heroMode ? control : (control && state.phase === "selecting")
+    );
     return {
       id: d.id,
       value: d.value,
       inPlay: d.state === "in-play",
       kept: d.state === "kept",
+      canToggle,
       selected: !ui.heroMode && !ui.gmRerollMode && effSel.has(d.id),
       reroll: (ui.heroMode || ui.gmRerollMode) && ui.rerollSelection.has(d.id),
       blank: d.value === null,

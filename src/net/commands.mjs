@@ -276,11 +276,14 @@ async function buildNewGame(config) {
     let type = "generic";
     let heroPoints = config.npcHeroPool ?? 0;
     let name = p.name || `Player ${i}`;
-    if (p.actorUuid) {
-      const actor = await fromUuid(p.actorUuid);
+    // Resolve token-first, and gate type/name/HP on the SAME uuid the resolver uses, so a
+    // token-only participant (no world actorUuid) still gets its type + Hero Points seeded.
+    const aUuid = participantActorUuid(p);
+    if (aUuid) {
+      const actor = await fromUuid(aUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
       if (!p.tokenUuid) name = actor?.name ?? name; // actor-bound follows the actor; token-bound keeps the token name
-      heroPoints = await getHeroPoints(participantActorUuid(p)); // token-first (unlinked tokens use their own actor)
+      heroPoints = await getHeroPoints(aUuid);
     }
     // Seed the six slots: a saved default loadout if the actor has one (applies in BOTH
     // virtual and physical mode), else physical pre-fills from owned dice and virtual

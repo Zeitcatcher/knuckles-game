@@ -2,12 +2,13 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createGame, reduce } from "../src/core/game-state.mjs";
 
 // Mutable mock state, hoisted so the vi.mock factories below can read it.
-const h = vi.hoisted(() => ({ state: null, physical: false, owned: new Map(), granted: [] }));
+const h = vi.hoisted(() => ({ state: null, physical: false, owned: new Map(), granted: [], heroReads: [], spent: [], coinPays: [] }));
 
-// Who owns which actor (for canAct's testUserPermission), and the source actors.
-const OWNED_BY = { actorAlice: "alice", actorBob: "bob" };
+// Who owns which actor (for canAct's testUserPermission), and the source actors. `tokTok`
+// is an unlinked-token actor uuid owned by alice.
+const OWNED_BY = { actorAlice: "alice", actorBob: "bob", tokTok: "alice" };
 const USERS = { gm: { id: "gm", isGM: true }, alice: { id: "alice", isGM: false }, bob: { id: "bob", isGM: false } };
-const ACTORS = { actorAlice: { type: "character", name: "Alice" }, actorBob: { type: "character", name: "Bob" } };
+const ACTORS = { actorAlice: { type: "character", name: "Alice" }, actorBob: { type: "character", name: "Bob" }, tokTok: { type: "character", name: "TokenChar" } };
 
 vi.mock("../src/foundry/state-store.mjs", () => ({
   loadState: () => h.state,
@@ -18,8 +19,11 @@ vi.mock("../src/foundry/dice-roller.mjs", () => ({
   rollValues: async (n) => ({ values: Array.from({ length: n }, () => 5), roll: null }),
 }));
 vi.mock("../src/foundry/dice-so-nice.mjs", () => ({ animateRoll: async () => {} }));
-vi.mock("../src/foundry/hero-points.mjs", () => ({ getHeroPoints: async () => 0, spendHeroPoint: async () => true }));
-vi.mock("../src/foundry/currency.mjs", () => ({ awardCoins: async () => true }));
+vi.mock("../src/foundry/hero-points.mjs", () => ({
+  getHeroPoints: async (uuid) => { h.heroReads.push(uuid); return 1; },
+  spendHeroPoint: async (uuid) => { h.spent.push(uuid); return true; },
+}));
+vi.mock("../src/foundry/currency.mjs", () => ({ awardCoins: async (uuid) => { h.coinPays.push(uuid); return true; } }));
 vi.mock("../src/foundry/dice-data.mjs", () => ({ getDieSpec: () => [1, 1, 1, 1, 1, 1], diceIds: () => ["01", "02", "07", "22"] }));
 vi.mock("../src/foundry/dice-items.mjs", async (importOriginal) => {
   const actual = await importOriginal();
@@ -46,7 +50,7 @@ const playingGame = (over = {}) => {
 };
 
 beforeEach(() => {
-  h.state = null; h.physical = false; h.owned = new Map(); h.granted = [];
+  h.state = null; h.physical = false; h.owned = new Map(); h.granted = []; h.heroReads = []; h.spent = []; h.coinPays = [];
   globalThis.game = {
     users: { get: (id) => USERS[id] ?? null },
     i18n: { format: (k) => k, localize: (k) => k },
@@ -151,5 +155,29 @@ describe("physical-mode gifting + launch (block unless GM gifted six)", () => {
     h.state.players[0].dieIds = ["07", "07", "07", "07", "07", "07"];
     h.state.players[0].gifts = [false, false, false, false, false, false]; // not gifted
     await expect(dispatchAsGM({ type: "startPlay" }, "gm", true)).rejects.toThrow();
+  });
+});
+
+describe("token-bound participants resolve HP/coins token-first (Q2)", () => {
+  it("buildNewGame seeds type + Hero Points via the token's actor for a token-only participant", async () => {
+    const config = { players: [{ id: "a", tokenUuid: "tokTok", actorUuid: null }, { id: "b", actorUuid: "actorBob" }] };
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.players[0].type).toBe("pc"); // type resolved through the token's actor
+    expect(h.heroReads).toContain("tokTok"); // Hero Points seeded via the token uuid
+  });
+
+  it("useHeroPoint spends on the token's actor, not the underlying world actor", async () => {
+    let s = createGame({
+      players: [
+        { id: "a", type: "pc", tokenUuid: "tokTok", actorUuid: "actorAlice", heroPoints: 1 },
+        { id: "b", type: "pc", actorUuid: "actorBob" },
+      ],
+    });
+    s = reduce(s, { type: "startPlay" });
+    h.state = s;
+    h.state = await dispatchAsGM({ type: "roll" }, "alice", false); // alice's turn → selecting
+    await dispatchAsGM({ type: "useHeroPoint", rerollIds: [1] }, "alice", false);
+    expect(h.spent).toContain("tokTok"); // spent on the token's actor, never actorAlice
+    expect(h.spent).not.toContain("actorAlice");
   });
 });
