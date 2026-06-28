@@ -30,7 +30,7 @@ function canControl(user, player) {
  * `usedAll` counts each die across ALL six slots (for the free/total label); `usedExcl`
  * excludes the current slot (for the disable test, so the current pick stays selectable).
  */
-function slotOptions({ mode, allIds, owned, usedAll, usedExcl, dieId, gifted, theme, lang }) {
+function slotOptions({ mode, allIds, owned, usedAll, usedExcl, dieId, theme, lang }) {
   const nm = (id) => dieName(theme, lang, id);
   const fl = (id) => dieDesc(theme, lang, id);
   const ft = (id) => `${nm(id)} ${freeCopies(owned, usedAll, id)}/${owned.get(id) ?? 0}`;
@@ -51,26 +51,22 @@ function slotOptions({ mode, allIds, owned, usedAll, usedExcl, dieId, gifted, th
   const { ids, placeholder } = ownedSlotChoices(allIds, owned, usedExcl, dieId);
   const opts = ids.map(({ id, selected, disabled }) => ({ id, label: ft(id), flavor: fl(id), selected, disabled }));
   if (placeholder) {
-    // The slot holds a die the actor doesn't own: show the gifted die's name (it'll be
-    // added at launch) or, if it isn't a gift, the "no die left" placeholder.
-    opts.unshift(
-      gifted
-        ? { id: dieId, label: nm(dieId), flavor: fl(dieId), selected: true, disabled: true }
-        : { id: dieId, label: game.i18n.localize("KNUCKLES.dice.noDieLeft"), flavor: "", selected: true, disabled: true },
-    );
+    // The slot holds a die the actor doesn't own yet — show its name (it's added on start),
+    // selected but disabled (a non-GM can only swap it for one they own).
+    opts.unshift({ id: dieId, label: nm(dieId), flavor: fl(dieId), selected: true, disabled: true });
   }
   return opts;
 }
 
-/** The per-slot ownership marker: { icon, cls, title } or null (virtual).
- *  `covered` comes from coverLoadout's GREEDY per-slot allocation, so the marker matches
- *  the launch outcome exactly. check = covered by an owned copy; plus = will be added on
- *  start (NPC stock or a GM gift to a PC); warn = unowned and not gifted → blocks. */
-function slotMark({ mode, covered, gifted, npc }) {
+/** The per-slot ownership marker: { icon, cls, title } or null (virtual). `covered` comes
+ *  from the GREEDY per-slot allocation. check = covered by an owned copy; plus = the
+ *  character doesn't own this one, so it is **added on start** (NPC stock, or gifted to a
+ *  PC by the GM's Start). Nothing blocks — the red short-tally is informational. */
+function slotMark({ mode, covered }) {
   if (mode === "virtual") return null;
-  if (covered) return { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") };
-  if (npc || gifted) return { icon: "fa-plus", cls: "is-add", title: game.i18n.localize("KNUCKLES.dice.willAdd") };
-  return { icon: "fa-triangle-exclamation", cls: "is-warn", title: game.i18n.localize("KNUCKLES.dice.noDieLeft") };
+  return covered
+    ? { icon: "fa-check", cls: "is-ok", title: game.i18n.localize("KNUCKLES.dice.inInv") }
+    : { icon: "fa-plus", cls: "is-add", title: game.i18n.localize("KNUCKLES.dice.willAdd") };
 }
 
 /** Pre-game (and GM mid-game) window: choose a die for each of a character's six slots. */
@@ -114,39 +110,39 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       const actor = inventoryActor(p);
       const owned = mode === "virtual" ? new Map() : ownedDieCounts(actor);
       const total = [...owned.values()].reduce((a, b) => a + b, 0);
-      const gifts = Array.isArray(p.gifts) ? p.gifts : [];
 
       const used = new Map();
       for (const id of p.dieIds ?? []) used.set(id, (used.get(id) ?? 0) + 1);
 
-      // Greedy per-slot coverage — the SAME allocation launch enforcement uses — so the
-      // slot marker can never disagree with what happens on start. shortBy = the blockers.
-      const { shortBy, slotCovered } = coverLoadout(p.dieIds, gifts, owned);
+      // Greedy per-slot coverage drives only the check-vs-will-add marker; an unowned slot
+      // is GRANTED on start (the GM's Start gifts it), never blocked.
+      const { slotCovered } = coverLoadout(p.dieIds, [], owned);
 
       const slots = (p.dieIds ?? []).map((dieId, i) => {
         const usedExcl = new Map(used);
         usedExcl.set(dieId, (usedExcl.get(dieId) ?? 0) - 1);
-        const gifted = Boolean(gifts[i]);
         const covered = mode !== "virtual" && Boolean(slotCovered[i]);
         return {
           slot: i,
           n: i + 1,
           dieId,
-          mark: slotMark({ mode, covered, gifted, npc }),
-          options: slotOptions({ mode, allIds, owned, usedAll: used, usedExcl, dieId, gifted, theme, lang }),
+          mark: slotMark({ mode, covered }),
+          options: slotOptions({ mode, allIds, owned, usedAll: used, usedExcl, dieId, theme, lang }),
         };
       });
 
-      // The owned tally / buy-hint stay visible to the GM too (the economy readout), for
-      // inventory-backed PCs; NPCs auto-stock, so they show the stock note instead.
+      // The owned tally + buy-hint are INFORMATIONAL (the character OWNS fewer than six) —
+      // they stay red even though the GM can start right away and the missing dice are
+      // gifted on launch. Visible to the GM too (the economy readout); NPCs show the stock note.
+      const enough = total >= 6;
       const showTally = physical && !generic && !npc;
       return {
         id: p.id,
         name: p.name,
         ready: Boolean(p.ready),
         physical: mode !== "virtual",
-        tally: showTally ? { have: Math.min(total, 6), ok: shortBy === 0 } : null,
-        buyHint: showTally && shortBy > 0 ? game.i18n.format("KNUCKLES.dice.buyMore", { n: shortBy }) : null,
+        tally: showTally ? { have: Math.min(total, 6), ok: enough } : null,
+        buyHint: showTally && !enough ? game.i18n.format("KNUCKLES.dice.buyMore", { n: 6 - total }) : null,
         stockNote: physical && npc ? game.i18n.localize("KNUCKLES.dice.stockNote") : null,
         // Saved default loadout (any actor-backed player, virtual or physical).
         canSaveDefault: Boolean(actor),
