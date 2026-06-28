@@ -19,6 +19,7 @@
   --kg-coin-gold: #d9b44a;
   --kg-coin-silver: #b8c0c8;
   --kg-coin-copper: #c2814a;
+  --kg-input-bg: #2c2620; /* SOLID (not translucent) so native <option> popups are readable */
 
   --kg-radius: 8px;
   --kg-die-size: 55px;

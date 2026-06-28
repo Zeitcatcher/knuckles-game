@@ -17,4 +17,5 @@
   --kg-coin-gold: #8a6a14;
   --kg-coin-silver: #5f656c;
   --kg-coin-copper: #8a4f23;
+  --kg-input-bg: #fbf7ec; /* light solid; dark --kg-text on top is readable */
 }

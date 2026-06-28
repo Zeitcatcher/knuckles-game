@@ -47,7 +47,9 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${MODULE_ID}-board`,
     classes: ["knuckles-game"],
     window: { title: "KNUCKLES.title", icon: "fa-solid fa-dice-d6", resizable: true },
-    position: { width: BOARD_W_OPEN, height: 600 }, // 580 board column + 258 open combos panel (default open)
+    // Height is generous so the full combos reference panel never needs an internal scroll
+    // (its content is ~530px tall + window chrome). A CSS min-height enforces the floor.
+    position: { width: BOARD_W_OPEN, height: 680 }, // 580 board column + 258 open combos panel (default open)
     actions: {
       roll: BoardApp._onRoll,
       toggleDie: BoardApp._onToggleDie,

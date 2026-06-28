@@ -13,4 +13,5 @@
   --kg-die-bg: #2a2218;
   --kg-die-face: #f0e2c4;
   --kg-pip: #f0e2c4;
+  --kg-input-bg: #241d15; /* solid; light --kg-text on top is readable */
 }
