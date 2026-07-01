@@ -1,5 +1,7 @@
 # Changelog
 
+All notable changes to **Knuckles Game** are recorded here, newest first. Each version is also published on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press **Update** on the module. Versioning is `MAJOR.MINOR.PATCH`.
+
 ## 0.5.13
 
 - **The dice compendium now matches your theme/language.** The bundled **Knuckles Dice** compendium ships as a neutral English (Pathfinder) snapshot; it's now re-stamped to the table's theme + language on load and whenever you change theme/language, so the Compendium browser reads "Кость Шамаса", not "Abadar's Ledger", when you've chosen The Shards / Russian. (GM-only; the pack is unlocked just for the update and re-locked. A module reinstall resets it to English and the next load re-localizes it.)
