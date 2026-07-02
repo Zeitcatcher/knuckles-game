@@ -154,7 +154,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     // The signature of what we're about to render — refreshDicePicker compares the
     // next state's signature against this to skip renders that wouldn't change our slice.
     this._kgSig = pickerSignature(state, editable.map((p) => p.id));
-    return { active: editable.length > 0, choosing: state.status === "choosing", isGM: Boolean(game.user.isGM), players };
+    const allReady = editable.length > 0 && editable.every((p) => p.ready);
+    return { active: editable.length > 0, choosing: state.status === "choosing", isGM: Boolean(game.user.isGM), allReady, players };
   }
 
   /** Snapshot the list scroll + the focused slot-select before the DOM swap. */
@@ -230,12 +231,14 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     return super._onClose?.(options);
   }
 
+  /** Toggle ready for the player(s) this client controls. Stays open so the state is
+   *  visible and can be taken back; the window's close button dismisses it. */
   static async _onReady() {
-    const state = loadState();
-    for (const p of state.players.filter((pl) => canControl(game.user, pl))) {
-      await dispatch({ type: "setReady", playerId: p.id, ready: true }).catch(reportError);
+    const mine = loadState().players.filter((pl) => canControl(game.user, pl));
+    const next = !mine.every((p) => p.ready); // all ready → un-ready; otherwise ready
+    for (const p of mine) {
+      await dispatch({ type: "setReady", playerId: p.id, ready: next }).catch(reportError);
     }
-    this.close();
   }
 
   static async _onStartPlay() {

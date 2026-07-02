@@ -2,6 +2,15 @@
 
 All notable changes to **Knuckles Game** are recorded here, newest first. Each version is also published on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press **Update** on the module. Versioning is `MAJOR.MINOR.PATCH`.
 
+## 0.6.1
+
+- NPCs never get Hero Points. Player characters read their own sheet; a participant added as a name only (no character or token) can still be given a starting pool in the settings. The setting is renamed to "Hero Points for generic players" so it's clear it doesn't apply to NPCs.
+- 3D dice (Dice So Nice) now show the acting player's own dice style instead of the GM's.
+- Starting a new game while one is already running no longer wipes it silently. The New Game window replaces the current game on purpose and refunds its collected stakes; a stray scripted start is refused.
+- The Ready button can be toggled off again in the dice picker.
+- Board dice can be selected with the keyboard (Tab to a die, Enter or Space to pick it), and the GM value-override popover can be closed with Escape.
+- Added a continuous-integration check that runs the tests and validates the localization files on every push.
+
 ## 0.6.0
 
 - **Real wager stakes.** Bets are now actually collected when a game starts, and the winner's pot is backed by that coin instead of appearing from nowhere. In a Pathfinder 2e world each participant's bet is deducted from their character (or token) on Start.

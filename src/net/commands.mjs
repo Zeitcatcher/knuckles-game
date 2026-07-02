@@ -31,11 +31,21 @@ function participantActorUuid(player) {
   return inventoryActor(player)?.uuid ?? player?.actorUuid ?? null;
 }
 
-/** Re-read the active player's Hero Points from their (token-first) actor (may have changed). */
+/** Re-read the active player's Hero Points from their (token-first) actor (may have changed).
+ *  NPCs never have Hero Points; a name-only generic keeps whatever it was seeded with. */
 async function syncCurrentHeroPoints(state) {
   const p = currentPlayer(state);
+  if (p.type === "npc") { p.heroPoints = 0; return; }
   const uuid = participantActorUuid(p);
   if (uuid) p.heroPoints = await getHeroPoints(uuid);
+}
+
+/** The active User to attribute a 3D roll to (Dice So Nice shows THEIR dice appearance):
+ *  the acting player's owning user if one is connected, else the GM's own user. */
+function actingUser(player) {
+  const actor = inventoryActor(player);
+  const owner = actor ? game.users?.find((u) => u.active && !u.isGM && actor.testUserPermission?.(u, "OWNER")) : null;
+  return owner ?? game.user;
 }
 
 // Every intent runs through ONE promise queue. handleIntent is re-entrant at its awaits
@@ -60,6 +70,13 @@ async function handleIntent(intent, userId, local) {
 
   if (intent.type === "startGame") {
     if (!trustedGM) throw new Error("only the GM can start a game");
+    // Don't clobber a running game by accident (e.g. a scripted dispatch). The New Game
+    // window passes force:true (a deliberate replace) and we refund the old game's stakes.
+    const running = loadState();
+    if (running && running.status !== "finished") {
+      if (!intent.force) throw new Error("a Knuckles game is already in progress");
+      await refundEscrow(running);
+    }
     const state = await buildNewGame(intent.config);
     await syncCurrentHeroPoints(state);
     await saveState(state);
@@ -167,7 +184,7 @@ async function handleIntent(intent, userId, local) {
     const ids = (intent.rerollIds ?? []).filter((id) => Number.isInteger(id));
     if (!ids.length) throw new Error("select at least one die to re-roll");
     const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
-    await animateRoll(roll);
+    await animateRoll(roll, actingUser(currentPlayer(state)));
     state = reduce(state, { type: "gmReroll", rerollIds: ids, values });
     pushLog(state, "KNUCKLES.log.gmReroll", { name: currentPlayer(state).name });
     await saveState(state);
@@ -192,7 +209,7 @@ async function handleIntent(intent, userId, local) {
     case "roll": {
       const ids = inPlay(state.pool).map((d) => d.id);
       const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
-      await animateRoll(roll);
+      await animateRoll(roll, actingUser(currentPlayer(state)));
       state = reduce(state, { type: "roll", values });
       break;
     }
@@ -202,7 +219,7 @@ async function handleIntent(intent, userId, local) {
       if (state.status === "playing" && state.phase === "await-roll") {
         const ids = inPlay(state.pool).map((d) => d.id);
         const { values, roll } = await rollValues(ids.length, specsForIds(state, ids));
-        await animateRoll(roll);
+        await animateRoll(roll, actingUser(currentPlayer(state)));
         state = reduce(state, { type: "roll", values });
       }
       break;
@@ -235,7 +252,7 @@ async function handleIntent(intent, userId, local) {
       const rerollIds = (intent.rerollIds ?? []).filter((id) => Number.isInteger(id));
       if (!rerollIds.length) throw new Error("select at least one die to re-roll");
       const { values, roll } = await rollValues(rerollIds.length, specsForIds(state, rerollIds));
-      await animateRoll(roll);
+      await animateRoll(roll, actingUser(currentPlayer(state)));
       state = reduce(state, { type: "useHeroPoint", rerollIds, values });
       pushLog(state, "KNUCKLES.log.hero", { name });
       break;
@@ -283,6 +300,8 @@ async function buildNewGame(config) {
   for (const p of config.players ?? []) {
     i += 1;
     let type = "generic";
+    // A name-only generic participant gets the configurable pool; NPCs get none; PCs read
+    // their sheet (below). This is the seed only — syncCurrentHeroPoints re-reads each turn.
     let heroPoints = config.npcHeroPool ?? 0;
     let name = p.name || `Player ${i}`;
     // Resolve token-first, and gate type/name/HP on the SAME uuid the resolver uses, so a
@@ -292,7 +311,7 @@ async function buildNewGame(config) {
       const actor = await fromUuid(aUuid);
       type = actor?.type === "character" ? "pc" : actor?.type === "npc" ? "npc" : "generic";
       if (!p.tokenUuid) name = actor?.name ?? name; // actor-bound follows the actor; token-bound keeps the token name
-      heroPoints = await getHeroPoints(aUuid);
+      heroPoints = type === "npc" ? 0 : type === "pc" ? await getHeroPoints(aUuid) : heroPoints;
     }
     // Seed the six slots: a saved default loadout if the actor has one (applies in BOTH
     // virtual and physical mode), else physical pre-fills from owned dice and virtual

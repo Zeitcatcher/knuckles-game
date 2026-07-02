@@ -101,6 +101,10 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   _onRender() {
     applyAppearance(this.element);
     restoreRender(this); // re-apply scroll/focus captured before this re-render
+    this._bindKeyboard();
+    // Keyboard a11y: when the GM value-override popover is open, move focus into it so the
+    // face options are reachable without a mouse (Escape closes it — see _bindKeyboard).
+    if (this.editDieId != null) this.element.querySelector(".kg-valpop .kg-valopt")?.focus?.();
 
     // Auto-scroll the scoreboard so the active player's card is always in view
     // (only when the row actually overflows).
@@ -131,6 +135,25 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     pop.style.transform = `translateX(calc(-50% + ${shift}px))`;
     const arrow = pop.querySelector(".kg-valpop-arr");
     if (arrow) arrow.style.transform = `translateX(calc(-50% - ${shift}px)) rotate(45deg)`;
+  }
+
+  /** Bind keyboard handlers once (this.element persists across the part's re-renders):
+   *  Enter/Space toggles a focused die (the action system is click-only); Escape closes
+   *  the GM value-override popover. */
+  _bindKeyboard() {
+    if (this._kgKeyBound) return;
+    this._kgKeyBound = true;
+    this.element.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" && this.editDieId != null) {
+        ev.preventDefault();
+        this.editDieId = null;
+        this.render();
+        return;
+      }
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      const die = ev.target.closest?.(".kg-die[data-action='toggleDie']");
+      if (die) { ev.preventDefault(); die.click(); } // route through the existing toggle action
+    });
   }
 
   static _onRoll() {

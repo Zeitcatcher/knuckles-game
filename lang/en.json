@@ -86,8 +86,8 @@
   "KNUCKLES.log.wins": "{name} wins!",
   "KNUCKLES.settings.defaultTarget.name": "Default target score",
   "KNUCKLES.settings.defaultTarget.hint": "The score new games are played to by default. Can be changed per game.",
-  "KNUCKLES.settings.npcHeroPool.name": "Hero Points for unlinked players",
-  "KNUCKLES.settings.npcHeroPool.hint": "Hero Points granted to NPC / generic players that have no linked character. 0 disables Hero Points for them.",
+  "KNUCKLES.settings.npcHeroPool.name": "Hero Points for generic players",
+  "KNUCKLES.settings.npcHeroPool.hint": "Hero Points given to a participant entered as a name only, with no character or token. Player characters use their own sheet, and NPCs never get Hero Points. Set to 0 to give generic players none.",
   "KNUCKLES.settings.physicalDice.name": "Physical dice (item economy)",
   "KNUCKLES.settings.physicalDice.hint": "Off (default): the game uses virtual dice exactly as before. On: dice become real, buyable inventory items that a character must own to play them, using the bundled Knuckles Dice compendium. Two separate approaches — pick the one that fits your table. Takes effect on the next new game.",
   "KNUCKLES.settings.theme.name": "Board theme",
@@ -133,5 +133,7 @@
   "KNUCKLES.stakes.mintAll": "Create all shortfalls",
   "KNUCKLES.stakes.cancel": "Cancel",
   "KNUCKLES.stakes.confirm": "Collect and start",
-  "KNUCKLES.stakes.footnote": "Create adds the shortfall to the pot from nothing. Loans and bets are refunded if the game is cancelled with no winner."
+  "KNUCKLES.stakes.footnote": "Create adds the shortfall to the pot from nothing. Loans and bets are refunded if the game is cancelled with no winner.",
+  "KNUCKLES.dice.notReady": "Not ready",
+  "KNUCKLES.board.dieN": "Die {n}"
 }

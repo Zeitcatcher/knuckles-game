@@ -159,7 +159,8 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     const targetScore = Number(formData.object.targetScore) || DEFAULTS.TARGET;
     const npcHeroPool = game.settings.get(MODULE_ID, SETTINGS.NPC_HERO_POOL) ?? 0;
-    await dispatch({ type: "startGame", config: { players: this.players, targetScore, npcHeroPool } });
+    // force: this is a deliberate New Game from the GM; replacing a running game refunds its stakes.
+    await dispatch({ type: "startGame", force: true, config: { players: this.players, targetScore, npcHeroPool } });
     // Open the dice-choosing window for everyone at the table.
     broadcastOpen();
   }

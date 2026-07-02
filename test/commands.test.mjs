@@ -8,7 +8,7 @@ const h = vi.hoisted(() => ({ state: null, physical: false, owned: new Map(), gr
 // is an unlinked-token actor uuid owned by alice.
 const OWNED_BY = { actorAlice: "alice", actorBob: "bob", tokTok: "alice" };
 const USERS = { gm: { id: "gm", isGM: true }, alice: { id: "alice", isGM: false }, bob: { id: "bob", isGM: false } };
-const ACTORS = { actorAlice: { type: "character", name: "Alice" }, actorBob: { type: "character", name: "Bob" }, tokTok: { type: "character", name: "TokenChar" } };
+const ACTORS = { actorAlice: { type: "character", name: "Alice" }, actorBob: { type: "character", name: "Bob" }, tokTok: { type: "character", name: "TokenChar" }, actorNpc: { type: "npc", name: "Orc" } };
 
 vi.mock("../src/foundry/state-store.mjs", () => ({
   loadState: () => h.state,
@@ -67,7 +67,8 @@ beforeEach(() => {
   h.state = null; h.physical = false; h.owned = new Map(); h.granted = []; h.heroReads = []; h.spent = []; h.coinPays = [];
   h.wallets = {}; h.deducted = []; h.refunded = [];
   globalThis.game = {
-    users: { get: (id) => USERS[id] ?? null },
+    user: USERS.gm,
+    users: { get: (id) => USERS[id] ?? null, find: (fn) => Object.values(USERS).find(fn) ?? null },
     i18n: { format: (k) => k, localize: (k) => k },
     settings: { get: () => undefined, set: async () => {} },
   };
@@ -155,6 +156,45 @@ describe("physical-mode dice placement + launch stocking", () => {
     const launched = await dispatchAsGM({ type: "startPlay" }, "gm", true);
     expect(launched.status).toBe("playing"); // starts immediately, no block
     expect(h.granted.length).toBeGreaterThan(0); // the missing dice were granted on start
+  });
+});
+
+describe("Hero Points: NPCs get none, generics get the pool (#11)", () => {
+  it("an NPC participant is seeded 0 Hero Points even with a non-zero pool", async () => {
+    const config = { npcHeroPool: 3, players: [{ id: "a", actorUuid: "actorNpc" }, { id: "b", actorUuid: "actorBob" }] };
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.players[0].type).toBe("npc");
+    expect(s.players[0].heroPoints).toBe(0);
+  });
+
+  it("a generic (name-only) participant gets the configured pool", async () => {
+    const config = { npcHeroPool: 3, players: [{ id: "a", actorUuid: "actorBob" }, { id: "b", name: "Barkeep" }] };
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.players[1].type).toBe("generic");
+    expect(s.players[1].heroPoints).toBe(3);
+  });
+});
+
+describe("startGame does not clobber a running game (#14)", () => {
+  const config = { players: [{ id: "a", actorUuid: "actorAlice" }, { id: "b", actorUuid: "actorBob" }] };
+
+  it("refuses to start over an in-progress game without force", async () => {
+    h.state = playingGame();
+    await expect(dispatchAsGM({ type: "startGame", config }, "gm", true)).rejects.toThrow();
+  });
+
+  it("replaces a running game with force, refunding the old stakes", async () => {
+    h.state = playingGame();
+    h.state.escrow = [{ uuid: "actorAlice", coins: { gold: 5 } }];
+    const s = await dispatchAsGM({ type: "startGame", force: true, config }, "gm", true);
+    expect(s.status).toBe("choosing");
+    expect(h.refunded.length).toBe(1);
+  });
+
+  it("starts over a finished game without force", async () => {
+    h.state = playingGame(); h.state.status = "finished";
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.status).toBe("choosing");
   });
 });
 

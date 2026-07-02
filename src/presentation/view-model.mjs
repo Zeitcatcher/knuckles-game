@@ -53,14 +53,17 @@ export function buildBoardContext(state, user, ui) {
     const canToggle = d.state === "in-play" && d.value !== null && (
       ui.gmRerollMode ? Boolean(user.isGM) : ui.heroMode ? control : (control && state.phase === "selecting")
     );
+    const selected = !ui.heroMode && !ui.gmRerollMode && effSel.has(d.id);
+    const reroll = (ui.heroMode || ui.gmRerollMode) && ui.rerollSelection.has(d.id);
     return {
       id: d.id,
       value: d.value,
       inPlay: d.state === "in-play",
       kept: d.state === "kept",
       canToggle,
-      selected: !ui.heroMode && !ui.gmRerollMode && effSel.has(d.id),
-      reroll: (ui.heroMode || ui.gmRerollMode) && ui.rerollSelection.has(d.id),
+      pressed: selected || reroll, // aria-pressed for the keyboard-toggleable die
+      selected,
+      reroll,
       blank: d.value === null,
       isWild: d.value === WILD,
       label: named ? dieName(theme, lang, dieId) : `#${d.id}`,
