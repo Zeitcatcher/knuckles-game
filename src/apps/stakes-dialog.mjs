@@ -21,16 +21,14 @@ export class StakesDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     this._resolve = resolve;
     this._settled = false;
     this.payerNames = context.payerNames ?? [];
-    // Build mutable per-shortfall rows with sensible defaults (pc → borrow even-split, else mint).
+    // Build mutable per-shortfall rows. A PC shortfall the party could cover opens in BORROW
+    // mode, but with NO lender pre-selected: the GM decides who lends and ticks them (the
+    // even split then fills in among the ticked). NPC / actorless default to mint.
     this.rows = (context.shortfalls ?? []).map((sf) => {
       const lenders = (sf.lenders ?? []).map((l) => ({ ...l, checked: false, coins: emptyBag() }));
       const row = { id: sf.id, name: sf.name, kind: sf.kind, value: sf.value, coins: sf.coins, mode: "mint", editing: false, lenders };
-      if (sf.kind === "pc" && lenders.some((l) => l.cap > 0)) {
-        row.mode = "borrow";
-        for (const l of lenders) l.checked = l.cap > 0;
-        splitEvenly(row);
-        if (!fullyAllocated(row)) row.mode = "mint"; // party can't cover → mint by default
-      }
+      const canCover = lenders.reduce((s, l) => s + Math.max(0, l.cap), 0) >= sf.value;
+      if (sf.kind === "pc" && canCover) row.mode = "borrow"; // lenders start unchecked
       return row;
     });
   }
@@ -103,7 +101,8 @@ export class StakesDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!row) return;
     row.mode = target.dataset.mode;
     row.editing = false;
-    if (row.mode === "borrow") { for (const l of row.lenders) l.checked = l.cap > 0; splitEvenly(row); }
+    // Switching to borrow starts with a clean slate - no lender selected; the GM ticks who lends.
+    if (row.mode === "borrow") { for (const l of row.lenders) { l.checked = false; l.coins = emptyBag(); } }
     this.render();
   }
 

@@ -2,6 +2,10 @@
 
 All notable changes to **Knuckles Game** are recorded here, newest first. Each version is also published on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press **Update** on the module. Versioning is `MAJOR.MINOR.PATCH`.
 
+## 0.6.2
+
+- In the stakes window, when a player needs to borrow, no lender is selected by default. The GM ticks who lends, and the amount is split evenly among the ones they pick.
+
 ## 0.6.1
 
 - NPCs never get Hero Points. Player characters read their own sheet; a participant added as a name only (no character or token) can still be given a starting pool in the settings. The setting is renamed to "Hero Points for generic players" so it's clear it doesn't apply to NPCs.
