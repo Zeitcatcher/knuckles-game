@@ -7,3 +7,16 @@ packs/** binary
 assets/** binary
 *.png binary
 *.webp binary
+
+# Keep the distributed module.zip (git archive) lean: these are dev-only and are not
+# needed when the module runs in Foundry. The README links its screenshots from GitHub.
+docs/ export-ignore
+test/ export-ignore
+scripts/ export-ignore
+.github/ export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+package.json export-ignore
+package-lock.json export-ignore
+vitest.config.js export-ignore
+vitest.config.mjs export-ignore
