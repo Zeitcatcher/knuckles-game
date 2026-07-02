@@ -1,0 +1,37 @@
+/* Coin amounts: number + metal disc, one line. The disc (colour + inset ring) reads as a
+   coin in any system; on pf2e the system's coin art loads over it. No letters. */
+.kg-amt { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; vertical-align: -2px; }
+.kg-c { display: inline-flex; align-items: center; gap: 2px; }
+.kg-cn { font-variant-numeric: tabular-nums; }
+.kg-coin {
+  display: inline-block; width: 13px; height: 13px; border-radius: 50%; flex: none;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+}
+.kg-coin-sun    { background-color: #dfe3e8; box-shadow: inset 0 0 0 1.5px #9aa4ad; background-image: url("/systems/pf2e/icons/equipment/treasure/currency/platinum-pieces.webp"); }
+.kg-coin-gold   { background-color: #e6b32e; box-shadow: inset 0 0 0 1.5px #a97e1a; background-image: url("/systems/pf2e/icons/equipment/treasure/currency/gold-pieces.webp"); }
+.kg-coin-silver { background-color: #b9bec4; box-shadow: inset 0 0 0 1.5px #7f868d; background-image: url("/systems/pf2e/icons/equipment/treasure/currency/silver-pieces.webp"); }
+.kg-coin-copper { background-color: #c8823f; box-shadow: inset 0 0 0 1.5px #8a5626; background-image: url("/systems/pf2e/icons/equipment/treasure/currency/copper-pieces.webp"); }
+
+/* Stakes dialog */
+.kg-stakes { font-size: 14px; }
+.kg-stakes .kg-stakes-lead { margin: 0 0 4px; }
+.kg-stakes .kg-stakes-paid { margin: 0 0 12px; color: var(--kg-muted, #8a7c66); font-size: 13px; }
+.kg-stakes .kg-srow { border: 1px solid var(--kg-line, #4a3f34); border-radius: 6px; padding: 10px 12px; margin: 0 0 10px; }
+.kg-stakes .kg-srow-head { display: flex; align-items: center; gap: 10px; }
+.kg-stakes .kg-srow-name { font-weight: 500; flex: 1; min-width: 0; }
+.kg-stakes .kg-srow-short { font-size: 13px; color: var(--kg-muted, #8a7c66); }
+.kg-stakes .kg-seg { display: inline-flex; border: 1px solid var(--kg-line, #5a4d3e); border-radius: 6px; overflow: hidden; flex: none; }
+.kg-stakes .kg-seg button { border: 0; background: transparent; color: var(--kg-muted, #9b8d78); font-size: 12px; padding: 4px 12px; cursor: pointer; }
+.kg-stakes .kg-seg button.on { background: var(--kg-accent, #d4a648); color: #241d18; font-weight: 500; }
+.kg-stakes .kg-lenders { margin: 8px 0 0; border-top: 1px solid var(--kg-line, #3a3128); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.kg-stakes .kg-lrow { display: flex; align-items: center; gap: 10px; }
+.kg-stakes .kg-lname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kg-stakes .kg-lgive { color: var(--kg-muted, #8a7c66); white-space: nowrap; }
+.kg-stakes .kg-lrow.is-off { opacity: 0.55; }
+.kg-stakes .kg-cin { width: 38px; height: 24px; text-align: right; padding: 0 3px; }
+.kg-stakes .kg-editlink { background: none; border: 0; color: var(--kg-muted, #cdbfa5); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; padding: 2px 0; }
+.kg-stakes .kg-alloc-ok { color: var(--kg-win, #7fa650); font-size: 12px; }
+.kg-stakes .kg-alloc-short { color: var(--kg-danger, #c75142); font-size: 12px; }
+.kg-stakes .kg-stakes-foot { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.kg-stakes .kg-stakes-foot .kg-spacer { margin-left: auto; }
+.kg-stakes .kg-stakes-note { font-size: 11px; color: var(--kg-muted, #8a7c66); margin: 10px 0 0; }

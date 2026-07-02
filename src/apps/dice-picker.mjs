@@ -4,7 +4,7 @@ import { dispatch, broadcastOpen } from "../net/socket.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
 import { diceIds } from "../foundry/dice-data.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
-import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, coverLoadout, readDefaultLoadout, saveDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
+import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, slotCoverage, readDefaultLoadout, saveDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
 import { pickerSignature } from "../core/transient-ui.mjs";
 
@@ -116,7 +116,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
 
       // Greedy per-slot coverage drives only the check-vs-will-add marker; an unowned slot
       // is GRANTED on start (the GM's Start gifts it), never blocked.
-      const { slotCovered } = coverLoadout(p.dieIds, [], owned);
+      const slotCovered = slotCoverage(p.dieIds, owned);
 
       const slots = (p.dieIds ?? []).map((dieId, i) => {
         const usedExcl = new Map(used);
@@ -181,7 +181,10 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
           playerId: ev.target.dataset.playerId,
           slot: Number(ev.target.dataset.slot),
           dieId: ev.target.value,
-        }).then(() => { if (game.user.isGM) scheduleRender(this); }).catch(reportError);
+        }).then(() => { if (game.user.isGM) scheduleRender(this); })
+          // A rejected pick (e.g. the die was sold in a race) leaves the native <select>
+          // showing a value that was never saved — snap back to the authoritative state.
+          .catch((err) => { reportError(err); scheduleRender(this); });
       });
       // Flush a render that was DEFERRED while this dropdown was open (e.g. another player's
       // change) once it closes — but don't force a fresh render here (that's the change path).
@@ -236,9 +239,31 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static async _onStartPlay() {
-    await dispatch({ type: "startPlay" }).catch(reportError);
-    broadcastOpen();
-    this.close();
+    // Stake collection runs on the GM client: compute the plan; a shortfall opens the
+    // stakes dialog (mint / borrow), otherwise start straight away. The command re-reads
+    // wallets and performs the authoritative deductions. Cancelling the dialog aborts Start.
+    let stakes = null;
+    const state = loadState();
+    if (state && game.user.isGM) {
+      try {
+        const { buildStakeContext } = await import("../foundry/stakes-context.mjs");
+        const ctx = await buildStakeContext(state);
+        if (ctx.needsDialog) {
+          const { openStakesDialog } = await import("./stakes-dialog.mjs");
+          stakes = await openStakesDialog(ctx);
+          if (stakes === null) return; // GM cancelled — do not start
+        }
+      } catch (err) {
+        reportError(err); // fall through: start with no explicit resolutions (shortfalls minted)
+      }
+    }
+    try {
+      await dispatch({ type: "startPlay", stakes });
+      broadcastOpen();
+      this.close();
+    } catch (err) {
+      reportError(err); // a failed stake collection (wallet race) keeps the picker open to retry
+    }
   }
 
   static async _onEndGame() {

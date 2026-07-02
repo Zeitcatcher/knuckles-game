@@ -37,13 +37,19 @@ export function weightedFace(rng, weights) {
   return 6;
 }
 
+/** The physical face that reads as WILD on a joker die (default: the 1-face). */
+export function jokerFaceOf(spec) {
+  const f = !Array.isArray(spec) ? Number(spec?.jokerFace) : NaN;
+  return Number.isInteger(f) && f >= 1 && f <= 6 ? f : 1;
+}
+
 /**
  * Roll one die from a spec, returning a face 1..6 — or WILD if the die is a joker
- * and its joker face (the 1-face) comes up. `spec` is a weight array or `{weights, joker}`.
+ * and its joker face comes up. `spec` is a weight array or `{weights, joker, jokerFace}`.
  */
 export function rollDieValue(rng, spec) {
   const weights = Array.isArray(spec) ? spec : spec?.weights;
   const isJoker = !Array.isArray(spec) && Boolean(spec?.joker);
   const face = weightedFace(rng, weights);
-  return isJoker && face === 1 ? WILD : face;
+  return isJoker && face === jokerFaceOf(spec) ? WILD : face;
 }

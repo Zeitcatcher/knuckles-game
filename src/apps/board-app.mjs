@@ -183,7 +183,11 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static _onHeroConfirm() {
     const rerollIds = [...this.rerollSelection];
     if (!rerollIds.length) return;
-    dispatch({ type: "useHeroPoint", rerollIds }).catch(reportError);
+    // Close the picker locally on success — a re-roll can land selecting→selecting (same
+    // turn signature), so refreshBoard's transient reset won't fire. Errors keep it open.
+    dispatch({ type: "useHeroPoint", rerollIds })
+      .then(() => { this.heroMode = false; this.rerollSelection.clear(); scheduleRender(this); })
+      .catch(reportError);
   }
 
   static _onGmRerollOpen() {
@@ -202,7 +206,9 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static _onGmRerollConfirm() {
     const rerollIds = [...this.rerollSelection];
     if (!rerollIds.length) return;
-    dispatch({ type: "gmReroll", rerollIds }).catch(reportError);
+    dispatch({ type: "gmReroll", rerollIds })
+      .then(() => { this.gmRerollMode = false; this.rerollSelection.clear(); scheduleRender(this); })
+      .catch(reportError);
   }
 
   /** Toggle the combos reference panel: persist the client setting, resize the window
@@ -278,10 +284,16 @@ export function refreshBoard(force = false) {
   // in flight, in which case the controller's optimistic Set wins until it flushes
   // (so the round-trip echo can't yank their in-progress selection).
   if (!instance._selectionDirty) instance.selection = new Set(state.selection ?? []);
-  // Hero-Point / GM re-roll modes and the GM value-override are private/transient: reset.
-  instance.heroMode = false;
-  instance.gmRerollMode = false;
-  instance.rerollSelection.clear();
-  instance.editDieId = null;
+  // Hero-Point / GM re-roll modes and the GM value-override are private/transient — but
+  // reset them only when the TURN actually moved on. Resetting on every sync let a player
+  // fidgeting with their keep highlight slam the GM's open picker/popover shut mid-pick.
+  const turnSig = `${state.status}|${state.turnIndex}|${state.phase}`;
+  if (instance._kgTurnSig !== turnSig) {
+    instance._kgTurnSig = turnSig;
+    instance.heroMode = false;
+    instance.gmRerollMode = false;
+    instance.rerollSelection.clear();
+    instance.editDieId = null;
+  }
   scheduleRender(instance, { force });
 }

@@ -32,7 +32,6 @@ export function createGame({ players, targetScore = 2000, physical = false } = {
       total: 0,
       heroPoints: p.heroPoints ?? 0,
       dieIds: Array.from({ length: 6 }, (_, s) => p.dieIds?.[s] ?? "01"),
-      gifts: Array.from({ length: 6 }, (_, s) => Boolean(p.gifts?.[s])), // GM placed an unowned die here → granted at launch
       ready: false,
       bet: {
         sun: Number(p.bet?.sun) || 0,
@@ -43,6 +42,7 @@ export function createGame({ players, targetScore = 2000, physical = false } = {
     })),
     turnIndex: 0,
     turnScore: 0,
+    escrow: [], // real coin deductions made to collect stakes: [{uuid, coins}] — refunded if the game ends unfinished
     selection: [], // the current controller's shared keep-selection (in-play die ids), visible to all
     pool: freshPool(),
     phase: "await-roll", // await-roll | selecting | bust | finished
@@ -197,25 +197,21 @@ function applySetSelection(s, { ids }) {
   return s;
 }
 
-/** Choose the catalog die for one of a player's six slots. `gifted` marks a GM-placed
- *  die the actor doesn't own (granted at launch); cleared for an owned / player pick. */
-function applySetDieSlot(s, { playerId, slot, dieId, gifted }) {
+/** Choose the catalog die for one of a player's six slots. Ownership is enforced by the
+ *  command handler; anything still unowned at launch is auto-granted there. */
+function applySetDieSlot(s, { playerId, slot, dieId }) {
   const p = s.players.find((pl) => pl.id === playerId);
   if (p && Number.isInteger(slot) && slot >= 0 && slot < 6) {
     p.dieIds[slot] = dieId ?? "01";
-    if (!Array.isArray(p.gifts)) p.gifts = [false, false, false, false, false, false];
-    p.gifts[slot] = Boolean(gifted);
   }
   return s;
 }
 
-/** Set all six of a player's slots at once (e.g. applying a saved default). Clears the
- *  gift flags — a default is the player's own owned favourites, never a gift. */
+/** Set all six of a player's slots at once (e.g. applying a saved default). */
 function applySetLoadout(s, { playerId, dieIds }) {
   const p = s.players.find((pl) => pl.id === playerId);
   if (p && Array.isArray(dieIds)) {
     for (let i = 0; i < 6; i++) p.dieIds[i] = dieIds[i] ?? "01";
-    p.gifts = [false, false, false, false, false, false];
   }
   return s;
 }

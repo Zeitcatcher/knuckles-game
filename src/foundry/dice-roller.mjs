@@ -1,4 +1,4 @@
-import { isWeighted, rollDieValue } from "../core/weighting.mjs";
+import { isWeighted, rollDieValue, jokerFaceOf } from "../core/weighting.mjs";
 import { WILD } from "../core/dice-model.mjs";
 
 /** Foundry's uniform RNG (shared with every other roll), with a safe fallback. */
@@ -28,7 +28,7 @@ export async function rollValues(count, specs) {
     if (spec && (isWeighted(weights) || joker)) {
       const value = rollDieValue(uniform, spec);
       values[i] = value;
-      res.result = value === WILD ? 1 : value; // 3D shows the physical 1-position for a wild
+      res.result = value === WILD ? jokerFaceOf(spec) : value; // 3D shows the wild's physical face
     }
   });
 

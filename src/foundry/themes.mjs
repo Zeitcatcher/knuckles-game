@@ -27,7 +27,12 @@ export async function loadThemes() {
   }
 }
 
-/** Register an extra theme at runtime (third-party packs). */
+/**
+ * Register an extra theme at runtime (third-party packs).
+ * `themeMeta` = { id, name, baseLanguage, languages: [{name, code}], path? } — `path` is the
+ * directory the language JSONs load from (e.g. "modules/my-pack/knuckles-themes/noir"); a
+ * theme from ANOTHER module must set it, since `dir` resolves inside THIS module's folder.
+ */
 export function registerTheme(themeMeta) {
   if (themeMeta?.id) meta.set(themeMeta.id, themeMeta);
 }
@@ -68,7 +73,8 @@ async function loadLang(themeId, code) {
   const lang = m?.languages?.find((l) => l.code === code);
   if (!m || !lang) { langCache.set(key, null); return null; }
   try {
-    const data = await foundry.utils.fetchJsonWithTimeout(`modules/${MODULE_ID}/themes/${m.dir}/${lang.name}.json`);
+    const base = m.path ?? `modules/${MODULE_ID}/themes/${m.dir}`;
+    const data = await foundry.utils.fetchJsonWithTimeout(`${base}/${lang.name}.json`);
     langCache.set(key, data);
     return data;
   } catch (err) {

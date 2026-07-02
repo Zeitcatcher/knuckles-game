@@ -35,7 +35,7 @@ Everything is **networked and live**: every player sees the same board update in
 - **Pathfinder 2e Hero Points** — spend a Hero Point to re-roll any dice from your last throw.
 - **GM tools** — a free re-roll (re-roll a player's dice without spending anything), value overrides, and the ability to gift dice to players.
 - **Saved default loadouts** — each character can save a default set of six dice that's restored automatically next game, across sessions and restarts.
-- **Wagers & a shared pot** — optional per-player bets in four coin denominations on a single compact line, plus a configurable target score.
+- **Wagers & a shared pot** — optional per-player bets in four coin denominations. On a Pathfinder 2e table the stakes are really collected on start (deducted from each character), and short players can mint the coins or borrow from the party; the pot is refunded if a game ends with no winner.
 - **Optional physical-dice economy** — turn the dice into real, buyable Pathfinder 2e items you own and carry (see below).
 
 ---

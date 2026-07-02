@@ -14,7 +14,7 @@ let order = [];
 export function parseCatalog(json) {
   const map = new Map();
   for (const d of json?.dice ?? []) {
-    if (d?.id) map.set(d.id, { weights: d.weights, joker: Boolean(d.joker) });
+    if (d?.id) map.set(d.id, { weights: d.weights, joker: Boolean(d.joker), jokerFace: Number(d.jokerFace) || 1 });
   }
   return map;
 }
@@ -30,9 +30,9 @@ export async function loadDiceCatalog() {
   }
 }
 
-/** The roll spec ({weights, joker}) for a die id, falling back to the default. */
+/** The roll spec ({weights, joker, jokerFace}) for a die id, falling back to the default. */
 export function getDieSpec(id) {
-  return byId.get(id) ?? byId.get(DEFAULT_DIE_ID) ?? { weights: [1, 1, 1, 1, 1, 1], joker: false };
+  return byId.get(id) ?? byId.get(DEFAULT_DIE_ID) ?? { weights: [1, 1, 1, 1, 1, 1], joker: false, jokerFace: 1 };
 }
 
 /** All die ids, in catalog order. */

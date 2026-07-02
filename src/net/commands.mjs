@@ -11,13 +11,13 @@ import { loadState, saveState } from "../foundry/state-store.mjs";
 import { rollValues } from "../foundry/dice-roller.mjs";
 import { animateRoll } from "../foundry/dice-so-nice.mjs";
 import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
-import { awardCoins } from "../foundry/currency.mjs";
+import { awardCoins, walletValue, deductCoins, refundCoins } from "../foundry/currency.mjs";
+import { planStakes, coinValue, coinsFromValue } from "../core/stakes.mjs";
 import { getDieSpec, diceIds } from "../foundry/dice-data.mjs";
 import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
-let launching = false; // GM-side guard: one startPlay at a time, so auto-grant can't double-fire
 
 /** Log entries are stored as {key, data} and localized per client in the view-model. */
 function pushLog(state, key, data) {
@@ -38,8 +38,20 @@ async function syncCurrentHeroPoints(state) {
   if (uuid) p.heroPoints = await getHeroPoints(uuid);
 }
 
+// Every intent runs through ONE promise queue. handleIntent is re-entrant at its awaits
+// (dice rolls, actor writes), so two interleaved intents would race loadState/saveState
+// (lost update — e.g. a GM override landing during a player's bank). Serialising removes
+// the whole class; a failed intent never poisons the queue.
+let queue = Promise.resolve();
+
 /** @param {object} intent  @param {string} userId - the requesting user's id */
-export async function dispatchAsGM(intent, userId, local = false) {
+export function dispatchAsGM(intent, userId, local = false) {
+  const run = queue.then(() => handleIntent(intent, userId, local));
+  queue = run.then(() => {}, () => {});
+  return run;
+}
+
+async function handleIntent(intent, userId, local) {
   // GM authority requires a LOCAL (direct) call. A socket-forwarded userId is forgeable,
   // but a socket call is never local — and a GM's own client dispatches directly — so a
   // player cannot impersonate the GM. `requester` is still resolved for ownership checks.
@@ -57,10 +69,12 @@ export async function dispatchAsGM(intent, userId, local = false) {
   let state = loadState();
   if (!state) throw new Error("no active game");
 
-  // End the game with no winner and no payout: clear the state so the launch
+  // End the game with no winner and no payout: refund any collected stakes (only while
+  // unfinished — a finished game already paid its pot), then clear the state so the launch
   // icon reverts to New Game setup. Allowed in any phase, GM only.
   if (intent.type === "endGame") {
     if (!trustedGM) throw new Error("only the GM can end the game");
+    await refundEscrow(state);
     await saveState(null);
     return null;
   }
@@ -75,18 +89,15 @@ export async function dispatchAsGM(intent, userId, local = false) {
     if (!allowed) throw new Error("you cannot change that die now");
     // Physical mode: a NON-GM may only equip a die the character owns (the picker greys
     // out the rest; this is the authoritative defence against a hand-crafted intent).
-    // ANY GM placement during choosing is a deliberate GIFT — granted at launch for every
-    // slot not backed by an owned copy. coverLoadout allocates owned copies first (order-
-    // independently), so this also gifts EXTRA copies of an already-owned die. A mid-game
+    // The GM may place anything — starting the game auto-stocks every unowned slot die
+    // (enforcePhysicalLaunch), so a GM placement needs no per-slot bookkeeping. A mid-game
     // GM change grants nothing (dice are frozen at launch). NPCs over-assign freely;
     // generic / token-less players are exempt.
-    let gifted = false;
-    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid)) {
+    if (state.physical && target.type !== "npc" && (target.actorUuid || target.tokenUuid) && !trustedGM) {
       const owns = (ownedDieCounts(inventoryActor(target)).get(intent.dieId) ?? 0) >= 1;
-      if (!owns && !trustedGM) throw new Error("you do not own that die");
-      gifted = trustedGM && state.status === "choosing";
+      if (!owns) throw new Error("you do not own that die");
     }
-    state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId, gifted });
+    state = reduce(state, { type: "setDieSlot", playerId: intent.playerId, slot: intent.slot, dieId: intent.dieId });
     await saveState(state);
     return state;
   }
@@ -121,18 +132,16 @@ export async function dispatchAsGM(intent, userId, local = false) {
     if (!trustedGM) throw new Error("only the GM can start play");
     if (state.status !== "choosing") throw new Error("the game has already started");
     if (state.physical) {
-      if (launching) throw new Error("a game is already starting");
-      launching = true;
-      try {
-        const blockers = await enforcePhysicalLaunch(state);
-        if (blockers.length) {
-          ui.notifications?.warn(game.i18n.format("KNUCKLES.warn.needSix", { names: blockers.join(", ") }));
-          throw new Error("some players do not have six dice");
-        }
-      } finally {
-        launching = false;
+      const blockers = await enforcePhysicalLaunch(state);
+      if (blockers.length) {
+        ui.notifications?.warn(game.i18n.format("KNUCKLES.warn.noActor", { names: blockers.join(", ") }));
+        throw new Error("some participants have no resolvable actor");
       }
     }
+    // Collect stakes: deduct each bettor's affordable part + the GM's chosen borrow
+    // allocations (from intent.stakes), recording every real deduction in state.escrow for
+    // refund. Minted shortfalls move no coin. Skipped entirely when nobody bet.
+    if (hasBets(state)) await collectStakes(state, intent.stakes ?? null);
     state = reduce(state, { type: "startPlay" });
     await syncCurrentHeroPoints(state);
     await saveState(state);
@@ -314,4 +323,64 @@ async function enforcePhysicalLaunch(state) {
     if (missing.size) await grantDice(actor, missing);
   }
   return blockers;
+}
+
+/** True when at least one participant staked a non-zero bet. */
+function hasBets(state) {
+  return (state.players ?? []).some((p) => coinValue(p.bet) > 0);
+}
+
+/**
+ * Collect stakes GM-side. Deducts each bettor's affordable part from their (token-first)
+ * actor, then the GM's chosen borrow allocations from lenders; minted shortfalls move no
+ * coin (the end-of-game pot award already includes them). Every real deduction is appended
+ * to state.escrow so refundEscrow can undo it. Any failed deduction rolls back everything
+ * done in this call and throws, so the GM's Start is atomic — coins never partially move.
+ *
+ * @param {object} state
+ * @param {Record<string, {mode:"mint"|"borrow", borrow?:{uuid:string, coins:object}[]}>|null} resolutions
+ *   Per short-participant id, from the GM's stakes dialog (null when nothing was short).
+ */
+async function collectStakes(state, resolutions) {
+  const done = []; // {uuid, coins} removed so far, for rollback
+  const escrow = [];
+  const rollback = async () => { for (const d of done) await refundCoins(d.uuid, d.coins); };
+  const deduct = async (uuid, coins) => {
+    if (!uuid || !coinValue(coins)) return;
+    if (!(await deductCoins(uuid, coins))) {
+      await rollback();
+      throw new Error("stake deduction failed (a wallet changed) — reopen the stakes window");
+    }
+    done.push({ uuid, coins });
+    escrow.push({ uuid, coins });
+  };
+
+  const parts = [];
+  for (const p of state.players) {
+    const uuid = participantActorUuid(p);
+    const kind = uuid ? (p.type === "npc" ? "npc" : "pc") : "actorless";
+    parts.push({ id: p.id, name: p.name, kind, bet: p.bet, walletValue: uuid ? await walletValue(uuid) : 0, uuid });
+  }
+  const plan = planStakes(parts);
+
+  for (const pay of plan.payments) {
+    const part = parts.find((x) => x.id === pay.id);
+    await deduct(part?.uuid, coinsFromValue(pay.value));
+  }
+  for (const sf of plan.shortfalls) {
+    const res = resolutions?.[sf.id];
+    if (!res || res.mode === "mint") continue; // minted → no deduction
+    for (const b of res.borrow ?? []) await deduct(b.uuid, b.coins);
+  }
+
+  state.escrow = [...(state.escrow ?? []), ...escrow];
+  pushLog(state, "KNUCKLES.log.stakes", {});
+}
+
+/** Refund every recorded stake deduction — but only while the game is unfinished (a
+ *  finished game already awarded its pot). Idempotent in practice: the state is cleared
+ *  right after, so the escrow can't be refunded twice. */
+async function refundEscrow(state) {
+  if (!state || state.status === "finished") return;
+  for (const e of state.escrow ?? []) await refundCoins(e.uuid, e.coins);
 }

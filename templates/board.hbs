@@ -7,10 +7,7 @@
   {{#if hasPot}}
     <div class="kg-pot">
       <span class="kg-muted">{{localize "KNUCKLES.board.pot"}}</span>
-      <span class="kg-coin kg-sun">{{pool.sun}} {{localize "KNUCKLES.coin.sun"}}</span>
-      <span class="kg-coin kg-gold">{{pool.gold}} {{localize "KNUCKLES.coin.gold"}}</span>
-      <span class="kg-coin kg-silver">{{pool.silver}} {{localize "KNUCKLES.coin.silver"}}</span>
-      <span class="kg-coin kg-copper">{{pool.copper}} {{localize "KNUCKLES.coin.copper"}}</span>
+      {{kgCoins pool all=true}}
     </div>
   {{/if}}
 

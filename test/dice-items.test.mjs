@@ -11,7 +11,7 @@ import {
   ownedSlotChoices,
   orderIdsOwnedFirst,
   freeCopies,
-  coverLoadout,
+  slotCoverage,
   resolveLoadout,
   readDefaultLoadout,
 } from "../src/foundry/dice-items.mjs";
@@ -165,49 +165,30 @@ describe("freeCopies (free/total label)", () => {
   });
 });
 
-describe("coverLoadout (block unless GM gifted six)", () => {
-  const six = (a) => a; // a 6-length dieIds array
-
-  it("covers fully-owned loadouts with nothing to grant and no shortfall", () => {
+describe("slotCoverage (picker check-vs-plus marker)", () => {
+  it("marks a fully-owned loadout covered on every slot", () => {
     const owned = new Map([["01", 6]]);
-    const { toGrant, shortBy } = coverLoadout(six(["01", "01", "01", "01", "01", "01"]), [], owned);
-    expect(shortBy).toBe(0);
-    expect(toGrant.size).toBe(0);
+    expect(slotCoverage(["01", "01", "01", "01", "01", "01"], owned)).toEqual([true, true, true, true, true, true]);
   });
 
-  it("grants the GM-gifted slots and reports no shortfall", () => {
-    const owned = new Map([["01", 4]]);
-    const gifts = [false, false, false, false, true, true]; // GM gifted slots 5 and 6
-    const dieIds = ["01", "01", "01", "01", "02", "22"];
-    const { toGrant, shortBy } = coverLoadout(dieIds, gifts, owned);
-    expect(shortBy).toBe(0);
-    expect(toGrant.get("02")).toBe(1);
-    expect(toGrant.get("22")).toBe(1);
-  });
-
-  it("reports a shortfall for unowned, un-gifted slots (the prefill pad case)", () => {
+  it("marks unowned slots as will-be-granted (the prefill pad case)", () => {
     const owned = new Map([["07", 4]]);
-    const dieIds = ["07", "07", "07", "07", "01", "01"]; // two unowned "01" pads, not gifted
-    const { toGrant, shortBy } = coverLoadout(dieIds, [false, false, false, false, false, false], owned);
-    expect(shortBy).toBe(2);
-    expect(toGrant.size).toBe(0);
+    expect(slotCoverage(["07", "07", "07", "07", "01", "01"], owned)).toEqual([true, true, true, true, false, false]);
   });
 
-  it("counts duplicate copies correctly (owned 1, placed twice)", () => {
+  it("allocates duplicate copies greedily, first-come (owned 1, placed six times)", () => {
     const owned = new Map([["07", 1]]);
-    const dieIds = ["07", "07", "07", "07", "07", "07"]; // own 1, placed 6, none gifted
-    const { shortBy } = coverLoadout(dieIds, [], owned);
-    expect(shortBy).toBe(5); // first slot covered, other five short
+    expect(slotCoverage(["07", "07", "07", "07", "07", "07"], owned)).toEqual([true, false, false, false, false, false]);
   });
 
-  it("reports greedy per-slot coverage that matches the launch outcome", () => {
+  it("matches the launch grant maths: uncovered slots = missingDieCopies total", () => {
     const owned = new Map([["07", 2]]);
-    const gifts = [false, false, false, false, true, false];
-    const dieIds = ["07", "07", "07", "02", "02", "07"]; // slot4 "02" is a gift
-    const { slotCovered, shortBy, toGrant } = coverLoadout(dieIds, gifts, owned);
-    expect(slotCovered).toEqual([true, true, false, false, false, false]); // first two 07 covered
-    expect(shortBy).toBe(3); // slot2(07), slot3(02 not gifted), slot5(07)
-    expect(toGrant.get("02")).toBe(1); // slot4 gifted
+    const dieIds = ["07", "07", "07", "02", "02", "07"];
+    const covered = slotCoverage(dieIds, owned);
+    expect(covered).toEqual([true, true, false, false, false, false]);
+    const missing = missingDieCopies(dieIds, owned);
+    const missingTotal = [...missing.values()].reduce((a, b) => a + b, 0);
+    expect(covered.filter((c) => !c).length).toBe(missingTotal);
   });
 });
 

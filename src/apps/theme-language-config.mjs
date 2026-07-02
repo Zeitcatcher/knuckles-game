@@ -5,8 +5,9 @@ import { applyAppearance } from "../presentation/theme.mjs";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
- * Settings submenu: the GM picks the shared theme + their own language; players
- * pick only their language. The language list is populated from the chosen theme.
+ * Settings submenu (GM-only — registered with `restricted: true`): the GM picks the
+ * dice theme AND the language for the whole table; both are world settings. The
+ * language list is populated from the chosen theme.
  */
 export class ThemeLanguageConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -44,12 +45,15 @@ export class ThemeLanguageConfig extends HandlebarsApplicationMixin(ApplicationV
     });
   }
 
+  /** Both are world settings (GM-only submenu); skip unchanged values so a submit
+   *  fires ONE onThemeChanged (and one restamp sweep), not two. */
   static async _onSubmit(event, form, formData) {
+    if (!game.user.isGM) return;
     const data = formData.object;
-    if (game.user.isGM && data.theme) {
+    if (data.theme && data.theme !== game.settings.get(MODULE_ID, SETTINGS.CONTENT_THEME)) {
       await game.settings.set(MODULE_ID, SETTINGS.CONTENT_THEME, data.theme);
     }
-    if (data.language) {
+    if (data.language && data.language !== game.settings.get(MODULE_ID, SETTINGS.LANGUAGE)) {
       await game.settings.set(MODULE_ID, SETTINGS.LANGUAGE, data.language);
     }
   }

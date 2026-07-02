@@ -154,24 +154,21 @@ export function freeCopies(ownedCounts, usedAll, id) {
 }
 
 /**
- * Walk a six-slot loadout against owned copies + per-slot GM gift flags. Returns the
- * copies to GRANT (gifted slots with no owned copy) and how many slots are neither owned
- * nor gifted (`shortBy`, the launch blockers). Pure — encodes the "block unless GM gifted
- * six" rule, shared by launch enforcement and the picker's live tally.
+ * Per-slot ownership coverage: greedy first-come allocation of owned copies over the six
+ * chosen slots. `true` = backed by an owned copy, `false` = will be granted on start.
+ * Pure — drives the picker's check-vs-plus marker with the same greedy order the launch
+ * grant math (missingDieCopies) resolves in, so marker and outcome can never disagree.
  */
-export function coverLoadout(dieIds, gifts, ownedCounts) {
+export function slotCoverage(dieIds, ownedCounts) {
   const remaining = new Map(ownedCounts);
-  const toGrant = new Map();
-  const slotCovered = []; // per slot: true when backed by an owned copy (greedy, first-come)
-  let shortBy = 0;
-  (dieIds ?? []).forEach((dieId, i) => {
+  return (dieIds ?? []).map((dieId) => {
     const have = remaining.get(dieId) ?? 0;
-    if (have > 0) { remaining.set(dieId, have - 1); slotCovered[i] = true; return; } // covered by an owned copy
-    slotCovered[i] = false;
-    if (gifts?.[i]) toGrant.set(dieId, (toGrant.get(dieId) ?? 0) + 1); // a GM gift → grant it
-    else shortBy += 1; // unowned and not gifted → blocks
+    if (have > 0) {
+      remaining.set(dieId, have - 1);
+      return true;
+    }
+    return false;
   });
-  return { toGrant, shortBy, slotCovered };
 }
 
 const DEFAULT_LOADOUT_FLAG = "defaultLoadout";

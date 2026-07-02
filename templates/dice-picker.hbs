@@ -14,7 +14,7 @@
           {{#if hasDefault}}<button type="button" class="kg-defbtn ghost" data-action="resetDefault" data-player-id="{{id}}" title="{{localize 'KNUCKLES.dice.resetDefaultHint'}}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> {{localize "KNUCKLES.dice.resetDefault"}}</button>{{/if}}
         </span>{{/if}}
       </div>
-      {{#if tally}}<div class="kg-buyhint">{{#if buyHint}}<i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> {{buyHint}}{{/if}}</div>{{/if}}
+      {{#if tally}}<div class="kg-buyhint">{{#if buyHint}}<i class="fa-solid fa-gift" aria-hidden="true"></i> {{buyHint}}{{/if}}</div>{{/if}}
       {{#if stockNote}}<div class="kg-stocknote"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> {{stockNote}}</div>{{/if}}
       <div class="kg-dslots">
         {{#each slots}}

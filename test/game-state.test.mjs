@@ -313,35 +313,35 @@ describe("gmReroll (GM free re-roll, no Hero Point)", () => {
   });
 });
 
-describe("setDieSlot gift tracking", () => {
+describe("setDieSlot", () => {
   const fresh = () => createGame({ players: [{ id: "a" }, { id: "b" }] });
 
-  it("createGame seeds gifts to all-false", () => {
-    expect(fresh().players[0].gifts).toEqual([false, false, false, false, false, false]);
-  });
-
-  it("records the die id and the gift flag for a GM gift", () => {
-    const s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
+  it("records the die id for a valid slot", () => {
+    const s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07" });
     expect(s.players[0].dieIds[0]).toBe("07");
-    expect(s.players[0].gifts[0]).toBe(true);
   });
 
-  it("clears the gift flag when the slot is re-picked without a gift", () => {
-    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
-    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 0, dieId: "03", gifted: false });
-    expect(s.players[0].dieIds[0]).toBe("03");
-    expect(s.players[0].gifts[0]).toBe(false);
+  it("ignores an unknown player or an out-of-range slot", () => {
+    let s = reduce(fresh(), { type: "setDieSlot", playerId: "zz", slot: 0, dieId: "07" });
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 6, dieId: "07" });
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: -1, dieId: "07" });
+    expect(s.players[0].dieIds).toEqual(["01", "01", "01", "01", "01", "01"]);
+  });
+
+  it("falls back to the default die for a missing die id", () => {
+    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 2, dieId: "07" });
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 2, dieId: undefined });
+    expect(s.players[0].dieIds[2]).toBe("01");
   });
 });
 
 describe("setLoadout (batched, e.g. reset to default)", () => {
   const fresh = () => createGame({ players: [{ id: "a" }, { id: "b" }] });
 
-  it("sets all six slots at once and clears the gift flags", () => {
-    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07", gifted: true });
+  it("sets all six slots at once", () => {
+    let s = reduce(fresh(), { type: "setDieSlot", playerId: "a", slot: 0, dieId: "07" });
     s = reduce(s, { type: "setLoadout", playerId: "a", dieIds: ["02", "02", "02", "02", "02", "02"] });
     expect(s.players[0].dieIds).toEqual(["02", "02", "02", "02", "02", "02"]);
-    expect(s.players[0].gifts).toEqual([false, false, false, false, false, false]);
   });
 
   it("does not mutate the input state", () => {

@@ -2,6 +2,22 @@
 
 All notable changes to **Knuckles Game** are recorded here, newest first. Each version is also published on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press **Update** on the module. Versioning is `MAJOR.MINOR.PATCH`.
 
+## 0.6.0
+
+- **Real wager stakes.** Bets are now actually collected when a game starts, and the winner's pot is backed by that coin instead of appearing from nowhere. In a Pathfinder 2e world each participant's bet is deducted from their character (or token) on Start.
+  - **If someone can't cover their bet**, a stakes window opens: for each short participant you either **create the coins** (added to the pot from nothing — handy for NPC tokens with no money) or **borrow from the party** (pick which members lend; the shortfall is split evenly and every amount is editable). One click can **create all shortfalls** at once.
+  - **Coins are refunded** if you end or discard a game with no winner. Created (minted) coins are never clawed back.
+  - Coins now show as **coin icons** (platinum/gold/silver/copper) everywhere — the pot, the bet row, and the stakes window — instead of letter codes.
+- **Resume or discard a game after a reload.** If the GM refreshes mid-game, Knuckles now asks whether to resume the game in progress or discard it (refunding stakes), instead of silently wiping it.
+- **Fixes and hardening.**
+  - A second (assistant) GM logging in no longer wipes a running game or double-processes the dice compendium — only the primary GM performs those.
+  - The GM's free-reroll picker and die-value popover no longer snap shut when a player fiddles with their selection.
+  - Picking a die that was just sold/deleted no longer leaves the dropdown showing an unsaved value — it reverts to the real state.
+  - Third-party dice themes can now load their own language files (a `path` on the registered theme).
+  - Joker dice honour their configured wild face everywhere (data, roll, and 3D die), not a hardcoded 1.
+  - Commands are processed one at a time, so two quick actions can't interleave and lose an update.
+  - Internal cleanup: removed the now-unused per-slot "gift" bookkeeping left over from the one-click gifting change.
+
 ## 0.5.13
 
 - **The dice compendium now matches your theme/language.** The bundled **Knuckles Dice** compendium ships as a neutral English (Pathfinder) snapshot; it's now re-stamped to the table's theme + language on load and whenever you change theme/language, so the Compendium browser reads "Кость Шамаса", not "Abadar's Ledger", when you've chosen The Shards / Russian. (GM-only; the pack is unlocked just for the update and re-locked. A module reinstall resets it to English and the next load re-localizes it.)

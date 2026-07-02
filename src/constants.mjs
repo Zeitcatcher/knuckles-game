@@ -32,6 +32,7 @@ export const TEMPLATES = Object.freeze({
   SETUP: `modules/${MODULE_ID}/templates/setup.hbs`,
   DICE: `modules/${MODULE_ID}/templates/dice-picker.hbs`,
   THEME_LANG: `modules/${MODULE_ID}/templates/theme-language.hbs`,
+  STAKES: `modules/${MODULE_ID}/templates/stakes.hbs`,
 });
 
 /** pf2e actor data path for Hero Points. */
