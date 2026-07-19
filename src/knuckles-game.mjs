@@ -134,6 +134,10 @@ Hooks.once("ready", async () => {
     Hooks.on("createItem", (item) => stampDie(item).catch((err) => console.error("knuckles-game | stampDie", err)));
     // Localize the bundled dice compendium to the table's theme + language (it ships English).
     restampCompendium().catch((err) => console.error("knuckles-game | restampCompendium", err));
+    // Dice already in inventories carry text from whenever they were granted. Sweep them on
+    // load so an updated theme (new names or descriptions) reaches the sheets too; both
+    // restampers only write what actually differs, so a normal load is a read-only pass.
+    restampWorldDice().catch((err) => console.error("knuckles-game | restampWorldDice", err));
     // A game left over from last session: offer resume/discard. Not awaited — the modal
     // must not hold up the stamper above (it fires as soon as the world is ready).
     promptLeftoverGame().catch((err) => console.error("knuckles-game | promptLeftoverGame", err));

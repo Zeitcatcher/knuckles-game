@@ -2,6 +2,12 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.1.1
+
+- Rewrote every die name and description in The Shards theme, in Russian and Ukrainian. Six dice named after characters (Изудин, Вестник, Харгрим, Хальдрим, Хальмун, Ниневеш) were renamed after what they do or where they were made; gods, orders and cities keep their names.
+- Descriptions no longer state the odds outright. Each die hints at its bias through its own imagery and origin: a miner's die sends up a full cart, a pearl-fishery die shines with different catches, a port die treats evens as bad luck. The hints stay accurate to the real weights, so a player who listens closely gains a real edge.
+- Dice already sitting in inventories are re-stamped when the world loads, so updated theme text reaches character sheets without switching theme or language.
+
 ## 1.1.0
 
 - Added a quick-hand generator for the GM. Every row in the dice picker now carries a GM-only strip: pick how many loaded dice to deal (0 to 6), a price class, random picks or a matched set, then press Deal. Each participant keeps its own settings, so a tavern regular can hold two cheap tricks while the sharper at the next table runs six elite dice.
