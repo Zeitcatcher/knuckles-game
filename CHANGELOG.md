@@ -2,6 +2,12 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.0.1
+
+- Fixed the End Game confirmation after a finished game: it claimed the pot would not be paid out, even though the winner had already received it. A finished game now asks a plain "clear the table?" question instead.
+- The running-game warning now says what actually happens since wagers became real: nobody wins and collected stakes go back to their owners.
+- New Game now asks for confirmation before replacing an unfinished game (same warning); replacing a finished one opens setup straight away.
+
 ## 1.0.0
 
 First public release. A Farkle-style tavern dice game for Foundry VTT.

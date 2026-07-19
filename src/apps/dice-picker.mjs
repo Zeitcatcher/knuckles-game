@@ -270,12 +270,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static async _onEndGame() {
-    const ok = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize("KNUCKLES.board.endGame") },
-      content: `<p>${game.i18n.localize("KNUCKLES.board.endConfirm")}</p>`,
-      modal: true,
-    });
-    if (ok) dispatch({ type: "endGame" }).catch(reportError);
+    const { confirmEndGame } = await import("./board-app.mjs"); // shared, state-aware dialog
+    if (await confirmEndGame()) dispatch({ type: "endGame" }).catch(reportError);
   }
 
   /** Pin the player's current six dice as their default (an actor flag; survives restarts).

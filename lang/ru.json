@@ -48,7 +48,7 @@
   "KNUCKLES.board.die": "Кость",
   "KNUCKLES.board.changeDice": "Кости",
   "KNUCKLES.board.endGame": "Завершить игру",
-  "KNUCKLES.board.endConfirm": "Завершить игру сейчас? Победителя не будет, банк не выплачивается.",
+  "KNUCKLES.board.endConfirm": "Завершить игру сейчас? Победителя не будет, собранные ставки вернутся владельцам.",
   "KNUCKLES.board.editDie": "Изменить грань",
   "KNUCKLES.board.pickFace": "Новая грань",
   "KNUCKLES.board.wild": "Дикая",
@@ -135,5 +135,7 @@
   "KNUCKLES.stakes.confirm": "Собрать и начать",
   "KNUCKLES.stakes.footnote": "«Создать» добавляет недостающее в банк из ниоткуда. Займы и ставки возвращаются, если игра отменена без победителя.",
   "KNUCKLES.dice.notReady": "Не готов",
-  "KNUCKLES.board.dieN": "Кость {n}"
+  "KNUCKLES.board.dieN": "Кость {n}",
+  "KNUCKLES.board.endConfirmFinished": "Закрыть завершённую игру? Банк уже выплачен победителю.",
+  "KNUCKLES.board.newConfirm": "Начать новую игру? Текущая завершится без победителя, собранные ставки вернутся владельцам."
 }

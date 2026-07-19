@@ -263,7 +263,18 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     dispatch({ type: "setDieValue", dieId: id, value }).catch(reportError);
   }
 
-  static _onNewGame() {
+  /** New Game replaces the current one on Start. Replacing an UNFINISHED game deserves a
+   *  warning (no winner, stakes go back); a finished game has nothing at risk, so no dialog. */
+  static async _onNewGame() {
+    const s = loadState();
+    if (s && s.status !== "finished") {
+      const ok = await foundry.applications.api.DialogV2.confirm({
+        window: { title: game.i18n.localize("KNUCKLES.board.newGame") },
+        content: `<p>${game.i18n.localize("KNUCKLES.board.newConfirm")}</p>`,
+        modal: true,
+      });
+      if (!ok) return;
+    }
     import("./setup-app.mjs").then((m) => m.openSetup());
   }
 
@@ -272,13 +283,23 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static async _onEndGame() {
-    const ok = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize("KNUCKLES.board.endGame") },
-      content: `<p>${game.i18n.localize("KNUCKLES.board.endConfirm")}</p>`,
-      modal: true,
-    });
+    const ok = await confirmEndGame();
     if (ok) dispatch({ type: "endGame" }).catch(reportError);
   }
+}
+
+/**
+ * The end-game confirmation, state-aware. A running game warns that nobody wins and the
+ * collected stakes go back; a FINISHED game has already paid the pot to the winner, so
+ * that warning would be false there - it only confirms clearing the table.
+ */
+export async function confirmEndGame() {
+  const finished = loadState()?.status === "finished";
+  return foundry.applications.api.DialogV2.confirm({
+    window: { title: game.i18n.localize("KNUCKLES.board.endGame") },
+    content: `<p>${game.i18n.localize(finished ? "KNUCKLES.board.endConfirmFinished" : "KNUCKLES.board.endConfirm")}</p>`,
+    modal: true,
+  });
 }
 
 function reportError(err) {

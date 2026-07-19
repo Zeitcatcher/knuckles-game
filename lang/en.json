@@ -48,7 +48,7 @@
   "KNUCKLES.board.die": "Die",
   "KNUCKLES.board.changeDice": "Dice",
   "KNUCKLES.board.endGame": "End game",
-  "KNUCKLES.board.endConfirm": "End the game now? There will be no winner and the pot is not paid out.",
+  "KNUCKLES.board.endConfirm": "End the game now? Nobody wins, and every collected stake goes back to its owner.",
   "KNUCKLES.board.editDie": "Change value",
   "KNUCKLES.board.pickFace": "Pick a new face",
   "KNUCKLES.board.wild": "Wild",
@@ -135,5 +135,7 @@
   "KNUCKLES.stakes.confirm": "Collect and start",
   "KNUCKLES.stakes.footnote": "Create adds the shortfall to the pot from nothing. Loans and bets are refunded if the game is cancelled with no winner.",
   "KNUCKLES.dice.notReady": "Not ready",
-  "KNUCKLES.board.dieN": "Die {n}"
+  "KNUCKLES.board.dieN": "Die {n}",
+  "KNUCKLES.board.endConfirmFinished": "Clear the finished game? The pot has already been paid to the winner.",
+  "KNUCKLES.board.newConfirm": "Start a new game? The current one ends with no winner, and every collected stake goes back to its owner."
 }
