@@ -2,6 +2,14 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.1.0
+
+- Added a quick-hand generator for the GM. Every row in the dice picker now carries a GM-only strip: pick how many loaded dice to deal (0 to 6), a price class, random picks or a matched set, then press Deal. Each participant keeps its own settings, so a tavern regular can hold two cheap tricks while the sharper at the next table runs six elite dice.
+- Price classes are a hard ceiling on every generated die, so a commoner can never be dealt the 850 gp die by accident. Cheap stops at 5 gp, Solid at 30 gp, Expensive at 100 gp, and Elite opens the whole catalog including the joker.
+- A matched set picks dice that pull toward the same scoring face instead of a random grab bag, and the joker always joins a full elite set.
+- The toolbar at the top deals to every NPC and generic row at once. Player characters are dealt only from their own row, so a hand a player picked is never overwritten by a mass deal.
+- Slots stay editable after a deal, and in physical-dice mode generated dice are stocked on start exactly as any other GM placement.
+
 ## 1.0.1
 
 - Fixed the End Game confirmation after a finished game: it claimed the pot would not be paid out, even though the winner had already received it. A finished game now asks a plain "clear the table?" question instead.

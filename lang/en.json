@@ -137,5 +137,20 @@
   "KNUCKLES.dice.notReady": "Not ready",
   "KNUCKLES.board.dieN": "Die {n}",
   "KNUCKLES.board.endConfirmFinished": "Clear the finished game? The pot has already been paid to the winner.",
-  "KNUCKLES.board.newConfirm": "Start a new game? The current one ends with no winner, and every collected stake goes back to its owner."
+  "KNUCKLES.board.newConfirm": "Start a new game? The current one ends with no winner, and every collected stake goes back to its owner.",
+  "KNUCKLES.gen.gm": "GM",
+  "KNUCKLES.gen.title": "Quick hand",
+  "KNUCKLES.gen.count": "Loaded dice to deal",
+  "KNUCKLES.gen.classLabel": "Price class",
+  "KNUCKLES.gen.modeLabel": "How the dice are chosen",
+  "KNUCKLES.gen.random": "Random",
+  "KNUCKLES.gen.matched": "Matched",
+  "KNUCKLES.gen.deal": "Deal",
+  "KNUCKLES.gen.dealHint": "Deal a fresh hand to this participant. The remaining slots keep the honest die.",
+  "KNUCKLES.gen.dealAll": "Deal to all",
+  "KNUCKLES.gen.dealAllHint": "Deal to all fills NPC and generic rows; player characters are dealt only from their own row.",
+  "KNUCKLES.gen.class.cheap": "Cheap",
+  "KNUCKLES.gen.class.solid": "Solid",
+  "KNUCKLES.gen.class.expensive": "Expensive",
+  "KNUCKLES.gen.class.elite": "Elite"
 }

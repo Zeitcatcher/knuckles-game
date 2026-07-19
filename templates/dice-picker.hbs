@@ -3,6 +3,26 @@
   <p class="kg-empty">{{localize "KNUCKLES.dice.none"}}</p>
 {{else}}
   {{#if choosing}}<div class="kg-muted" style="margin-bottom:10px">{{localize "KNUCKLES.dice.hint"}}</div>{{/if}}
+  {{#if genAll}}
+    <div class="kg-gen kg-gen-all">
+      <span class="kg-gmtag">{{localize "KNUCKLES.gen.gm"}}</span>
+      <b class="kg-gen-title">{{localize "KNUCKLES.gen.title"}}</b>
+      <select class="kg-gen-count" data-gen-knob data-gen-id="{{genAll.id}}" data-gen-knob-kind="count" aria-label="{{localize 'KNUCKLES.gen.count'}}">
+        {{#each genAll.counts}}<option value="{{n}}"{{#if selected}} selected{{/if}}>{{n}}</option>{{/each}}
+      </select>
+      <select class="kg-gen-class" data-gen-knob data-gen-id="{{genAll.id}}" data-gen-knob-kind="class" aria-label="{{localize 'KNUCKLES.gen.classLabel'}}">
+        {{#each genAll.classes}}<option value="{{id}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+      <span class="kg-gen-acts">
+        <span class="kg-gen-seg" role="group" aria-label="{{localize 'KNUCKLES.gen.modeLabel'}}">
+          <button type="button" class="{{#if genAll.random}}on{{/if}}" data-action="genMode" data-gen-id="{{genAll.id}}" data-mode="random" aria-pressed="{{#if genAll.random}}true{{else}}false{{/if}}">{{localize "KNUCKLES.gen.random"}}</button>
+          <button type="button" class="{{#unless genAll.random}}on{{/unless}}" data-action="genMode" data-gen-id="{{genAll.id}}" data-mode="matched" aria-pressed="{{#unless genAll.random}}true{{else}}false{{/unless}}">{{localize "KNUCKLES.gen.matched"}}</button>
+        </span>
+        <button type="button" class="kg-gen-deal" data-action="genDealAll"><i class="fa-solid fa-shuffle" aria-hidden="true"></i> {{localize "KNUCKLES.gen.dealAll"}}</button>
+      </span>
+    </div>
+    <div class="kg-gen-note">{{localize "KNUCKLES.gen.dealAllHint"}}</div>
+  {{/if}}
   <div class="kg-dchars">
   {{#each players}}
     <div class="kg-dchar">
@@ -16,6 +36,24 @@
       </div>
       {{#if tally}}<div class="kg-buyhint">{{#if buyHint}}<i class="fa-solid fa-gift" aria-hidden="true"></i> {{buyHint}}{{/if}}</div>{{/if}}
       {{#if stockNote}}<div class="kg-stocknote"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> {{stockNote}}</div>{{/if}}
+      {{#if gen}}
+        <div class="kg-gen">
+          <span class="kg-gmtag">{{localize "KNUCKLES.gen.gm"}}</span>
+          <select class="kg-gen-count" data-gen-knob data-gen-id="{{gen.id}}" data-gen-knob-kind="count" aria-label="{{localize 'KNUCKLES.gen.count'}}">
+            {{#each gen.counts}}<option value="{{n}}"{{#if selected}} selected{{/if}}>{{n}}</option>{{/each}}
+          </select>
+          <select class="kg-gen-class" data-gen-knob data-gen-id="{{gen.id}}" data-gen-knob-kind="class" aria-label="{{localize 'KNUCKLES.gen.classLabel'}}">
+            {{#each gen.classes}}<option value="{{id}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+          </select>
+          <span class="kg-gen-acts">
+            <span class="kg-gen-seg" role="group" aria-label="{{localize 'KNUCKLES.gen.modeLabel'}}">
+              <button type="button" class="{{#if gen.random}}on{{/if}}" data-action="genMode" data-gen-id="{{gen.id}}" data-mode="random" aria-pressed="{{#if gen.random}}true{{else}}false{{/if}}">{{localize "KNUCKLES.gen.random"}}</button>
+              <button type="button" class="{{#unless gen.random}}on{{/unless}}" data-action="genMode" data-gen-id="{{gen.id}}" data-mode="matched" aria-pressed="{{#unless gen.random}}true{{else}}false{{/unless}}">{{localize "KNUCKLES.gen.matched"}}</button>
+            </span>
+            <button type="button" class="kg-gen-deal" data-action="genDeal" data-gen-id="{{gen.id}}" title="{{localize 'KNUCKLES.gen.dealHint'}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.gen.deal"}}</button>
+          </span>
+        </div>
+      {{/if}}
       <div class="kg-dslots">
         {{#each slots}}
           <label class="kg-dslot">

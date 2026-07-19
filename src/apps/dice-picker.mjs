@@ -7,6 +7,11 @@ import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes
 import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, slotCoverage, readDefaultLoadout, saveDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
 import { pickerSignature } from "../core/transient-ui.mjs";
+import { generateLoadout, CLASS_IDS } from "../core/loadout-gen.mjs";
+import { catalogEntries } from "../foundry/dice-data.mjs";
+
+/** Opening knobs for the quick-hand generator: a couple of cheap tricks, the tavern case. */
+const GEN_DEFAULTS = Object.freeze({ count: 2, priceClass: "cheap", mode: "random" });
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -73,6 +78,9 @@ function slotMark({ mode, covered }) {
 export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
   /** active createItem/deleteItem/updateItem hook ids while open in physical mode */
   _itemHooks = null;
+  /** GM quick-hand knobs: the shared toolbar plus one entry per player id. Kept on the
+   *  instance so the render gate's re-renders never reset what the GM dialled in. */
+  _gen = { all: { ...GEN_DEFAULTS }, rows: {} };
 
   static DEFAULT_OPTIONS = {
     id: `${MODULE_ID}-dice`,
@@ -85,9 +93,18 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       endGame: DicePicker._onEndGame,
       saveDefault: DicePicker._onSaveDefault,
       resetDefault: DicePicker._onResetDefault,
+      genMode: DicePicker._onGenMode,
+      genDeal: DicePicker._onGenDeal,
+      genDealAll: DicePicker._onGenDealAll,
       close: DicePicker._onCloseClick,
     },
   };
+
+  /** The knobs for one row (or the toolbar, id `all`), seeded from the defaults. */
+  _knobs(id) {
+    if (id === "all") return this._gen.all;
+    return (this._gen.rows[id] ??= { ...GEN_DEFAULTS });
+  }
 
   static PARTS = { picker: { template: TEMPLATES.DICE } };
 
@@ -147,6 +164,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
         // Saved default loadout (any actor-backed player, virtual or physical).
         canSaveDefault: Boolean(actor),
         hasDefault: Boolean(actor) && readDefaultLoadout(actor) !== null,
+        // The GM's quick-hand strip, on every row the GM can edit. Players never see it.
+        gen: isGM ? this._genContext(p.id) : null,
         slots,
       };
     });
@@ -155,7 +174,30 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     // next state's signature against this to skip renders that wouldn't change our slice.
     this._kgSig = pickerSignature(state, editable.map((p) => p.id));
     const allReady = editable.length > 0 && editable.every((p) => p.ready);
-    return { active: editable.length > 0, choosing: state.status === "choosing", isGM: Boolean(game.user.isGM), allReady, players };
+    return {
+      active: editable.length > 0,
+      choosing: state.status === "choosing",
+      isGM,
+      allReady,
+      // "Deal to all" only makes sense with a GM-driven opponent on the table.
+      genAll: isGM && editable.some((p) => p.type !== "pc") ? this._genContext("all") : null,
+      players,
+    };
+  }
+
+  /** Template shape for one quick-hand strip: the dialled-in knobs plus their menus. */
+  _genContext(id) {
+    const k = this._knobs(id);
+    return {
+      id,
+      counts: Array.from({ length: 7 }, (_, n) => ({ n, selected: n === k.count })),
+      classes: CLASS_IDS.map((c) => ({
+        id: c,
+        label: game.i18n.localize(`KNUCKLES.gen.class.${c}`),
+        selected: c === k.priceClass,
+      })),
+      random: k.mode === "random",
+    };
   }
 
   /** Snapshot the list scroll + the focused slot-select before the DOM swap. */
@@ -190,6 +232,19 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       // Flush a render that was DEFERRED while this dropdown was open (e.g. another player's
       // change) once it closes — but don't force a fresh render here (that's the change path).
       sel.addEventListener("blur", () => { this._kgSelectBusy = false; if (this._kgPending) scheduleRender(this); });
+    }
+    // The quick-hand knobs are local state, not an intent: remember the pick and take the
+    // same open-dropdown lock, so a sync can't yank a menu the GM has open.
+    for (const sel of this.element.querySelectorAll("select[data-gen-knob]")) {
+      sel.addEventListener("focus", () => { this._kgSelectBusy = true; });
+      sel.addEventListener("blur", () => { this._kgSelectBusy = false; if (this._kgPending) scheduleRender(this); });
+      sel.addEventListener("change", (ev) => {
+        this._kgSelectBusy = false;
+        const { genId, genKnobKind } = ev.target.dataset;
+        const k = this._knobs(genId);
+        if (genKnobKind === "count") k.count = Number(ev.target.value) || 0;
+        else k.priceClass = ev.target.value;
+      });
     }
     if (loadState()?.physical) this._ensureItemHooks();
     else this._dropItemHooks();
@@ -272,6 +327,32 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
   static async _onEndGame() {
     const { confirmEndGame } = await import("./board-app.mjs"); // shared, state-aware dialog
     if (await confirmEndGame()) dispatch({ type: "endGame" }).catch(reportError);
+  }
+
+  /** Flip a strip between random picks and a matched set. */
+  static _onGenMode(event, target) {
+    this._knobs(target.dataset.genId).mode = target.dataset.mode;
+    this.render();
+  }
+
+  /** Deal a fresh hand to one participant, using that row's own knobs. */
+  static async _onGenDeal(event, target) {
+    await this._deal(target.dataset.genId, this._knobs(target.dataset.genId));
+  }
+
+  /** Deal to every GM-driven row at once, using the toolbar knobs. A player character is
+   *  never included: their hand is theirs unless the GM deals it from that player's row. */
+  static async _onGenDealAll() {
+    const knobs = this._knobs("all");
+    const targets = (loadState()?.players ?? []).filter((p) => p.type !== "pc" && canControl(game.user, p));
+    for (const p of targets) await this._deal(p.id, knobs);
+  }
+
+  /** Generate and apply one loadout. Uses the batched setLoadout intent, so it lands as a
+   *  single atomic write per participant (and the GM-side handler still validates it). */
+  async _deal(playerId, { count, priceClass, mode }) {
+    const dieIds = generateLoadout({ entries: catalogEntries(), count, priceClass, mode, rng: () => Math.random() });
+    await dispatch({ type: "setLoadout", playerId, dieIds }).catch(reportError);
   }
 
   /** Pin the player's current six dice as their default (an actor flag; survives restarts).

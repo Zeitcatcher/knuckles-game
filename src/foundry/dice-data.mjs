@@ -7,14 +7,22 @@ import { MODULE_ID } from "../constants.mjs";
 
 export const DEFAULT_DIE_ID = "01";
 
-let byId = new Map(); // id -> { weights, joker }
+let byId = new Map(); // id -> { weights, joker, jokerFace, price }
 let order = [];
 
-/** Pure: build an id -> spec map from the catalog JSON. */
+/** Pure: build an id -> spec map from the catalog JSON. `price` (copper) feeds the
+ *  quick-hand generator's class ceilings; the roll path ignores it. */
 export function parseCatalog(json) {
   const map = new Map();
   for (const d of json?.dice ?? []) {
-    if (d?.id) map.set(d.id, { weights: d.weights, joker: Boolean(d.joker), jokerFace: Number(d.jokerFace) || 1 });
+    if (d?.id) {
+      map.set(d.id, {
+        weights: d.weights,
+        joker: Boolean(d.joker),
+        jokerFace: Number(d.jokerFace) || 1,
+        price: Number(d.price) || 0,
+      });
+    }
   }
   return map;
 }
@@ -38,4 +46,9 @@ export function getDieSpec(id) {
 /** All die ids, in catalog order. */
 export function diceIds() {
   return order.length ? [...order] : [DEFAULT_DIE_ID];
+}
+
+/** The catalog as generator entries: `{id, weights, joker, price}` in catalog order. */
+export function catalogEntries() {
+  return diceIds().map((id) => ({ id, ...getDieSpec(id) }));
 }

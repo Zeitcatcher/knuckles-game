@@ -167,3 +167,22 @@
 .knuckles-game .kg-gold { color: var(--kg-coin-gold); }
 .knuckles-game .kg-silver { color: var(--kg-coin-silver); }
 .knuckles-game .kg-copper { color: var(--kg-coin-copper); }
+
+/* Quick-hand generator (GM only): one strip per row plus a shared "deal to all" toolbar.
+   Fixed control widths and heights keep every row's columns in the same place, so the
+   window never shifts as names or classes change; actions are pinned right. */
+.knuckles-game .kg-gen { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 18px; margin: 0 0 8px; padding: 6px 8px; background: var(--kg-surface-2); border: 1px solid var(--kg-line); border-radius: 6px; }
+.knuckles-game .kg-gen-all { margin-bottom: 6px; }
+.knuckles-game .kg-gen-title { color: var(--kg-accent); font-weight: 500; }
+.knuckles-game .kg-gen select { height: 26px; line-height: 18px; padding: 2px 6px; font-size: 12px; background: var(--kg-input-bg); color: var(--kg-text); border: 1px solid var(--kg-surface-2); border-radius: 4px; flex: 0 0 auto; }
+.knuckles-game .kg-gen select option { background: var(--kg-input-bg); color: var(--kg-text); }
+.knuckles-game .kg-gen-count { width: 48px; }
+.knuckles-game .kg-gen-class { width: 106px; }
+.knuckles-game .kg-gen-acts { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: 0 0 auto; }
+.knuckles-game .kg-gen-seg { display: inline-flex; height: 26px; border: 1px solid var(--kg-surface-2); border-radius: 6px; overflow: hidden; flex: 0 0 auto; }
+.knuckles-game .kg-gen-seg button { height: 24px; line-height: 24px; padding: 0 10px; font-size: 12px; color: var(--kg-muted); background: transparent; border: 0; cursor: pointer; white-space: nowrap; }
+.knuckles-game .kg-gen-seg button.on { background: var(--kg-accent); color: var(--kg-board-bg); font-weight: 500; }
+.knuckles-game .kg-gen-deal { height: 26px; line-height: 16px; padding: 4px 10px; font-size: 12px; color: var(--kg-accent); background: color-mix(in srgb, var(--kg-accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kg-accent) 55%, transparent); border-radius: 6px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; }
+.knuckles-game .kg-gen-deal:hover { background: color-mix(in srgb, var(--kg-accent) 22%, transparent); }
+.knuckles-game .kg-gmtag { height: 18px; line-height: 14px; padding: 1px 5px; font-size: 10px; color: var(--kg-accent); border: 1px solid color-mix(in srgb, var(--kg-accent) 55%, transparent); border-radius: 4px; flex: 0 0 auto; }
+.knuckles-game .kg-gen-note { font-size: 11px; line-height: 15px; color: var(--kg-muted); margin: 0 0 10px 2px; }

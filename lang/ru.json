@@ -137,5 +137,20 @@
   "KNUCKLES.dice.notReady": "Не готов",
   "KNUCKLES.board.dieN": "Кость {n}",
   "KNUCKLES.board.endConfirmFinished": "Закрыть завершённую игру? Банк уже выплачен победителю.",
-  "KNUCKLES.board.newConfirm": "Начать новую игру? Текущая завершится без победителя, собранные ставки вернутся владельцам."
+  "KNUCKLES.board.newConfirm": "Начать новую игру? Текущая завершится без победителя, собранные ставки вернутся владельцам.",
+  "KNUCKLES.gen.gm": "ГМ",
+  "KNUCKLES.gen.title": "Быстрая раздача",
+  "KNUCKLES.gen.count": "Сколько шулерских костей выдать",
+  "KNUCKLES.gen.classLabel": "Ценовой класс",
+  "KNUCKLES.gen.modeLabel": "Как выбираются кости",
+  "KNUCKLES.gen.random": "Случайные",
+  "KNUCKLES.gen.matched": "Набор",
+  "KNUCKLES.gen.deal": "Выдать",
+  "KNUCKLES.gen.dealHint": "Выдать этому участнику новую руку. Остальные слоты остаются с честной костью.",
+  "KNUCKLES.gen.dealAll": "Выдать всем",
+  "KNUCKLES.gen.dealAllHint": "«Выдать всем» заполняет строки NPC и участников без персонажа; персонажам игроков кости выдаются только из их строки.",
+  "KNUCKLES.gen.class.cheap": "Дешёвые",
+  "KNUCKLES.gen.class.solid": "Приличные",
+  "KNUCKLES.gen.class.expensive": "Дорогие",
+  "KNUCKLES.gen.class.elite": "Элитные"
 }
