@@ -39,3 +39,7 @@ export const TEMPLATES = Object.freeze({
 
 /** pf2e actor data path for Hero Points. */
 export const PF2E_HERO_POINTS = "system.resources.heroPoints.value";
+
+/** The stock die art, worn by all 37 shipped dice and by any table-made die whose
+ *  maker didn't pick one of their own. */
+export const DEFAULT_DIE_IMG = `modules/${MODULE_ID}/assets/dice/default.webp`;

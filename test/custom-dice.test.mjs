@@ -14,6 +14,7 @@ import {
   toDraft,
   sanitizeList,
 } from "../src/core/custom-dice.mjs";
+import { DEFAULT_DIE_IMG } from "../src/constants.mjs";
 
 /** Deterministic rng over a fixed sequence, cycling. */
 const seq = (values) => {
@@ -162,9 +163,13 @@ describe("validateDie", () => {
     expect(validateDie(draft()).ok).toBe(true);
   });
 
-  it("requires a name and an icon", () => {
+  it("requires a name", () => {
     expect(validateDie(draft({ name: "  " })).errors).toContain("name");
-    expect(validateDie(draft({ img: "" })).errors).toContain("icon");
+  });
+
+  it("treats the icon as optional", () => {
+    expect(validateDie(draft({ img: "" })).ok).toBe(true);
+    expect(validateDie(draft({ img: undefined })).ok).toBe(true);
   });
 
   it("rejects a short all-typed set", () => {
@@ -183,6 +188,16 @@ describe("definition round trip", () => {
     expect(def.weights).toEqual([40, 10, 10, 10, 25, 5]);
     expect(def.price).toBe(1200);
     expect(def.name).toBe("Волчья кость");
+  });
+
+  it("gives a die with no chosen icon the standard die art", () => {
+    expect(toDefinition(draft({ img: "" }), "cab12").img).toBe(DEFAULT_DIE_IMG);
+    expect(toDefinition(draft({ img: "   " }), "cab12").img).toBe(DEFAULT_DIE_IMG);
+    expect(DEFAULT_DIE_IMG).toMatch(/^modules\/knuckles-game\/assets\/dice\/.+\.webp$/);
+  });
+
+  it("keeps a chosen icon", () => {
+    expect(toDefinition(draft(), "cab12").img).toBe("worlds/shards/wolf.webp");
   });
 
   it("survives a round trip back into the form", () => {
@@ -211,6 +226,11 @@ describe("sanitizeList", () => {
       "nonsense",
     ];
     expect(sanitizeList(bad)).toEqual([]);
+  });
+
+  it("backfills the standard art on an entry stored without an icon", () => {
+    expect(sanitizeList([{ ...good, img: "" }])[0].img).toBe(DEFAULT_DIE_IMG);
+    expect(sanitizeList([{ ...good, img: undefined }])[0].img).toBe(DEFAULT_DIE_IMG);
   });
 
   it("drops a duplicate id and tolerates a non-array", () => {

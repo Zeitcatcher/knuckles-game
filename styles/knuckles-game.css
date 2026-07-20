@@ -206,7 +206,6 @@
 .knuckles-game .kg-builder .kg-bld-area { height: 48px; resize: vertical; padding: 5px 8px; }
 .knuckles-game .kg-bld-icon { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .knuckles-game .kg-bld-thumb { width: 32px; height: 32px; flex: 0 0 auto; box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--kg-input-bg); border: 1px solid color-mix(in srgb, var(--kg-accent) 50%, transparent); border-radius: 5px; color: var(--kg-accent); font-size: 15px; }
-.knuckles-game .kg-bld-thumb.is-empty { border-color: var(--kg-surface-2); color: var(--kg-muted); }
 .knuckles-game .kg-bld-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .knuckles-game .kg-bld-thumb.sm { width: 22px; height: 22px; font-size: 12px; border-radius: 4px; }
 .knuckles-game .kg-bld-price { display: flex; align-items: center; gap: 8px; }

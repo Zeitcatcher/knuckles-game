@@ -12,6 +12,7 @@
  * blank and the other five read 12 each. That way a die is always complete without making
  * anyone do the arithmetic.
  */
+import { DEFAULT_DIE_IMG } from "../constants.mjs";
 
 export const FACES = 6;
 
@@ -111,13 +112,12 @@ export function clampFace(inputs, index, raw) {
 
 /**
  * Validate a draft die. Returns the errors as short keys the app maps to messages, so this
- * stays free of i18n. `name` and `img` are required: a table-made die with the stock icon
- * would be indistinguishable from a shipped one at a glance.
+ * stays free of i18n. Only the name is required: an icon is optional, and a die without one
+ * wears the stock die art like the shipped 37.
  */
 export function validateDie(draft) {
   const errors = [];
   if (!String(draft?.name ?? "").trim()) errors.push("name");
-  if (!String(draft?.img ?? "").trim()) errors.push("icon");
   const faces = resolveFaces(draft?.faces);
   if (faces.error) errors.push(faces.error);
   if (!(Number(draft?.price) >= 0)) errors.push("price");
@@ -126,7 +126,8 @@ export function validateDie(draft) {
 
 /**
  * A validated draft as the object stored in the world setting. `price` is copper, matching
- * the shipped catalog, so the quick-hand generator's class ceilings apply unchanged.
+ * the shipped catalog, so the quick-hand generator's class ceilings apply unchanged. An
+ * unset icon resolves to the stock art here, so nothing downstream has to fall back.
  */
 export function toDefinition(draft, id) {
   const { weights } = resolveFaces(draft?.faces);
@@ -134,7 +135,7 @@ export function toDefinition(draft, id) {
     id,
     name: String(draft?.name ?? "").trim(),
     desc: String(draft?.desc ?? "").trim(),
-    img: String(draft?.img ?? "").trim(),
+    img: String(draft?.img ?? "").trim() || DEFAULT_DIE_IMG,
     price: Math.max(0, Math.round(Number(draft?.price) || 0)),
     weights: weights.map((w) => round(w, 4)),
   };
@@ -170,7 +171,7 @@ export function sanitizeList(raw) {
       id: d.id,
       name: String(d.name ?? d.id),
       desc: String(d.desc ?? ""),
-      img: String(d.img ?? ""),
+      img: String(d.img ?? "") || DEFAULT_DIE_IMG,
       price: Math.max(0, Math.round(Number(d.price) || 0)),
       weights: d.weights.map((w) => Number(w)),
     });

@@ -8,7 +8,7 @@
  * parts (ghost shares, the pool bar, the price class, the save button) are written straight
  * into the DOM by _refreshLive.
  */
-import { TEMPLATES, MODULE_ID, SETTINGS } from "../constants.mjs";
+import { TEMPLATES, MODULE_ID, SETTINGS, DEFAULT_DIE_IMG } from "../constants.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
 import { loadState } from "../foundry/state-store.mjs";
 import { customDice, loadCustomDice } from "../foundry/dice-data.mjs";
@@ -66,6 +66,7 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     position: { width: 620, height: "auto" },
     actions: {
       pickIcon: DieBuilder._onPickIcon,
+      resetIcon: DieBuilder._onResetIcon,
       clearFaces: DieBuilder._onClearFaces,
       save: DieBuilder._onSave,
       cancelEdit: DieBuilder._onCancelEdit,
@@ -84,6 +85,10 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       editing: Boolean(d.id),
       itemsSupported: game.system?.id === "pf2e",
       draft: { ...d, priceGp: toGp(d.price) },
+      // The thumb always shows what the die will actually wear, so an untouched icon field
+      // previews the stock art rather than an empty box.
+      iconPreview: d.img || DEFAULT_DIE_IMG,
+      hasOwnIcon: Boolean(d.img) && d.img !== DEFAULT_DIE_IMG,
       classLabel: game.i18n.localize(`KNUCKLES.gen.class.${classOf(d.price)}`),
       canSave: validateDie(d).ok,
       faces: d.faces.map((v, i) => ({
@@ -180,8 +185,8 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     if (chip) {
       chip.textContent = `${game.i18n.localize("KNUCKLES.builder.classChip")} ${game.i18n.localize(`KNUCKLES.gen.class.${classOf(this._draft.price)}`)}`;
     }
-    const thumb = el.querySelector(".kg-bld-thumb img");
-    if (thumb && this._draft.img) thumb.src = this._draft.img;
+    const thumb = el.querySelector("[data-icon-preview]");
+    if (thumb) thumb.src = this._draft.img || DEFAULT_DIE_IMG;
     const save = el.querySelector("[data-save-btn]");
     if (save) save.disabled = !validateDie(this._draft).ok;
   }
@@ -203,6 +208,12 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
         this.render();
       },
     }).browse();
+  }
+
+  /** Drop a chosen icon and go back to the stock die art. */
+  static _onResetIcon() {
+    this._draft.img = "";
+    this.render();
   }
 
   static _onClearFaces() {

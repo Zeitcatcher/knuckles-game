@@ -122,7 +122,7 @@ Hooks.once("init", () => {
     onCustomDiceChanged,
   });
 
-  registerControls(open, openDieBuilder);
+  registerControls(open);
 
   const mod = game.modules.get(MODULE_ID);
   mod.api = { open, openSetup, openBoard, openDieBuilder, dispatch, getState: loadState, testWeightedRoll, registerTheme };

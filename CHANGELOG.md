@@ -2,13 +2,18 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.2.1
+
+- A custom die no longer needs an image. Left alone it wears the same art as the 37 shipped dice, and picking your own is an option rather than a requirement. The preview always shows what the die will actually look like, and a Standard button drops a chosen image again.
+- Removed the second Knuckles button from the scene toolbar. The die builder is reached from the setup and dice-picker footers, and the toolbar keeps one Knuckles icon.
+
 ## 1.2.0
 
-- Dice can now be made at the table. A GM window takes a name, an icon, a description and a price, plus the chance of each face, and the die joins the catalog for everyone: it can be picked in any slot and rolls with its own odds. Table-made dice sit right under the honest die in every dropdown, marked with a star.
+- Dice can now be made at the table. A GM window takes a name, a description and a price, plus the chance of each face, and the die joins the catalog for everyone: it can be picked in any slot and rolls with its own odds. Table-made dice sit right under the honest die in every dropdown, marked with a star.
 - The six face chances share one pool of 100%. A typed face locks in, the faces left blank split what is left and show the share they would take, and no entry can push the total past 100. The create button stays greyed until the die adds up.
 - The price decides which quick-hand class the die falls into, so a die made cheap can be dealt to a tavern regular and an expensive one cannot.
 - On Pathfinder 2e a new die also becomes an Item in the world directory, priced and flagged like a shipped one, so it can be dragged onto a sheet or bought, and the physical-dice economy counts it like any other. Editing a die updates every copy already in an inventory. Deleting one removes those copies too, and is refused while someone is holding the die in a running game.
-- The builder opens from the dice control on the left toolbar, or from the Custom dice button in the setup and dice-picker footers.
+- The builder opens from the Custom dice button in the setup and dice-picker footers.
 
 ## 1.1.1
 

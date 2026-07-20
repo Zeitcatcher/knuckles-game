@@ -11,11 +11,10 @@
 
     <span class="kg-bld-lb">{{localize "KNUCKLES.builder.icon"}}</span>
     <span class="kg-bld-icon">
-      <span class="kg-bld-thumb{{#unless draft.img}} is-empty{{/unless}}">
-        {{#if draft.img}}<img src="{{draft.img}}" alt="" />{{else}}<i class="fa-solid fa-image" aria-hidden="true"></i>{{/if}}
-      </span>
+      <span class="kg-bld-thumb"><img src="{{iconPreview}}" alt="" data-icon-preview /></span>
       <input class="kg-bld-in" type="text" data-field="img" value="{{draft.img}}" placeholder="{{localize 'KNUCKLES.builder.iconPh'}}" autocomplete="off" />
       <button type="button" class="kg-defbtn ghost" data-action="pickIcon"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> {{localize "KNUCKLES.builder.browse"}}</button>
+      {{#if hasOwnIcon}}<button type="button" class="kg-defbtn ghost" data-action="resetIcon" title="{{localize 'KNUCKLES.builder.useDefaultHint'}}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> {{localize "KNUCKLES.builder.useDefault"}}</button>{{/if}}
     </span>
 
     <label class="kg-bld-lb kg-bld-lb-top" for="kg-bld-desc">{{localize "KNUCKLES.builder.desc"}}</label>
@@ -65,7 +64,7 @@
     {{#if list.length}}
       {{#each list}}
         <div class="kg-bld-row{{#if editing}} is-editing{{/if}}">
-          <span class="kg-bld-thumb sm">{{#if img}}<img src="{{img}}" alt="" />{{else}}<i class="fa-solid fa-dice-d6" aria-hidden="true"></i>{{/if}}</span>
+          <span class="kg-bld-thumb sm"><img src="{{img}}" alt="" /></span>
           <span class="kg-bld-rname">{{name}}</span>
           <span class="kg-bld-spark" aria-hidden="true">{{#each bars}}<b class="{{#unless strong}}lo{{/unless}}" style="height:{{h}}px"></b>{{/each}}</span>
           <span class="kg-bld-note">{{priceText}}</span>
