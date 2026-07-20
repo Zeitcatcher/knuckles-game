@@ -37,9 +37,10 @@ describe("price classes as purses", () => {
   it("files a die under the cheapest class whose full purse could afford it", () => {
     expect(classForPrice(priceOf(QUEEN))).toBe("elite");
     expect(classForPrice(priceOf(JOKER))).toBe("elite");
-    expect(classForPrice(priceOf("03"))).toBe("expensive"); // 225 gp
-    expect(classForPrice(priceOf("09"))).toBe("solid"); // 20 gp
-    expect(classForPrice(priceOf("13"))).toBe("cheap"); // 6 gp
+    expect(classForPrice(priceOf("03"))).toBe("elite"); // 450 gp: above the expensive purse
+    expect(classForPrice(priceOf("06"))).toBe("expensive"); // 350 gp
+    expect(classForPrice(priceOf("09"))).toBe("solid"); // 60 gp
+    expect(classForPrice(priceOf("13"))).toBe("cheap"); // 18 gp
     expect(classForPrice(0)).toBe("cheap"); // a free custom die
   });
 

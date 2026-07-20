@@ -25,11 +25,11 @@ describe("dice catalog prices", () => {
     const max = Math.max(...catalog.dice.map((d) => d.price));
     expect(byId["02"]).toBe(max);
     expect(byId["02"]).toBe(150000); // 1500 gp
-    expect(byId["22"]).toBe(80000); // 800 gp
+    expect(byId["22"]).toBe(70000); // 700 gp
     expect(byId["22"]).toBeLessThan(byId["02"]);
-    // and both monsters sit far above the rest of the catalog
+    // the top shelf fills the ladder under the monsters instead of leaving a hole
     const rest = catalog.dice.filter((d) => !["02", "22"].includes(d.id)).map((d) => d.price);
-    expect(byId["22"]).toBeGreaterThan(Math.max(...rest) * 3);
+    expect(Math.max(...rest)).toBe(45000); // 03 at 450 gp
   });
 
   it("ranks the loaded dice by how strongly they favour a scoring face", () => {

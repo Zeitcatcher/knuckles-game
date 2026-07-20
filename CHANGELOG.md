@@ -2,6 +2,12 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.3.1
+
+- Filled the price hole between 225 and 800 gp that made elite hands underspend. Seventeen dice from the top shelf down are repriced on a gentler curve (03 нищего 225 → 450, 06 доброй вести 175 → 350, 04 → 250, 05 → 190, 07 → 130, 18 → 100, the 25 gp band up to 50-70, and so on down to 35 Грязная at 7), the joker eases 800 → 700, and the elite purse trims to 400 gp per die. Everything at or under 1 gp keeps its released price.
+- Measured over 3000 six-die deals per class: solid and expensive hands now spend 92% of their purse, matched elite climbed from 37% to 53%, and the 1500 gp die appears in 58% of full elite hands instead of 83%, so her arrival reads as an event. The cheap purse grows to 4 gp per die to match the slightly dearer trick band.
+- Prices on dice already in inventories correct themselves on the next world load, as in 1.3.0.
+
 ## 1.3.0
 
 - Repriced all 37 dice from what they actually do at the table. A price now tracks a die's scoring power: how often it lands a 1 or a 5 on its own, and how hard it concentrates on one face for a triple. The strongest die costs 1500 gp, the wild joker 800 gp, and dice that are no better than honest are bric-a-brac priced under the honest die, cheaper the worse they get. Several old prices were far off: the 45% die of ones was 28 gp and is now 225 gp.

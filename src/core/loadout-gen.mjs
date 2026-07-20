@@ -29,10 +29,10 @@ const FAIR_SHARE = 1 / 6;
 
 /** Per-die budget in copper. Multiplied by the count knob to get the hand's purse. */
 export const CLASS_PURSE = Object.freeze({
-  cheap: 300,      // 3 gp each: tricks and junk, with room for one small splurge
+  cheap: 400,      // 4 gp each: tricks and junk, with room for one small splurge
   solid: 1500,     // 15 gp each
   expensive: 6000, // 60 gp each: the whole top shelf, but no monsters
-  elite: 45000,    // 450 gp each: at six dice, both monsters and a tail
+  elite: 40000,    // 400 gp each: at six dice, both monsters and a tail
 });
 
 /** Class ids in ascending order of power, for menus. */

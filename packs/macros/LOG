@@ -1,5 +1,5 @@
-2026/07/19-19:43:27.378 56f8 Delete type=3 #1
-2026/07/19-19:43:27.381 a540 Level-0 table #5: started
-2026/07/19-19:43:27.383 a540 Level-0 table #5: 2240 bytes OK
-2026/07/19-19:43:27.387 a540 Delete type=0 #3
-2026/07/19-19:43:27.387 a540 Manual compaction at level-0 from '!macros!kgtestdice000000' @ 72057594037927935 : 1 .. '!macros!kgtestdice000000' @ 0 : 0; will stop at (end)
+2026/07/19-20:00:29.625 6e34 Delete type=3 #1
+2026/07/19-20:00:29.627 93c4 Level-0 table #5: started
+2026/07/19-20:00:29.631 93c4 Level-0 table #5: 2240 bytes OK
+2026/07/19-20:00:29.634 93c4 Delete type=0 #3
+2026/07/19-20:00:29.634 93c4 Manual compaction at level-0 from '!macros!kgtestdice000000' @ 72057594037927935 : 1 .. '!macros!kgtestdice000000' @ 0 : 0; will stop at (end)
