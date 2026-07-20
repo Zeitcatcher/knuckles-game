@@ -61,18 +61,40 @@ function randomPick(pool, count, rng) {
   return shuffled(pool.map((e) => e.id), rng).slice(0, count);
 }
 
+/** How sharply a matched hand prefers high-synergy dice: weight = score^SHARPNESS. */
+const SHARPNESS = 2;
+
+/** A die must beat a fair die's share on the target face to belong in a matched hand. */
+const FAIR_SHARE = 1 / 6;
+
 /**
  * `count` distinct ids that pull toward one scoring face, so the hand plays together.
- * The face is drawn per call (1 or 5), then dice rank by their share of weight on it;
- * ties break by id, so the same inputs always give the same set.
+ * The face is drawn per call (1 or 5); the strongest candidate always joins (the joker,
+ * in an elite hand), and the rest are SAMPLED with synergy-squared weights rather than
+ * taken as a fixed top-N. A rigid ranking gave every class exactly two possible hands
+ * (one per face), so half of all Deals reproduced the current hand and looked dead.
+ * Dice that don't beat a fair die on the face never join; a thin candidate list leaves
+ * the remaining slots honest instead of padding the "matched" hand with traps.
  */
 function matchedPick(pool, count, rng) {
   const face = TARGET_FACES[Math.floor(rng() * TARGET_FACES.length)] ?? 1;
-  return pool
+  const candidates = pool
     .map((e) => ({ id: e.id, score: synergy(e, face) }))
-    .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-    .slice(0, count)
-    .map((x) => x.id);
+    .filter((x) => x.score > FAIR_SHARE)
+    .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  if (!candidates.length || count < 1) return [];
+
+  const picked = [candidates[0].id];
+  const rest = candidates.slice(1);
+  while (picked.length < count && rest.length) {
+    const weights = rest.map((x) => x.score ** SHARPNESS);
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = rng() * total;
+    let i = 0;
+    while (i < rest.length - 1 && (r -= weights[i]) >= 0) i += 1;
+    picked.push(rest.splice(i, 1)[0].id);
+  }
+  return picked;
 }
 
 /**

@@ -2,6 +2,11 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.2.2
+
+- Fixed the Deal button in Matched mode looking dead every other press. A matched hand was a rigid ranking, so each price class had exactly two possible hands (one per scoring face): half of all Deals reproduced the current hand and nothing visibly changed, the other half swapped to the one other hand. Matched hands are now sampled toward the target face instead of ranked, so consecutive deals differ while still playing together, and the joker still always joins a full elite set.
+- A matched hand no longer pads itself with dice that pull away from the scoring face. When a price class holds too few fitting dice, the remaining slots stay honest.
+
 ## 1.2.1
 
 - A custom die no longer needs an image. Left alone it wears the same art as the 37 shipped dice, and picking your own is an option rather than a requirement. The preview always shows what the die will actually look like, and a Standard button drops a chosen image again.

@@ -157,4 +157,34 @@ describe("matched sets", () => {
       expect(Math.max(shareOnFace(id, 1), shareOnFace(id, 5))).toBeGreaterThan(1 / 6);
     }
   });
+
+  it("varies from deal to deal instead of cycling two fixed hands", () => {
+    // The old ranking used the rng once (face pick only), so a class had exactly TWO
+    // possible matched hands and half of all Deals reproduced the current one.
+    const hands = new Set();
+    for (let v = 0.05; v < 1; v += 0.1) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: () => v });
+      hands.add([...hand].sort().join(","));
+    }
+    expect(hands.size).toBeGreaterThan(2);
+  });
+
+  it("mixes the hand within one face too, not only via the face pick", () => {
+    // Same target face (rng < 0.5 -> face 1) yet different streams -> different hands.
+    const a = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: seq([0.1, 0.15, 0.35, 0.7, 0.05, 0.9]) });
+    const b = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: seq([0.1, 0.8, 0.02, 0.44, 0.61, 0.3]) });
+    expect([...a].sort().join()).not.toBe([...b].sort().join());
+  });
+
+  it("leaves slots honest when few dice fit the face, instead of padding with traps", () => {
+    const tiny = [
+      { id: "90", weights: [50, 10, 10, 10, 10, 10], joker: false, price: 10 }, // pulls to 1
+      { id: "91", weights: [40, 12, 12, 12, 12, 12], joker: false, price: 10 }, // pulls to 1
+      { id: "92", weights: [5, 30, 30, 30, 2.5, 2.5], joker: false, price: 10 }, // trap: starves 1 and 5
+    ];
+    const hand = generateLoadout({ entries: tiny, count: 4, priceClass: "cheap", mode: "matched", rng: () => 0.1 });
+    expect(hand.filter((id) => id !== HONEST_DIE).sort()).toEqual(["90", "91"]);
+    expect(hand).not.toContain("92");
+    expect(hand.filter((id) => id === HONEST_DIE).length).toBe(4);
+  });
 });
