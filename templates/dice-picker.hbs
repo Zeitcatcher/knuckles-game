@@ -62,9 +62,11 @@
               {{#each options}}<option value="{{id}}"{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}} title="{{flavor}}">{{label}}</option>{{/each}}
             </select>
             {{#if mark}}<span class="kg-owned {{mark.cls}}" role="img" aria-label="{{mark.title}}" title="{{mark.title}}"><i class="fa-solid {{mark.icon}}" aria-hidden="true"></i></span>{{/if}}
+            {{#if ../staking}}<span class="kg-stake"><input type="checkbox" data-die-stake data-player-id="{{../id}}" data-slot="{{slot}}" {{#if staked}}checked{{/if}} {{#unless ../canStake}}disabled{{/unless}} title="{{localize 'KNUCKLES.dice.stakeHint'}}" aria-label="{{localize 'KNUCKLES.dice.stakeLabel'}} {{n}}" /></span>{{/if}}
           </label>
         {{/each}}
       </div>
+      {{#if stakeNote}}<div class="kg-stakenote"><i class="fa-solid fa-coins" aria-hidden="true"></i> {{stakeNote}}</div>{{/if}}
     </div>
   {{/each}}
   </div>

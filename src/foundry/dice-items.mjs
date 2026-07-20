@@ -456,6 +456,39 @@ export async function deleteCustomDieItems(dieId) {
 }
 
 /**
+ * Take copies out of an actor's inventory (GM-side) — the counterpart to grantDice, used
+ * when dice are staked into the pot. `counts` is Map(dieId -> copies). Decrements a stack
+ * or deletes it outright when the last copy goes. Returns false and touches NOTHING when
+ * the actor is short, so the caller can abort before any coin or die has moved.
+ */
+export async function removeDiceCopies(actor, counts) {
+  if (!actor || !counts || counts.size === 0) return true;
+  const equipment = actor.itemTypes?.equipment ?? actor.items?.filter?.((i) => i.type === "equipment") ?? [];
+  const owned = ownedDieCounts(actor);
+  for (const [id, n] of counts) if ((owned.get(id) ?? 0) < n) return false;
+
+  const updates = [];
+  const deletes = [];
+  for (const [id, copies] of counts) {
+    let left = copies;
+    for (const it of equipment) {
+      if (left <= 0) break;
+      if (dieIdOf(it) !== id) continue;
+      const have = Math.max(0, Math.trunc(it.system?.quantity ?? 1));
+      if (have <= 0) continue;
+      const take = Math.min(have, left);
+      left -= take;
+      if (have - take > 0) updates.push({ _id: it.id, "system.quantity": have - take });
+      else deletes.push(it.id);
+    }
+    if (left > 0) return false; // stacks disagreed with the count: change nothing
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
+  if (deletes.length) await actor.deleteEmbeddedDocuments("Item", deletes, { render: false });
+  return true;
+}
+
+/**
  * Grant missing copies to an actor (GM-side). `missing` is Map(dieId -> copies).
  * Explicitly bumps an existing stack's quantity or creates a fresh item — we do NOT
  * rely on pf2e's auto-stack-on-create merge (its match heuristic and +N vs +1 merge

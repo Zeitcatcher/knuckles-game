@@ -27,6 +27,8 @@ export function pickerSignature(state, editableIds) {
       ready: Boolean(p.ready),
       type: p.type ?? "generic",
       dieIds: [...(p.dieIds ?? [])],
+      stakeDice: Boolean(p.stakeDice),
+      betDice: [...(p.betDice ?? [])],
     }))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return JSON.stringify({ status: state.status ?? "", rows });

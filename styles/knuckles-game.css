@@ -83,6 +83,16 @@
 /* always rendered in owned mode (height reserved) so the window never resizes when the buy prompt toggles */
 .knuckles-game .kg-buyhint { display: flex; align-items: center; gap: 7px; min-height: 18px; font-size: 12px; color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); margin: 6px 0 2px; }
 .knuckles-game .kg-dice-foot { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+/* Wagered dice: a fixed-width column so ticking a box never shifts the row, rendered for
+   every slot of a staking participant (and absent entirely for everyone else). */
+.knuckles-game .kg-dslot .kg-stake { width: 22px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.knuckles-game .kg-dslot .kg-stake input { margin: 0; cursor: pointer; }
+.knuckles-game .kg-dslot .kg-stake input:disabled { cursor: default; opacity: 0.5; }
+.knuckles-game .kg-stakenote { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 18px; color: var(--kg-accent); margin: 6px 0 2px; }
+.knuckles-game .kg-stakedice { gap: 5px; margin-left: 6px; color: var(--kg-accent); }
+.knuckles-game .kg-stakedice input { width: auto; flex: 0 0 auto; margin: 0; }
+.knuckles-game .kg-potdice { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--kg-text); }
+.knuckles-game .kg-potdice i { color: var(--kg-accent); }
 
 /* theme & language settings submenu */
 .knuckles-game .kg-tl { padding: 4px 2px; }

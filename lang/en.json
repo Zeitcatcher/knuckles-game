@@ -199,5 +199,13 @@
   "KNUCKLES.builder.err.short": "The face chances add up to less than 100%.",
   "KNUCKLES.builder.err.over": "The face chances add up to more than 100%.",
   "KNUCKLES.builder.err.price": "The price cannot be negative.",
-  "KNUCKLES.builder.err.inUse": "{name} is in play right now. End the game first, or take it out of that hand."
+  "KNUCKLES.builder.err.inUse": "{name} is in play right now. End the game first, or take it out of that hand.",
+  "KNUCKLES.setup.stakeDice": "Stake dice",
+  "KNUCKLES.setup.stakeDiceHint": "Let this participant put dice into the pot. Which dice is chosen on the next screen.",
+  "KNUCKLES.dice.stakeLabel": "Stake die",
+  "KNUCKLES.dice.stakeHint": "Put this die into the pot. It still plays this game, and the winner takes it.",
+  "KNUCKLES.dice.stakeNote": "{n} dice in the pot: they play this game, and the winner takes them.",
+  "KNUCKLES.log.diceStakes": "{n} dice go into the pot.",
+  "KNUCKLES.log.dicePot": "{name} takes {n} staked dice",
+  "KNUCKLES.log.returned": "No one could take the pot, so everything went back."
 }

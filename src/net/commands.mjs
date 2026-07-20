@@ -5,7 +5,7 @@
  * records a short turn log. The state write broadcasts to every client.
  */
 
-import { reduce, createGame, currentPlayer, computePool } from "../core/game-state.mjs";
+import { reduce, createGame, currentPlayer, computePool, computeDicePool } from "../core/game-state.mjs";
 import { inPlay } from "../core/dice-model.mjs";
 import { loadState, saveState } from "../foundry/state-store.mjs";
 import { rollValues } from "../foundry/dice-roller.mjs";
@@ -14,7 +14,7 @@ import { spendHeroPoint, getHeroPoints } from "../foundry/hero-points.mjs";
 import { awardCoins, walletValue, deductCoins, refundCoins } from "../foundry/currency.mjs";
 import { planStakes, coinValue, coinsFromValue } from "../core/stakes.mjs";
 import { getDieSpec, diceIds } from "../foundry/dice-data.mjs";
-import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, prefillLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
+import { isPhysicalMode, inventoryActor, ownedDieCounts, missingDieCopies, grantDice, removeDiceCopies, prefillLoadout, clampLoadout, readDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { DEFAULTS } from "../constants.mjs";
 
 const LOG_MAX = 500; // effectively the whole game (state is cleared on a new game / reload)
@@ -137,6 +137,17 @@ async function handleIntent(intent, userId, local) {
     await saveState(state);
     return state;
   }
+  // Put one of a participant's six dice on the line (or take it back). Same control gate
+  // as picking the die itself, and only before the game starts.
+  if (intent.type === "setDieStake") {
+    const target = state.players.find((p) => p.id === intent.playerId);
+    if (!target) throw new Error("unknown player");
+    if (state.status !== "choosing") throw new Error("the stakes are already set");
+    if (!canAct(requester, target, trustedGM)) throw new Error("you cannot stake those dice");
+    state = reduce(state, { type: "setDieStake", playerId: intent.playerId, slot: intent.slot, staked: intent.staked });
+    await saveState(state);
+    return state;
+  }
   if (intent.type === "setReady") {
     if (state.status !== "choosing") throw new Error("the game has already started");
     const target = state.players.find((p) => p.id === intent.playerId);
@@ -159,6 +170,9 @@ async function handleIntent(intent, userId, local) {
     // allocations (from intent.stakes), recording every real deduction in state.escrow for
     // refund. Minted shortfalls move no coin. Skipped entirely when nobody bet.
     if (hasBets(state)) await collectStakes(state, intent.stakes ?? null);
+    // Then the staked DICE, after enforcePhysicalLaunch above has granted every unowned
+    // slot die — which is what lets an NPC stake a die it was only just dealt.
+    await collectDiceStakes(state);
     state = reduce(state, { type: "startPlay" });
     await syncCurrentHeroPoints(state);
     await saveState(state);
@@ -265,11 +279,21 @@ async function handleIntent(intent, userId, local) {
     const w = state.winnerId ? state.players.find((p) => p.id === state.winnerId) : null;
     if (w && state.log?.[state.log.length - 1]?.key !== "KNUCKLES.log.wins") {
       pushLog(state, "KNUCKLES.log.wins", { name: w.name });
-      // Award the pot to the winner only if they resolve to an actor (token-first).
       const winUuid = participantActorUuid(w);
-      if (winUuid && (await awardCoins(winUuid, computePool(state.players)))) {
-        pushLog(state, "KNUCKLES.log.pot", { name: w.name });
+      if (winUuid) {
+        if (await awardCoins(winUuid, computePool(state.players))) {
+          pushLog(state, "KNUCKLES.log.pot", { name: w.name });
+        }
+        const dice = await awardStakedDice(state, winUuid);
+        if (dice) pushLog(state, "KNUCKLES.log.dicePot", { name: w.name, n: dice });
+      } else {
+        // Nobody can actually receive the pot (a name-only winner). Hand everything back
+        // rather than letting real coin and real dice evaporate.
+        await refundEscrow(state, { force: true });
+        if (state.escrow?.length || state.diceEscrow?.length) pushLog(state, "KNUCKLES.log.returned", {});
       }
+      state.escrow = [];
+      state.diceEscrow = [];
     }
   } else {
     await syncCurrentHeroPoints(state);
@@ -320,7 +344,10 @@ async function buildNewGame(config) {
     const owned = physical ? ownedDieCounts(invActor) : new Map();
     let dieIds = resolveLoadout(readDefaultLoadout(invActor), owned, { physical, validIds: new Set(diceIds()) });
     if (!dieIds && physical) dieIds = prefillLoadout(owned);
-    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, tokenUuid: p.tokenUuid ?? null, heroPoints, bet: p.bet, dieIds });
+    // Staking dice needs real dice: only offered in the item economy, and only to a
+    // participant whose inventory we can actually reach.
+    const stakeDice = Boolean(p.stakeDice) && physical && Boolean(invActor);
+    players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, tokenUuid: p.tokenUuid ?? null, heroPoints, bet: p.bet, dieIds, stakeDice });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET, physical });
 }
@@ -396,10 +423,69 @@ async function collectStakes(state, resolutions) {
   pushLog(state, "KNUCKLES.log.stakes", {});
 }
 
-/** Refund every recorded stake deduction — but only while the game is unfinished (a
- *  finished game already awarded its pot). Idempotent in practice: the state is cleared
- *  right after, so the escrow can't be refunded twice. */
-async function refundEscrow(state) {
-  if (!state || state.status === "finished") return;
+/**
+ * Collect the staked DICE (GM-side). One copy per staked slot leaves its owner's inventory
+ * and is recorded in state.diceEscrow, so it can go back if the game ends with no winner.
+ * Runs after the launch grant, so a die the participant was handed this game can be staked.
+ * A participant who can't produce a staked die rolls the whole collection back and aborts
+ * Start, matching how coin stakes behave.
+ */
+async function collectDiceStakes(state) {
+  const staked = computeDicePool(state.players);
+  if (!staked.length) return;
+
+  const byPlayer = new Map();
+  for (const s of staked) {
+    if (!byPlayer.has(s.playerId)) byPlayer.set(s.playerId, new Map());
+    const counts = byPlayer.get(s.playerId);
+    counts.set(s.dieId, (counts.get(s.dieId) ?? 0) + 1);
+  }
+
+  const done = []; // {actor, counts} already taken, for rollback
+  const escrow = [];
+  for (const [playerId, counts] of byPlayer) {
+    const p = state.players.find((x) => x.id === playerId);
+    const actor = inventoryActor(p);
+    const uuid = participantActorUuid(p);
+    const ok = actor && uuid && (await removeDiceCopies(actor, counts));
+    if (!ok) {
+      for (const d of done) await grantDice(d.actor, d.counts);
+      throw new Error(`${p?.name ?? "a participant"} cannot put those dice up`);
+    }
+    done.push({ actor, counts });
+    for (const [dieId, n] of counts) for (let k = 0; k < n; k += 1) escrow.push({ uuid, dieId });
+  }
+
+  state.diceEscrow = [...(state.diceEscrow ?? []), ...escrow];
+  pushLog(state, "KNUCKLES.log.diceStakes", { n: staked.length });
+}
+
+/** Hand every staked die to the winner's actor. Returns how many changed hands. */
+async function awardStakedDice(state, winUuid) {
+  const escrow = state.diceEscrow ?? [];
+  if (!escrow.length) return 0;
+  const actor = await fromUuid(winUuid);
+  if (!actor) return 0;
+  const counts = new Map();
+  for (const e of escrow) counts.set(e.dieId, (counts.get(e.dieId) ?? 0) + 1);
+  await grantDice(actor, counts);
+  return escrow.length;
+}
+
+/** Refund every recorded stake deduction, coins and dice alike — but only while the game is
+ *  unfinished (a finished game already awarded its pot), unless `force` says otherwise (a
+ *  winner who resolves to no actor, where the pot has to go back instead). */
+async function refundEscrow(state, { force = false } = {}) {
+  if (!state || (state.status === "finished" && !force)) return;
   for (const e of state.escrow ?? []) await refundCoins(e.uuid, e.coins);
+  const byActor = new Map();
+  for (const e of state.diceEscrow ?? []) {
+    if (!byActor.has(e.uuid)) byActor.set(e.uuid, new Map());
+    const counts = byActor.get(e.uuid);
+    counts.set(e.dieId, (counts.get(e.dieId) ?? 0) + 1);
+  }
+  for (const [uuid, counts] of byActor) {
+    const actor = await fromUuid(uuid);
+    if (actor) await grantDice(actor, counts);
+  }
 }

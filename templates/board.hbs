@@ -7,7 +7,8 @@
   {{#if hasPot}}
     <div class="kg-pot">
       <span class="kg-muted">{{localize "KNUCKLES.board.pot"}}</span>
-      {{kgCoins pool all=true}}
+      {{#if hasCoinPot}}{{kgCoins pool all=true}}{{/if}}
+      {{#if potDice}}<span class="kg-potdice"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{potDice}}</span>{{/if}}
     </div>
   {{/if}}
 

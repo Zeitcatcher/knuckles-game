@@ -8,8 +8,8 @@ let instance = null;
 
 const emptyBet = () => ({ sun: 0, gold: 0, silver: 0, copper: 0 });
 const freshPlayers = () => [
-  { id: "p1", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() },
-  { id: "p2", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() },
+  { id: "p1", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet(), stakeDice: false },
+  { id: "p2", name: "", actorUuid: null, tokenUuid: null, bet: emptyBet(), stakeDice: false },
 ];
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
 
@@ -24,6 +24,7 @@ function rowFromToken(t, index) {
     actorUuid: worldActor?.uuid ?? t.actor?.uuid ?? null,
     tokenUuid: t.document.uuid,
     bet: emptyBet(),
+    stakeDice: false,
   };
 }
 
@@ -52,9 +53,13 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const actors = game.actors
       .map((a) => ({ uuid: a.uuid, name: a.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    const { isPhysicalMode } = await import("../foundry/dice-items.mjs");
     return {
       players: this.players,
       actors,
+      // Dice can only be wagered when they are real items; in a virtual game the checkbox
+      // would promise something the economy cannot deliver.
+      physical: isPhysicalMode(),
       defaultTarget: game.settings.get(MODULE_ID, SETTINGS.DEFAULT_TARGET) ?? DEFAULTS.TARGET,
     };
   }
@@ -124,12 +129,13 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
         silver: toInt(b.querySelector("[name='silver']")?.value),
         copper: toInt(b.querySelector("[name='copper']")?.value),
       },
+      stakeDice: Boolean(b.querySelector("[name='stakeDice']")?.checked),
     }));
   }
 
   static _onAddPlayer() {
     this._syncFromForm();
-    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null, tokenUuid: null, bet: emptyBet() });
+    this.players.push({ id: `p${this.players.length + 1}`, name: "", actorUuid: null, tokenUuid: null, bet: emptyBet(), stakeDice: false });
     this.render();
   }
 

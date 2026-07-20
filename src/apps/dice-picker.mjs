@@ -146,10 +146,15 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
           slot: i,
           n: i + 1,
           dieId,
+          staked: Boolean(p.betDice?.[i]),
           mark: slotMark({ mode, covered }),
           options: slotOptions({ mode, allIds, owned, usedAll: used, usedExcl, dieId, theme, lang }),
         };
       });
+      // The stake column shows for anyone who opted in at setup. It is only editable while
+      // choosing: once play starts the pot is fixed, but the marks stay visible.
+      const staking = Boolean(p.stakeDice);
+      const stakedCount = staking ? (p.betDice ?? []).filter(Boolean).length : 0;
 
       // The owned tally + buy-hint are INFORMATIONAL (the character OWNS fewer than six) —
       // they stay red even though the GM can start right away and the missing dice are
@@ -169,6 +174,9 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
         hasDefault: Boolean(actor) && readDefaultLoadout(actor) !== null,
         // The GM's quick-hand strip, on every row the GM can edit. Players never see it.
         gen: isGM ? this._genContext(p.id) : null,
+        staking,
+        canStake: state.status === "choosing",
+        stakeNote: stakedCount ? game.i18n.format("KNUCKLES.dice.stakeNote", { n: stakedCount }) : null,
         slots,
       };
     });
@@ -235,6 +243,18 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       // Flush a render that was DEFERRED while this dropdown was open (e.g. another player's
       // change) once it closes — but don't force a fresh render here (that's the change path).
       sel.addEventListener("blur", () => { this._kgSelectBusy = false; if (this._kgPending) scheduleRender(this); });
+    }
+    // Putting a die up, or taking it back. A real intent, so every client sees the pot grow.
+    for (const box of this.element.querySelectorAll("input[data-die-stake]")) {
+      box.addEventListener("change", (ev) => {
+        dispatch({
+          type: "setDieStake",
+          playerId: ev.target.dataset.playerId,
+          slot: Number(ev.target.dataset.slot),
+          staked: ev.target.checked,
+        }).then(() => { if (game.user.isGM) scheduleRender(this); })
+          .catch((err) => { reportError(err); scheduleRender(this); });
+      });
     }
     // The quick-hand knobs are local state, not an intent: remember the pick and take the
     // same open-dropdown lock, so a sync can't yank a menu the GM has open.

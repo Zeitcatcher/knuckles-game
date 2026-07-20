@@ -2,6 +2,16 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.4.0
+
+- Dice can be wagered instead of, or alongside, coin. Tick Stake dice on a participant's bet row in setup, and their rows in the dice picker grow a checkbox per slot: tick the dice they are putting up. A staked die still plays the game it was wagered in, and the winner takes it.
+- The stake belongs to the slot, not the die. Swap the die in a staked slot and the new one is what is on the line.
+- An NPC can stake a die it was dealt this game, because dice are handed out before stakes are collected. Winning one is how a player takes a sharper's cheat die off the table.
+- Staked dice leave their owner's inventory when the game starts and go back if it ends with no winner, exactly like coin stakes. If a participant cannot produce a die they promised, nothing moves at all and the game does not start.
+- The pot on the board names the dice riding on it, next to the coins.
+- Fixed a payout hole that predates dice stakes: when the winner was a name-only participant with no character, the collected coin pot silently vanished. Now everything goes back to the people who staked it.
+- Wagering dice needs the physical-dice economy, since it moves real items. The checkbox does not appear in a virtual game.
+
 ## 1.3.1
 
 - Filled the price hole between 225 and 800 gp that made elite hands underspend. Seventeen dice from the top shelf down are repriced on a gentler curve (03 нищего 225 → 450, 06 доброй вести 175 → 350, 04 → 250, 05 → 190, 07 → 130, 18 → 100, the 25 gp band up to 50-70, and so on down to 35 Грязная at 7), the joker eases 800 → 700, and the elite purse trims to 400 gp per die. Everything at or under 1 gp keeps its released price.

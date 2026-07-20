@@ -39,10 +39,16 @@ export function createGame({ players, targetScore = 2000, physical = false } = {
         silver: Number(p.bet?.silver) || 0,
         copper: Number(p.bet?.copper) || 0,
       },
+      // Wagering dice instead of (or alongside) coin. `stakeDice` is the setup opt-in;
+      // `betDice` marks WHICH of the six slots are on the line. The stake lives on the
+      // SLOT, not the die: swap the die in a staked slot and the new one is what's at risk.
+      stakeDice: Boolean(p.stakeDice),
+      betDice: Array.from({ length: 6 }, (_, s) => Boolean(p.stakeDice) && Boolean(p.betDice?.[s])),
     })),
     turnIndex: 0,
     turnScore: 0,
     escrow: [], // real coin deductions made to collect stakes: [{uuid, coins}] — refunded if the game ends unfinished
+    diceEscrow: [], // dice taken from inventories as stakes: [{uuid, dieId}] — refunded the same way
     selection: [], // the current controller's shared keep-selection (in-play die ids), visible to all
     pool: freshPool(),
     phase: "await-roll", // await-roll | selecting | bust | finished
@@ -67,6 +73,21 @@ export function computePool(players) {
   return pool;
 }
 
+/**
+ * Every die slot staked into the pot, as `{playerId, slot, dieId}`. Drives the board's pot
+ * line and the launch-time collection. A slot only counts while its owner opted in.
+ */
+export function computeDicePool(players) {
+  const staked = [];
+  for (const p of players ?? []) {
+    if (!p.stakeDice) continue;
+    (p.betDice ?? []).forEach((on, slot) => {
+      if (on) staked.push({ playerId: p.id, slot, dieId: p.dieIds?.[slot] ?? "01" });
+    });
+  }
+  return staked;
+}
+
 /** Apply a command, returning a NEW state (input is never mutated). */
 export function reduce(state, command) {
   const s = structuredClone(state);
@@ -81,6 +102,7 @@ export function reduce(state, command) {
     case "setSelection": return applySetSelection(s, command);
     case "setDieSlot": return applySetDieSlot(s, command);
     case "setLoadout": return applySetLoadout(s, command);
+    case "setDieStake": return applySetDieStake(s, command);
     case "setReady": return applySetReady(s, command);
     case "startPlay": return applyStartPlay(s);
     default: throw new Error(`unknown command: ${command.type}`);
@@ -212,6 +234,20 @@ function applySetLoadout(s, { playerId, dieIds }) {
   const p = s.players.find((pl) => pl.id === playerId);
   if (p && Array.isArray(dieIds)) {
     for (let i = 0; i < 6; i++) p.dieIds[i] = dieIds[i] ?? "01";
+  }
+  return s;
+}
+
+/**
+ * Put one slot's die on the line, or take it back. Only for a participant who opted in at
+ * setup, and only before the game starts — once play begins the pot is fixed.
+ */
+function applySetDieStake(s, { playerId, slot, staked }) {
+  if (s.status !== "choosing") throw new Error("the stakes are already set");
+  const p = s.players.find((pl) => pl.id === playerId);
+  if (!p?.stakeDice) return s;
+  if (Number.isInteger(slot) && slot >= 0 && slot < 6) {
+    p.betDice[slot] = Boolean(staked);
   }
   return s;
 }

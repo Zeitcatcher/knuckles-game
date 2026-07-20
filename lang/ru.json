@@ -199,5 +199,13 @@
   "KNUCKLES.builder.err.short": "Шансы граней в сумме меньше 100%.",
   "KNUCKLES.builder.err.over": "Шансы граней в сумме больше 100%.",
   "KNUCKLES.builder.err.price": "Цена не может быть отрицательной.",
-  "KNUCKLES.builder.err.inUse": "{name} сейчас в игре. Завершите игру или уберите кость из руки."
+  "KNUCKLES.builder.err.inUse": "{name} сейчас в игре. Завершите игру или уберите кость из руки.",
+  "KNUCKLES.setup.stakeDice": "Ставить кости",
+  "KNUCKLES.setup.stakeDiceHint": "Разрешить этому участнику поставить кости на кон. Какие именно — выбирается на следующем экране.",
+  "KNUCKLES.dice.stakeLabel": "Поставить кость",
+  "KNUCKLES.dice.stakeHint": "Поставить эту кость на кон. Она играет в этой партии, а победитель её забирает.",
+  "KNUCKLES.dice.stakeNote": "На кону костей: {n}. Они играют в этой партии, победитель их забирает.",
+  "KNUCKLES.log.diceStakes": "Костей ушло на кон: {n}.",
+  "KNUCKLES.log.dicePot": "{name} забирает кости с кона: {n}",
+  "KNUCKLES.log.returned": "Забрать кон было некому, всё вернулось владельцам."
 }

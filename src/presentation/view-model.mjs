@@ -4,7 +4,7 @@
  */
 
 import { scoreSelection } from "../core/scoring.mjs";
-import { computePool } from "../core/game-state.mjs";
+import { computePool, computeDicePool } from "../core/game-state.mjs";
 import { buildCombos } from "../core/combos.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { DEFAULT_DIE_ID } from "../foundry/dice-data.mjs";
@@ -91,13 +91,18 @@ export function buildBoardContext(state, user, ui) {
   }));
 
   const pool = computePool(state.players);
+  // Dice wagered into the pot, named for the table so everyone sees what is on the line.
+  const dicePool = computeDicePool(state.players);
+  const potDice = dicePool.map((d) => dieName(theme, lang, d.dieId)).join(", ");
 
   return {
     active: true,
     finished,
     targetScore: state.targetScore,
     pool,
-    hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0,
+    potDice,
+    hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0 || dicePool.length > 0,
+    hasCoinPot: pool.sun + pool.gold + pool.silver + pool.copper > 0,
     players,
     canOpenDice: Boolean(user.isGM) && !finished,
     faces: [1, 2, 3, 4, 5, 6],

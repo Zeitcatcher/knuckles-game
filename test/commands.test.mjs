@@ -2,13 +2,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createGame, reduce } from "../src/core/game-state.mjs";
 
 // Mutable mock state, hoisted so the vi.mock factories below can read it.
-const h = vi.hoisted(() => ({ state: null, physical: false, owned: new Map(), granted: [], heroReads: [], spent: [], coinPays: [], wallets: {}, deducted: [], refunded: [] }));
+const h = vi.hoisted(() => ({ state: null, physical: false, owned: new Map(), granted: [], removed: [], removeFails: false, heroReads: [], spent: [], coinPays: [], wallets: {}, deducted: [], refunded: [] }));
 
 // Who owns which actor (for canAct's testUserPermission), and the source actors. `tokTok`
 // is an unlinked-token actor uuid owned by alice.
 const OWNED_BY = { actorAlice: "alice", actorBob: "bob", tokTok: "alice" };
 const USERS = { gm: { id: "gm", isGM: true }, alice: { id: "alice", isGM: false }, bob: { id: "bob", isGM: false } };
-const ACTORS = { actorAlice: { type: "character", name: "Alice" }, actorBob: { type: "character", name: "Bob" }, tokTok: { type: "character", name: "TokenChar" }, actorNpc: { type: "npc", name: "Orc" } };
+// Real Foundry actors carry their own uuid; the fixtures do too, so code that resolves an
+// actor from a uuid and then reads it back (the dice-escrow settlement) behaves as it will.
+const ACTORS = { actorAlice: { uuid: "actorAlice", type: "character", name: "Alice" }, actorBob: { uuid: "actorBob", type: "character", name: "Bob" }, tokTok: { uuid: "tokTok", type: "character", name: "TokenChar" }, actorNpc: { uuid: "actorNpc", type: "npc", name: "Orc" } };
 
 vi.mock("../src/foundry/state-store.mjs", () => ({
   loadState: () => h.state,
@@ -50,7 +52,14 @@ vi.mock("../src/foundry/dice-items.mjs", async (importOriginal) => {
       return { uuid: key, testUserPermission: (user) => OWNED_BY[key] === user?.id };
     },
     ownedDieCounts: () => new Map(h.owned),
-    grantDice: async (_actor, missing) => { h.granted.push([...missing.entries()]); },
+    grantDice: async (actor, missing) => { h.granted.push({ uuid: actor?.uuid, counts: [...missing.entries()] }); },
+    removeDiceCopies: async (actor, counts) => {
+      // Mirrors the real adapter: refuses (touching nothing) when the actor is short.
+      for (const [id, n] of counts) if ((h.owned.get(id) ?? 0) < n) return false;
+      if (h.removeFails) return false;
+      h.removed.push({ uuid: actor?.uuid, counts: [...counts.entries()] });
+      return true;
+    },
     readDefaultLoadout: () => null,
   };
 });
@@ -64,7 +73,7 @@ const playingGame = (over = {}) => {
 };
 
 beforeEach(() => {
-  h.state = null; h.physical = false; h.owned = new Map(); h.granted = []; h.heroReads = []; h.spent = []; h.coinPays = [];
+  h.state = null; h.physical = false; h.owned = new Map(); h.granted = []; h.removed = []; h.removeFails = false; h.heroReads = []; h.spent = []; h.coinPays = [];
   h.wallets = {}; h.deducted = []; h.refunded = [];
   globalThis.game = {
     user: USERS.gm,
@@ -302,5 +311,116 @@ describe("token-bound participants resolve HP/coins token-first (Q2)", () => {
     await dispatchAsGM({ type: "useHeroPoint", rerollIds: [1] }, "alice", false);
     expect(h.spent).toContain("tokTok"); // spent on the token's actor, never actorAlice
     expect(h.spent).not.toContain("actorAlice");
+  });
+});
+
+describe("wagering dice", () => {
+  /** A choosing-phase physical game where alice puts dice up. */
+  const stakingGame = () => {
+    h.physical = true;
+    h.owned = new Map([["02", 1], ["07", 1], ["01", 6]]);
+    let s = createGame({
+      players: [
+        { id: "a", type: "pc", actorUuid: "actorAlice", stakeDice: true, dieIds: ["02", "07", "01", "01", "01", "01"] },
+        { id: "b", type: "pc", actorUuid: "actorBob" },
+      ],
+      physical: true,
+    });
+    return s;
+  };
+
+  /** A playing game one action away from alice winning, with dice already escrowed. */
+  const aboutToFinish = ({ winnerActorless = false } = {}) => {
+    let s = createGame({
+      players: [
+        { id: "a", type: winnerActorless ? "generic" : "pc", actorUuid: winnerActorless ? null : "actorAlice" },
+        { id: "b", type: "pc", actorUuid: "actorBob" },
+      ],
+      targetScore: 100,
+    });
+    s = reduce(s, { type: "startPlay" });
+    s.players[0].total = 100;
+    s.finalRound = { active: true, triggeredBy: "a" };
+    s.round = { index: 0, acted: 1 };
+    s.turnIndex = 1; // bob acts last
+    s.phase = "bust";
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02" }, { uuid: "actorBob", dieId: "07" }];
+    s.escrow = [{ uuid: "actorAlice", coins: { gold: 5 } }];
+    return s;
+  };
+
+  it("lets the owner put a die up, and refuses someone else's dice", async () => {
+    h.state = stakingGame();
+    const s = await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "alice", false);
+    expect(s.players[0].betDice[0]).toBe(true);
+    await expect(dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 1, staked: true }, "bob", false)).rejects.toThrow();
+  });
+
+  it("lets the GM stake for a participant they run", async () => {
+    h.state = stakingGame();
+    const s = await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 1, staked: true }, "gm", true);
+    expect(s.players[0].betDice[1]).toBe(true);
+  });
+
+  it("refuses to change the pot once play has started", async () => {
+    h.state = reduce(stakingGame(), { type: "startPlay" });
+    await expect(dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "gm", true)).rejects.toThrow();
+  });
+
+  it("takes the staked dice out of the inventory on start and escrows them", async () => {
+    h.state = stakingGame();
+    await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "alice", false);
+    await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 1, staked: true }, "alice", false);
+    const s = await dispatchAsGM({ type: "startPlay" }, "gm", true);
+    expect(h.removed).toEqual([{ uuid: "actorAlice", counts: [["02", 1], ["07", 1]]}]);
+    expect(s.diceEscrow).toEqual([{ uuid: "actorAlice", dieId: "02" }, { uuid: "actorAlice", dieId: "07" }]);
+  });
+
+  it("moves nothing and refuses to start when a staked die cannot be produced", async () => {
+    h.state = stakingGame();
+    await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "alice", false);
+    h.removeFails = true;
+    await expect(dispatchAsGM({ type: "startPlay" }, "gm", true)).rejects.toThrow();
+    expect(h.removed).toEqual([]);
+    expect(h.state.status).toBe("choosing"); // the game never left the picker
+  });
+
+  it("collects no dice when nobody staked any", async () => {
+    h.state = stakingGame();
+    const s = await dispatchAsGM({ type: "startPlay" }, "gm", true);
+    expect(h.removed).toEqual([]);
+    expect(s.diceEscrow).toEqual([]);
+  });
+
+  it("hands every staked die to the winner", async () => {
+    h.state = aboutToFinish();
+    const s = await dispatchAsGM({ type: "takeBust" }, "bob", false);
+    expect(s.status).toBe("finished");
+    expect(s.winnerId).toBe("a");
+    // one grant to the winner's actor carrying both escrowed dice
+    const toWinner = h.granted.filter((g) => g.uuid === "actorAlice");
+    expect(toWinner).toEqual([{ uuid: "actorAlice", counts: [["02", 1], ["07", 1]] }]);
+    expect(h.coinPays).toContain("actorAlice");
+    expect(s.diceEscrow).toEqual([]);
+  });
+
+  it("gives the pot back when the winner has no actor to receive it", async () => {
+    h.state = aboutToFinish({ winnerActorless: true });
+    const s = await dispatchAsGM({ type: "takeBust" }, "bob", false);
+    expect(s.status).toBe("finished");
+    expect(h.coinPays).toEqual([]); // nothing was paid out
+    expect(h.refunded.map((r) => r.uuid)).toContain("actorAlice"); // coins went home
+    expect(h.granted.map((g) => g.uuid).sort()).toEqual(["actorAlice", "actorBob"]); // and so did the dice
+    expect(s.diceEscrow).toEqual([]);
+  });
+
+  it("returns staked dice to their owners when the game ends with no winner", async () => {
+    h.state = playingGame();
+    h.state.diceEscrow = [{ uuid: "actorAlice", dieId: "02" }, { uuid: "actorAlice", dieId: "02" }, { uuid: "actorBob", dieId: "07" }];
+    await dispatchAsGM({ type: "endGame" }, "gm", true);
+    expect(h.granted).toEqual([
+      { uuid: "actorAlice", counts: [["02", 2]] }, // both copies, in one grant
+      { uuid: "actorBob", counts: [["07", 1]] },
+    ]);
   });
 });
