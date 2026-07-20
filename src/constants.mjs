@@ -16,6 +16,7 @@ export const SETTINGS = Object.freeze({
   LANGUAGE: "language",
   PHYSICAL_DICE: "physicalDice",
   COMBOS_OPEN: "combosOpen",
+  CUSTOM_DICE: "customDice",
 });
 
 export const SOCKET = Object.freeze({ DISPATCH: "dispatch", OPEN: "open" });
@@ -33,6 +34,7 @@ export const TEMPLATES = Object.freeze({
   DICE: `modules/${MODULE_ID}/templates/dice-picker.hbs`,
   THEME_LANG: `modules/${MODULE_ID}/templates/theme-language.hbs`,
   STAKES: `modules/${MODULE_ID}/templates/stakes.hbs`,
+  DIE_BUILDER: `modules/${MODULE_ID}/templates/die-builder.hbs`,
 });
 
 /** pf2e actor data path for Hero Points. */

@@ -69,6 +69,7 @@
   {{/each}}
   </div>
   <footer class="kg-dice-foot">
+    {{#if isGM}}<button type="button" class="kg-foot-left" data-action="openBuilder" title="{{localize 'KNUCKLES.builder.openHint'}}"><i class="fa-solid fa-dice-d6" aria-hidden="true"></i> {{localize "KNUCKLES.builder.open"}}</button>{{/if}}
     {{#if choosing}}
       {{#if isGM}}
         <button type="button" class="primary" data-action="startPlay"><i class="fa-solid fa-play" aria-hidden="true"></i> {{localize "KNUCKLES.dice.start"}}</button>

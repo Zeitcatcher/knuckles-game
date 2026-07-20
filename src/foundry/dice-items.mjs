@@ -10,8 +10,10 @@
  */
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "./themes.mjs";
+import { getCustomDie } from "./dice-data.mjs";
 
-const SLUG_RE = /^knuckles-die-(\d{2})$/;
+// Two-digit ids are the shipped catalog; a "c"-prefixed one is a die made at this table.
+const SLUG_RE = /^knuckles-die-(\d{2}|c[0-9a-z]{4,10})$/;
 const PACK_ID = `${MODULE_ID}.dice`;
 
 /** The catalog die id parsed from a slug string, or null. Pure. */
@@ -301,6 +303,142 @@ export async function restampCompendium() {
   return updates.length;
 }
 
+/** Copper-equivalent -> a pf2e Coins object, minimal denominations. Mirrors the pack build. */
+function cpToCoins(cp) {
+  const total = Math.max(0, Math.round(Number(cp) || 0));
+  const gp = Math.floor(total / 100);
+  const sp = Math.floor((total % 100) / 10);
+  const c = total % 10;
+  const v = {};
+  if (gp) v.gp = gp;
+  if (sp) v.sp = sp;
+  if (c) v.cp = c;
+  if (!gp && !sp && !c) v.cp = 0;
+  return v;
+}
+
+/**
+ * A pf2e `equipment` source for a table-made die — the same shape the bundled pack ships,
+ * so a custom die is bought, sold, dragged and counted exactly like a catalog one.
+ */
+export function customDieItemData(def, quantity = 1) {
+  return {
+    name: def.name,
+    type: "equipment",
+    img: def.img,
+    system: {
+      description: { value: `<p>${def.desc ?? ""}</p>` },
+      rules: [],
+      slug: `knuckles-die-${def.id}`,
+      traits: { value: [], rarity: "common", otherTags: [] },
+      level: { value: 0 },
+      quantity,
+      bulk: { value: 0 },
+      hp: { value: 0, max: 0 },
+      hardness: 0,
+      price: { value: cpToCoins(def.price) },
+      equipped: { carryType: "worn", handsHeld: 0 },
+      containerId: null,
+      size: "med",
+      material: { type: null, grade: null },
+      identification: { status: "identified" },
+      usage: { value: "held-in-one-hand" },
+    },
+    flags: { [MODULE_ID]: { dieId: def.id } },
+  };
+}
+
+/** Whether this world can hold dice as real items (the physical economy's adapter). */
+function itemsSupported() {
+  return game.system?.id === "pf2e";
+}
+
+/** The world-directory Item for a die id, or null. */
+function worldDieItem(dieId) {
+  return game.items?.find?.((i) => dieIdOf(i) === dieId) ?? null;
+}
+
+/** Create the world Item for a new table-made die (pf2e only). Returns it, or null. */
+export async function createCustomDieItem(def) {
+  if (!itemsSupported()) return null;
+  if (worldDieItem(def.id)) return null; // already there (an edit, or a re-run)
+  return Item.create(customDieItemData(def));
+}
+
+/** Every actor that can hold dice: world actors plus unlinked scene tokens. */
+function dieHoldingActors() {
+  const actors = [...(game.actors ?? [])];
+  for (const scene of game.scenes ?? []) {
+    for (const token of scene.tokens ?? []) {
+      if (token.actorLink || !token.actor) continue; // linked tokens are covered above
+      actors.push(token.actor);
+    }
+  }
+  return actors;
+}
+
+/** Copies of a die across every inventory: `{actors, copies}`. Drives the delete warning. */
+export function countCustomDieCopies(dieId) {
+  let actorsWith = 0;
+  let copies = 0;
+  for (const actor of dieHoldingActors()) {
+    const n = ownedDieCounts(actor).get(dieId) ?? 0;
+    if (n > 0) { actorsWith += 1; copies += n; }
+  }
+  return { actors: actorsWith, copies };
+}
+
+/**
+ * Push an edited definition onto every copy that already exists: the world Item and each
+ * inventory stack. Name and description alone would leave a renamed die wearing its old
+ * icon and price, so this writes all four.
+ */
+export async function syncCustomDieItems(def) {
+  if (!itemsSupported()) return 0;
+  const fields = {
+    name: def.name,
+    img: def.img,
+    "system.description.value": `<p>${def.desc ?? ""}</p>`,
+    "system.price.value": cpToCoins(def.price),
+  };
+  let n = 0;
+  const world = worldDieItem(def.id);
+  if (world) { await world.update(fields); n += 1; }
+  for (const actor of dieHoldingActors()) {
+    const updates = [];
+    const equipment = actor?.itemTypes?.equipment ?? actor?.items?.filter?.((i) => i.type === "equipment") ?? [];
+    for (const it of equipment) {
+      if (dieIdOf(it) === def.id) updates.push({ _id: it.id, ...fields });
+    }
+    if (updates.length) {
+      await actor.updateEmbeddedDocuments("Item", updates, { render: false });
+      n += updates.length;
+    }
+  }
+  return n;
+}
+
+/**
+ * Remove every trace of a deleted die: the world Item and each inventory stack. Leaving the
+ * items behind would strand copies whose mechanics no longer exist, and physical mode counts
+ * ownership from exactly those items.
+ */
+export async function deleteCustomDieItems(dieId) {
+  if (!itemsSupported()) return 0;
+  let n = 0;
+  const world = worldDieItem(dieId);
+  if (world) { await world.delete(); n += 1; }
+  for (const actor of dieHoldingActors()) {
+    const equipment = actor?.itemTypes?.equipment ?? actor?.items?.filter?.((i) => i.type === "equipment") ?? [];
+    const ids = equipment.filter((it) => dieIdOf(it) === dieId).map((it) => it.id);
+    if (ids.length) {
+      await actor.deleteEmbeddedDocuments("Item", ids, { render: false });
+      n += ids.length;
+    }
+  }
+  return n;
+}
+
 /**
  * Grant missing copies to an actor (GM-side). `missing` is Map(dieId -> copies).
  * Explicitly bumps an existing stack's quantity or creates a fresh item — we do NOT
@@ -318,6 +456,13 @@ export async function grantDice(actor, missing) {
     const existing = equipment.find((it) => dieIdOf(it) === id);
     if (existing) {
       updates.push({ _id: existing.id, "system.quantity": (existing.system?.quantity ?? 0) + copies });
+      continue;
+    }
+    // A table-made die has no pack source: build it from its stored definition instead, so
+    // physical mode stocks a custom die exactly like a shipped one.
+    const custom = getCustomDie(id);
+    if (custom) {
+      creates.push(customDieItemData(custom, copies));
       continue;
     }
     const src = sources.get(id);

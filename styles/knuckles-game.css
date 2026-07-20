@@ -186,3 +186,62 @@
 .knuckles-game .kg-gen-deal:hover { background: color-mix(in srgb, var(--kg-accent) 22%, transparent); }
 .knuckles-game .kg-gmtag { height: 18px; line-height: 14px; padding: 1px 5px; font-size: 10px; color: var(--kg-accent); border: 1px solid color-mix(in srgb, var(--kg-accent) 55%, transparent); border-radius: 4px; flex: 0 0 auto; }
 .knuckles-game .kg-gen-note { font-size: 11px; line-height: 15px; color: var(--kg-muted); margin: 0 0 10px 2px; }
+
+/* Die builder (GM only). One label column and one control height throughout, so the form
+   reads as a single grid; the six face inputs and the pool bar share the same 424px span
+   (6 x 64 + 5 x 8). Every control states its line-height explicitly — an inherited one
+   clips descenders inside a fixed-height box. */
+.knuckles-game .kg-builder { color: var(--kg-text); background: var(--kg-board-bg); padding: 12px; border-radius: var(--kg-radius); }
+.knuckles-game .kg-bld-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.knuckles-game .kg-bld-title { font-size: 12px; line-height: 18px; font-weight: 500; color: var(--kg-accent); flex: 0 0 auto; }
+.knuckles-game .kg-bld-hint { font-size: 11px; line-height: 15px; color: var(--kg-muted); }
+.knuckles-game .kg-bld-form { display: grid; grid-template-columns: 92px 1fr; gap: 8px 10px; align-items: center; }
+.knuckles-game .kg-bld-lb { font-size: 12px; line-height: 18px; color: var(--kg-muted); }
+.knuckles-game .kg-bld-lb-top { align-self: start; margin-top: 5px; }
+.knuckles-game .kg-builder input[type="text"], .knuckles-game .kg-builder input[type="number"], .knuckles-game .kg-builder textarea {
+  box-sizing: border-box; height: 26px; line-height: 18px; padding: 3px 8px; font-size: 12px; font-family: inherit;
+  background: var(--kg-input-bg); color: var(--kg-text); border: 1px solid var(--kg-surface-2); border-radius: 5px; width: 100%;
+}
+.knuckles-game .kg-builder input::placeholder, .knuckles-game .kg-builder textarea::placeholder { color: var(--kg-muted); font-style: italic; }
+.knuckles-game .kg-builder .kg-bld-area { height: 48px; resize: vertical; padding: 5px 8px; }
+.knuckles-game .kg-bld-icon { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.knuckles-game .kg-bld-thumb { width: 32px; height: 32px; flex: 0 0 auto; box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--kg-input-bg); border: 1px solid color-mix(in srgb, var(--kg-accent) 50%, transparent); border-radius: 5px; color: var(--kg-accent); font-size: 15px; }
+.knuckles-game .kg-bld-thumb.is-empty { border-color: var(--kg-surface-2); color: var(--kg-muted); }
+.knuckles-game .kg-bld-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.knuckles-game .kg-bld-thumb.sm { width: 22px; height: 22px; font-size: 12px; border-radius: 4px; }
+.knuckles-game .kg-bld-price { display: flex; align-items: center; gap: 8px; }
+/* The type-attribute rule above scores as high as a plain class, so the fixed-width
+   overrides name the element too and sit after it. */
+.knuckles-game .kg-bld-price input.kg-bld-in { width: 76px; flex: 0 0 auto; text-align: right; }
+.knuckles-game .kg-bld-unit { font-size: 11px; line-height: 15px; color: var(--kg-muted); flex: 0 0 auto; }
+.knuckles-game .kg-bld-class { height: 18px; line-height: 14px; box-sizing: border-box; padding: 1px 6px; font-size: 10px; white-space: nowrap; color: var(--kg-win); border: 1px solid color-mix(in srgb, var(--kg-win) 50%, transparent); border-radius: 4px; flex: 0 0 auto; }
+.knuckles-game .kg-bld-note { font-size: 11px; line-height: 15px; color: var(--kg-muted); }
+.knuckles-game .kg-bld-sec { font-size: 12px; line-height: 18px; color: var(--kg-muted); margin: 14px 0 6px; display: flex; align-items: baseline; gap: 8px; }
+.knuckles-game .kg-bld-faces { display: grid; grid-template-columns: repeat(6, 64px); gap: 8px; justify-content: start; }
+.knuckles-game .kg-bld-face { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.knuckles-game .kg-builder input.kg-bld-pct { width: 64px; text-align: center; padding: 3px 4px; }
+.knuckles-game .kg-bld-pool { width: 424px; max-width: 100%; margin-top: 10px; }
+.knuckles-game .kg-bld-bar { height: 8px; border-radius: 4px; background: var(--kg-surface-2); overflow: hidden; }
+.knuckles-game .kg-bld-bar span { display: block; height: 8px; background: var(--kg-accent); }
+.knuckles-game .kg-bld-poolrow { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; }
+.knuckles-game .kg-bld-left { font-size: 11px; line-height: 15px; color: var(--kg-win); }
+.knuckles-game .kg-bld-left.is-bad { color: color-mix(in srgb, var(--kg-bust) 75%, var(--kg-text)); }
+.knuckles-game .kg-bld-acts { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.knuckles-game .kg-bld-right { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.knuckles-game .kg-bld-save { height: 26px; line-height: 16px; box-sizing: border-box; padding: 4px 12px; font-size: 12px; font-weight: 500; color: var(--kg-board-bg); background: var(--kg-accent); border: 1px solid var(--kg-accent); border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.knuckles-game .kg-bld-save[disabled] { opacity: 0.45; cursor: default; }
+.knuckles-game .kg-defbtn.danger { color: color-mix(in srgb, var(--kg-bust) 80%, var(--kg-text)); border-color: color-mix(in srgb, var(--kg-bust) 40%, transparent); }
+.knuckles-game .kg-defbtn.danger:hover { background: color-mix(in srgb, var(--kg-bust) 14%, transparent); }
+.knuckles-game .kg-bld-list { border-top: 1px solid var(--kg-surface-2); margin-top: 14px; }
+.knuckles-game .kg-bld-row { display: flex; align-items: center; gap: 10px; background: var(--kg-surface); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+.knuckles-game .kg-bld-row.is-editing { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kg-accent) 55%, transparent); }
+.knuckles-game .kg-bld-rname { font-size: 12px; line-height: 18px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.knuckles-game .kg-bld-spark { display: flex; align-items: flex-end; gap: 2px; height: 14px; flex: 0 0 auto; }
+.knuckles-game .kg-bld-spark b { width: 5px; border-radius: 1px; background: var(--kg-accent); }
+.knuckles-game .kg-bld-spark b.lo { background: color-mix(in srgb, var(--kg-accent) 35%, transparent); }
+.knuckles-game .kg-bld-inuse { font-size: 10px; line-height: 14px; color: var(--kg-muted); white-space: nowrap; flex: 0 0 auto; }
+.knuckles-game .kg-bld-rowacts { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex: 0 0 auto; }
+.knuckles-game .kg-bld-empty { font-size: 12px; line-height: 18px; color: var(--kg-muted); padding: 4px 2px 8px; }
+.knuckles-game .kg-bld-sysnote { margin-top: 8px; }
+/* The builder's own launch button, pinned to the left of a window footer. */
+.knuckles-game .kg-foot-left { margin-right: auto; }

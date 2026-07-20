@@ -10,8 +10,9 @@ import { setupSocket, dispatch } from "./net/socket.mjs";
 import { openBoard, refreshBoard } from "./apps/board-app.mjs";
 import { openSetup } from "./apps/setup-app.mjs";
 import { openDicePicker, refreshDicePicker } from "./apps/dice-picker.mjs";
+import { openDieBuilder, refreshDieBuilder } from "./apps/die-builder.mjs";
 import { loadState, clearState } from "./foundry/state-store.mjs";
-import { loadDiceCatalog } from "./foundry/dice-data.mjs";
+import { loadDiceCatalog, loadCustomDice } from "./foundry/dice-data.mjs";
 import { loadThemes, preloadTheme, registerTheme, activeTheme, activeLanguage } from "./foundry/themes.mjs";
 import { stampDie, restampWorldDice, restampCompendium } from "./foundry/dice-items.mjs";
 import { isPrimaryGM } from "./foundry/platform.mjs";
@@ -50,11 +51,22 @@ async function testWeightedRoll(weights = [10, 1, 1, 1, 1, 1], n = 1, animate = 
   return { counts, weights, totalDice };
 }
 
-/** Load the bundled dice mechanics + themes, then preload the active language. */
+/** Load the bundled dice mechanics + themes, then preload the active language. The table's
+ *  own dice merge into the same registry, so they are ready before the first window opens. */
 async function loadContent() {
   await loadDiceCatalog();
+  loadCustomDice();
   await loadThemes();
   await preloadTheme(activeTheme(), activeLanguage());
+}
+
+/** A die was made, edited or deleted: re-read the registry and repaint what is open. Every
+ *  client runs this, so a player's picker gains the new die without a reload. */
+function onCustomDiceChanged() {
+  loadCustomDice();
+  refreshDicePicker(true); // every label may have shifted position in the list
+  refreshBoard(true);
+  refreshDieBuilder();
 }
 
 /**
@@ -107,19 +119,20 @@ Hooks.once("init", () => {
     onStateChanged: () => { refreshDicePicker(); refreshBoard(); },
     onAppearanceChanged: () => { refreshDicePicker(true); refreshBoard(true); },
     onThemeChanged,
+    onCustomDiceChanged,
   });
 
-  registerControls(open);
+  registerControls(open, openDieBuilder);
 
   const mod = game.modules.get(MODULE_ID);
-  mod.api = { open, openSetup, openBoard, dispatch, getState: loadState, testWeightedRoll, registerTheme };
+  mod.api = { open, openSetup, openBoard, openDieBuilder, dispatch, getState: loadState, testWeightedRoll, registerTheme };
   globalThis.KnucklesGame = mod.api;
 
   console.log("knuckles-game | initialised");
 });
 
 Hooks.once("setup", async () => {
-  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP, TEMPLATES.DICE, TEMPLATES.THEME_LANG, TEMPLATES.STAKES]);
+  await foundry.applications.handlebars.loadTemplates([TEMPLATES.BOARD, TEMPLATES.SETUP, TEMPLATES.DICE, TEMPLATES.THEME_LANG, TEMPLATES.STAKES, TEMPLATES.DIE_BUILDER]);
   await loadContent();
 });
 

@@ -2,7 +2,7 @@ import { TEMPLATES, MODULE_ID } from "../constants.mjs";
 import { loadState } from "../foundry/state-store.mjs";
 import { dispatch, broadcastOpen } from "../net/socket.mjs";
 import { applyAppearance } from "../presentation/theme.mjs";
-import { diceIds } from "../foundry/dice-data.mjs";
+import { diceIds, getCustomDie } from "../foundry/dice-data.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { ownedDieCounts, inventoryActor, isDieItem, ownedSlotChoices, orderIdsOwnedFirst, freeCopies, slotCoverage, readDefaultLoadout, saveDefaultLoadout, resolveLoadout } from "../foundry/dice-items.mjs";
 import { scheduleRender, snapshotRender, restoreRender } from "../presentation/render-gate.mjs";
@@ -36,7 +36,9 @@ function canControl(user, player) {
  * excludes the current slot (for the disable test, so the current pick stays selectable).
  */
 function slotOptions({ mode, allIds, owned, usedAll, usedExcl, dieId, theme, lang }) {
-  const nm = (id) => dieName(theme, lang, id);
+  // A star marks a die made at this table, so it reads apart from the 37 shipped ones. It
+  // lives in the option label only — the item on the sheet keeps the plain name.
+  const nm = (id) => (getCustomDie(id) ? `★ ${dieName(theme, lang, id)}` : dieName(theme, lang, id));
   const fl = (id) => dieDesc(theme, lang, id);
   const ft = (id) => `${nm(id)} ${freeCopies(owned, usedAll, id)}/${owned.get(id) ?? 0}`;
 
@@ -96,6 +98,7 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
       genMode: DicePicker._onGenMode,
       genDeal: DicePicker._onGenDeal,
       genDealAll: DicePicker._onGenDealAll,
+      openBuilder: DicePicker._onOpenBuilder,
       close: DicePicker._onCloseClick,
     },
   };
@@ -377,6 +380,13 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!saved) return;
     const dieIds = resolveLoadout(saved, ownedDieCounts(actor), { physical: Boolean(state.physical), validIds: new Set(diceIds()) });
     if (dieIds) await dispatch({ type: "setLoadout", playerId: p.id, dieIds }).catch(reportError);
+  }
+
+  /** Make a die on the spot — a player who just carved one doesn't have to wait for the
+   *  game to end. Imported lazily so the builder only loads when the GM asks for it. */
+  static async _onOpenBuilder() {
+    const { openDieBuilder } = await import("./die-builder.mjs");
+    openDieBuilder();
   }
 
   static _onCloseClick() {

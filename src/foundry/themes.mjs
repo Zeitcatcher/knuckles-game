@@ -5,6 +5,7 @@
  * -> the die id itself. Only flavor is localized; nothing visual changes.
  */
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
+import { getCustomDie } from "./dice-data.mjs";
 
 let registry = null;           // { default, themes: [{id, dir}] }
 const meta = new Map();        // id -> { id, name, dir, baseLanguage, languages:[{name,code}] }
@@ -96,8 +97,12 @@ function cached(themeId, code, dieId, field) {
   return langCache.get(`${themeId}:${code}`)?.dice?.[dieId]?.[field];
 }
 
-/** Resolve a die's name: viewer language -> baseLanguage -> the id itself. */
+/** Resolve a die's name: viewer language -> baseLanguage -> the id itself. A table-made die
+ *  answers with the text the GM typed, in every language — it belongs to the table, not to a
+ *  theme, so there is nothing to translate it into. */
 export function dieName(themeId, code, dieId) {
+  const custom = getCustomDie(dieId);
+  if (custom) return custom.name;
   return cached(themeId, code, dieId, "name")
     ?? cached(themeId, baseLanguageCode(themeId), dieId, "name")
     ?? dieId;
@@ -105,6 +110,8 @@ export function dieName(themeId, code, dieId) {
 
 /** Resolve a die's description with the same fallback chain. */
 export function dieDesc(themeId, code, dieId) {
+  const custom = getCustomDie(dieId);
+  if (custom) return custom.desc;
   return cached(themeId, code, dieId, "desc")
     ?? cached(themeId, baseLanguageCode(themeId), dieId, "desc")
     ?? "";

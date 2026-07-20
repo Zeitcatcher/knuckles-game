@@ -7,8 +7,9 @@ import { ThemeLanguageConfig } from "../apps/theme-language-config.mjs";
  * @param {(state:object|null)=>void} cb.onStateChanged  - fired when the synced game state changes
  * @param {()=>void} cb.onAppearanceChanged              - fired when theme / skin / colour changes
  * @param {()=>void} cb.onThemeChanged                   - fired when the dice theme / language changes
+ * @param {()=>void} cb.onCustomDiceChanged              - fired when the table's own dice change
  */
-export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeChanged }) {
+export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeChanged, onCustomDiceChanged }) {
   const reg = (key, data) => game.settings.register(MODULE_ID, key, data);
 
   reg(SETTINGS.GAME_STATE, {
@@ -41,6 +42,13 @@ export function registerSettings({ onStateChanged, onAppearanceChanged, onThemeC
   // The scoring-combinations reference panel's open/collapsed state. Per-user, toggled
   // from the board (not the settings menu), so config:false. Default open.
   reg(SETTINGS.COMBOS_OPEN, { scope: "client", config: false, type: Boolean, default: true });
+
+  // Dice made at this table. World-scoped, so a create/edit/delete reaches every client
+  // through Foundry's own setting sync — the die builder needs no socket of its own.
+  reg(SETTINGS.CUSTOM_DICE, {
+    scope: "world", config: false, type: Array, default: [],
+    onChange: () => onCustomDiceChanged?.(),
+  });
 
   reg(SETTINGS.THEME, {
     name: "KNUCKLES.settings.theme.name", hint: "KNUCKLES.settings.theme.hint",

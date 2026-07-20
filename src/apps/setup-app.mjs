@@ -42,6 +42,7 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
       addPlayer: SetupApp._onAddPlayer,
       addTokens: SetupApp._onAddTokens,
       removePlayer: SetupApp._onRemovePlayer,
+      openBuilder: SetupApp._onOpenBuilder,
     },
   };
 
@@ -149,6 +150,13 @@ export class SetupApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._syncFromForm();
     this.players.splice(Number(target.dataset.index), 1);
     this.render();
+  }
+
+  /** Open the die builder without losing the roster typed so far. */
+  static async _onOpenBuilder() {
+    this._syncFromForm();
+    const { openDieBuilder } = await import("./die-builder.mjs");
+    openDieBuilder();
   }
 
   static async _onSubmit(event, form, formData) {

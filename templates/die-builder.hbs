@@ -1,0 +1,85 @@
+<div class="kg-builder">
+  <div class="kg-bld-head">
+    <span class="kg-gmtag">{{localize "KNUCKLES.gen.gm"}}</span>
+    <b class="kg-bld-title">{{#if editing}}{{localize "KNUCKLES.builder.editing"}}{{else}}{{localize "KNUCKLES.builder.newDie"}}{{/if}}</b>
+    <span class="kg-bld-hint">{{localize "KNUCKLES.builder.headHint"}}</span>
+  </div>
+
+  <div class="kg-bld-form">
+    <label class="kg-bld-lb" for="kg-bld-name">{{localize "KNUCKLES.builder.name"}}</label>
+    <input class="kg-bld-in" type="text" id="kg-bld-name" data-field="name" value="{{draft.name}}" placeholder="{{localize 'KNUCKLES.builder.namePh'}}" autocomplete="off" />
+
+    <span class="kg-bld-lb">{{localize "KNUCKLES.builder.icon"}}</span>
+    <span class="kg-bld-icon">
+      <span class="kg-bld-thumb{{#unless draft.img}} is-empty{{/unless}}">
+        {{#if draft.img}}<img src="{{draft.img}}" alt="" />{{else}}<i class="fa-solid fa-image" aria-hidden="true"></i>{{/if}}
+      </span>
+      <input class="kg-bld-in" type="text" data-field="img" value="{{draft.img}}" placeholder="{{localize 'KNUCKLES.builder.iconPh'}}" autocomplete="off" />
+      <button type="button" class="kg-defbtn ghost" data-action="pickIcon"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> {{localize "KNUCKLES.builder.browse"}}</button>
+    </span>
+
+    <label class="kg-bld-lb kg-bld-lb-top" for="kg-bld-desc">{{localize "KNUCKLES.builder.desc"}}</label>
+    <textarea class="kg-bld-in kg-bld-area" id="kg-bld-desc" data-field="desc" rows="2" placeholder="{{localize 'KNUCKLES.builder.descPh'}}">{{draft.desc}}</textarea>
+
+    <label class="kg-bld-lb" for="kg-bld-price">{{localize "KNUCKLES.builder.price"}}</label>
+    <span class="kg-bld-price">
+      <input class="kg-bld-in" type="number" id="kg-bld-price" data-field="price" value="{{draft.priceGp}}" min="0" step="0.1" />
+      <span class="kg-bld-unit">{{localize "KNUCKLES.builder.gp"}}</span>
+      <span class="kg-bld-class" data-class-chip>{{localize "KNUCKLES.builder.classChip"}} {{classLabel}}</span>
+      <span class="kg-bld-note">{{localize "KNUCKLES.builder.classHint"}}</span>
+    </span>
+  </div>
+
+  <div class="kg-bld-sec">{{localize "KNUCKLES.builder.faces"}} <span class="kg-bld-note">{{localize "KNUCKLES.builder.facesHint"}}</span></div>
+
+  <div class="kg-bld-faces">
+    {{#each faces}}
+      <label class="kg-bld-face">
+        <span class="kg-die kg-cmini" data-value="{{n}}" aria-hidden="true"><span class="kg-die-num">{{n}}</span><span class="kg-pips">{{#each (kgRange 9)}}<span class="kg-pip"></span>{{/each}}</span></span>
+        <input class="kg-bld-pct" type="text" inputmode="decimal" data-face="{{index}}" value="{{value}}" placeholder="{{ghost}}" aria-label="{{localize 'KNUCKLES.builder.faceLabel'}} {{n}}" />
+      </label>
+    {{/each}}
+  </div>
+
+  <div class="kg-bld-pool">
+    <div class="kg-bld-bar"><span data-pool-fill style="width:{{pool.percent}}%"></span></div>
+    <div class="kg-bld-poolrow">
+      <span class="kg-bld-note" data-pool-assigned>{{pool.assignedText}}</span>
+      <span class="kg-bld-left{{#if pool.error}} is-bad{{/if}}" data-pool-left>{{pool.leftText}}</span>
+    </div>
+  </div>
+
+  <div class="kg-bld-acts">
+    <button type="button" class="kg-defbtn ghost" data-action="clearFaces"><i class="fa-solid fa-eraser" aria-hidden="true"></i> {{localize "KNUCKLES.builder.clearFaces"}}</button>
+    <span class="kg-bld-right">
+      {{#if editing}}<button type="button" class="kg-defbtn ghost" data-action="cancelEdit">{{localize "KNUCKLES.builder.cancelEdit"}}</button>{{/if}}
+      <button type="button" class="kg-bld-save" data-action="save" data-save-btn {{#unless canSave}}disabled{{/unless}}>
+        <i class="fa-solid {{#if editing}}fa-floppy-disk{{else}}fa-plus{{/if}}" aria-hidden="true"></i>
+        {{#if editing}}{{localize "KNUCKLES.builder.save"}}{{else}}{{localize "KNUCKLES.builder.create"}}{{/if}}
+      </button>
+    </span>
+  </div>
+
+  <div class="kg-bld-list">
+    <div class="kg-bld-sec">{{localize "KNUCKLES.builder.yourDice"}}</div>
+    {{#if list.length}}
+      {{#each list}}
+        <div class="kg-bld-row{{#if editing}} is-editing{{/if}}">
+          <span class="kg-bld-thumb sm">{{#if img}}<img src="{{img}}" alt="" />{{else}}<i class="fa-solid fa-dice-d6" aria-hidden="true"></i>{{/if}}</span>
+          <span class="kg-bld-rname">{{name}}</span>
+          <span class="kg-bld-spark" aria-hidden="true">{{#each bars}}<b class="{{#unless strong}}lo{{/unless}}" style="height:{{h}}px"></b>{{/each}}</span>
+          <span class="kg-bld-note">{{priceText}}</span>
+          {{#if inUse}}<span class="kg-bld-inuse" title="{{localize 'KNUCKLES.builder.inUseHint'}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "KNUCKLES.builder.inUse"}}</span>{{/if}}
+          <span class="kg-bld-rowacts">
+            <button type="button" class="kg-defbtn" data-action="edit" data-die-id="{{id}}"><i class="fa-solid fa-pen" aria-hidden="true"></i> {{localize "KNUCKLES.builder.edit"}}</button>
+            <button type="button" class="kg-defbtn danger" data-action="delete" data-die-id="{{id}}"><i class="fa-solid fa-trash" aria-hidden="true"></i> {{localize "KNUCKLES.builder.delete"}}</button>
+          </span>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="kg-bld-empty">{{localize "KNUCKLES.builder.noneYet"}}</div>
+    {{/if}}
+  </div>
+
+  {{#unless itemsSupported}}<div class="kg-bld-note kg-bld-sysnote">{{localize "KNUCKLES.builder.noItems"}}</div>{{/unless}}
+</div>
