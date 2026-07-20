@@ -132,11 +132,18 @@ describe("matched sets", () => {
     expect(synergy(joker, 1)).toBeGreaterThan(1 / 6);
   });
 
-  it("always includes the joker in a full elite matched set", () => {
-    for (const r of [0.1, 0.9]) {
-      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: () => r });
-      expect(hand).toContain("22");
+  it("makes the joker likely in an elite hand, but never certain", () => {
+    // No die may hold a guaranteed slot: across a seed sweep the joker must show up in
+    // some hands and be absent from others.
+    let withJoker = 0;
+    let without = 0;
+    for (let v = 0.025; v < 1; v += 0.05) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: () => v });
+      if (hand.includes("22")) withJoker += 1;
+      else without += 1;
     }
+    expect(withJoker).toBeGreaterThan(0);
+    expect(without).toBeGreaterThan(0);
   });
 
   it("leans harder on the target face than a random hand of the same size", () => {

@@ -4,7 +4,8 @@ Notable changes, newest first. Each version is also on the [Releases page](https
 
 ## 1.2.2
 
-- Fixed the Deal button in Matched mode looking dead every other press. A matched hand was a rigid ranking, so each price class had exactly two possible hands (one per scoring face): half of all Deals reproduced the current hand and nothing visibly changed, the other half swapped to the one other hand. Matched hands are now sampled toward the target face instead of ranked, so consecutive deals differ while still playing together, and the joker still always joins a full elite set.
+- Fixed the Deal button in Matched mode looking dead every other press. A matched hand was a rigid ranking, so each price class had exactly two possible hands (one per scoring face): half of all Deals reproduced the current hand and nothing visibly changed, the other half swapped to the one other hand. Matched hands are now sampled toward the target face instead of ranked, so consecutive deals differ while still playing together.
+- No die holds a guaranteed slot anymore. Every pick in a matched hand is a weighted draw, so the joker is the likeliest die in an elite hand rather than a certain one.
 - A matched hand no longer pads itself with dice that pull away from the scoring face. When a price class holds too few fitting dice, the remaining slots stay honest.
 
 ## 1.2.1

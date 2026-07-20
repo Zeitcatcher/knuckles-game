@@ -12,7 +12,8 @@ export const HONEST_DIE = "01";
 
 const SLOTS = 6;
 
-/** A joker completes any combination, so it outranks raw face weight in a matched set. */
+/** A joker completes any combination, so it outweighs raw face weight in a matched draw —
+ *  the likeliest pick where it fits the class, never a guaranteed one. */
 const JOKER_SCORE = 0.9;
 
 /** The faces a matched set can be built around (the two that score on their own). */
@@ -69,30 +70,27 @@ const FAIR_SHARE = 1 / 6;
 
 /**
  * `count` distinct ids that pull toward one scoring face, so the hand plays together.
- * The face is drawn per call (1 or 5); the strongest candidate always joins (the joker,
- * in an elite hand), and the rest are SAMPLED with synergy-squared weights rather than
- * taken as a fixed top-N. A rigid ranking gave every class exactly two possible hands
- * (one per face), so half of all Deals reproduced the current hand and looked dead.
- * Dice that don't beat a fair die on the face never join; a thin candidate list leaves
- * the remaining slots honest instead of padding the "matched" hand with traps.
+ * The face is drawn per call (1 or 5), then EVERY slot is a weighted draw with
+ * synergy-squared weights: strong dice are likely, but no die is ever a certainty —
+ * the joker is the likeliest pick in an elite hand, never a guaranteed one. (A rigid
+ * top-N ranking gave every class exactly two possible hands, one per face, so half of
+ * all Deals reproduced the current hand and looked dead.) Dice that don't beat a fair
+ * die on the face never join; a thin candidate list leaves the remaining slots honest
+ * instead of padding the "matched" hand with traps.
  */
 function matchedPick(pool, count, rng) {
   const face = TARGET_FACES[Math.floor(rng() * TARGET_FACES.length)] ?? 1;
   const candidates = pool
     .map((e) => ({ id: e.id, score: synergy(e, face) }))
-    .filter((x) => x.score > FAIR_SHARE)
-    .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  if (!candidates.length || count < 1) return [];
-
-  const picked = [candidates[0].id];
-  const rest = candidates.slice(1);
-  while (picked.length < count && rest.length) {
-    const weights = rest.map((x) => x.score ** SHARPNESS);
+    .filter((x) => x.score > FAIR_SHARE);
+  const picked = [];
+  while (picked.length < count && candidates.length) {
+    const weights = candidates.map((x) => x.score ** SHARPNESS);
     const total = weights.reduce((a, b) => a + b, 0);
     let r = rng() * total;
     let i = 0;
-    while (i < rest.length - 1 && (r -= weights[i]) >= 0) i += 1;
-    picked.push(rest.splice(i, 1)[0].id);
+    while (i < candidates.length - 1 && (r -= weights[i]) >= 0) i += 1;
+    picked.push(candidates.splice(i, 1)[0].id);
   }
   return picked;
 }
