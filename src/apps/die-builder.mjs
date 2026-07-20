@@ -24,7 +24,7 @@ import {
   toDraft,
   makeCustomId,
 } from "../core/custom-dice.mjs";
-import { CLASS_CAPS, CLASS_IDS } from "../core/loadout-gen.mjs";
+import { classForPrice, CLASS_IDS } from "../core/loadout-gen.mjs";
 import {
   createCustomDieItem,
   syncCustomDieItems,
@@ -41,10 +41,6 @@ const blankDraft = () => ({ id: null, name: "", desc: "", img: "", price: 0, fac
 /** Copper -> a short gp string ("12", "0.5"), for the form and the list. */
 const toGp = (cp) => String(Math.round((Number(cp) || 0)) / 100);
 
-/** The quick-hand class a price falls into — the same ceilings the generator deals by. */
-function classOf(cp) {
-  return CLASS_IDS.find((c) => (Number(cp) || 0) <= CLASS_CAPS[c]) ?? CLASS_IDS[CLASS_IDS.length - 1];
-}
 
 /** Six bar heights (px) for a die's shape at a glance; the tallest face sets the scale. */
 function sparkBars(weights) {
@@ -89,7 +85,7 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       // previews the stock art rather than an empty box.
       iconPreview: d.img || DEFAULT_DIE_IMG,
       hasOwnIcon: Boolean(d.img) && d.img !== DEFAULT_DIE_IMG,
-      classLabel: game.i18n.localize(`KNUCKLES.gen.class.${classOf(d.price)}`),
+      classLabel: game.i18n.localize(`KNUCKLES.gen.class.${classForPrice(d.price)}`),
       canSave: validateDie(d).ok,
       faces: d.faces.map((v, i) => ({
         index: i,
@@ -183,7 +179,7 @@ export class DieBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     const chip = el.querySelector("[data-class-chip]");
     if (chip) {
-      chip.textContent = `${game.i18n.localize("KNUCKLES.builder.classChip")} ${game.i18n.localize(`KNUCKLES.gen.class.${classOf(this._draft.price)}`)}`;
+      chip.textContent = `${game.i18n.localize("KNUCKLES.builder.classChip")} ${game.i18n.localize(`KNUCKLES.gen.class.${classForPrice(this._draft.price)}`)}`;
     }
     const thumb = el.querySelector("[data-icon-preview]");
     if (thumb) thumb.src = this._draft.img || DEFAULT_DIE_IMG;

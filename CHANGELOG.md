@@ -2,6 +2,13 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.3.0
+
+- Repriced all 37 dice from what they actually do at the table. A price now tracks a die's scoring power: how often it lands a 1 or a 5 on its own, and how hard it concentrates on one face for a triple. The strongest die costs 1500 gp, the wild joker 800 gp, and dice that are no better than honest are bric-a-brac priced under the honest die, cheaper the worse they get. Several old prices were far off: the 45% die of ones was 28 gp and is now 225 gp.
+- A price class is now a purse for the whole hand instead of a ceiling on each die. The generator shops with it: every pick is drawn from what the remaining money can still afford, so a hand that opens with the 1500 gp die finishes on cheap tricks. An elite hand is a real purchase with a descending tail, not six identical top-shelf dice.
+- Dice already sitting in inventories have their prices corrected when the world loads, alongside their names and descriptions.
+- No die is special-cased anymore. The joker's pull toward a scoring face is now read from its wild face, which counts as whatever the hand needs, so it is a strong candidate for a hand of fives and an ordinary one for a hand of ones. The hand-tuned constant that used to prop it up is gone.
+
 ## 1.2.2
 
 - Fixed the Deal button in Matched mode looking dead every other press. A matched hand was a rigid ranking, so each price class had exactly two possible hands (one per scoring face): half of all Deals reproduced the current hand and nothing visibly changed, the other half swapped to the one other hand. Matched hands are now sampled toward the target face instead of ranked, so consecutive deals differ while still playing together.

@@ -98,13 +98,17 @@ The GM sees controls players don't: a free re-roll that costs no Hero Point, a d
 
 ### Quick hands for opponents
 
-Building six dice by hand for every tavern regular gets old. Each row of the dice picker carries a GM-only strip: choose how many loaded dice to deal, a price class, random picks or a matched set, then press Deal. Every participant keeps its own settings, so the drunk at the bar can hold two cheap tricks while the sharper at the next table runs six elite dice. The price class is a hard ceiling, so a commoner can never be dealt the 850 gp die by accident. The toolbar at the top deals to every NPC and generic row at once, and leaves player characters alone.
+Building six dice by hand for every tavern regular gets old. Each row of the dice picker carries a GM-only strip: choose how many loaded dice to deal, how much the hand may spend, random picks or a matched set, then press Deal. Every participant keeps its own settings, so the drunk at the bar can hold two cheap tricks while the sharper at the next table runs a purse worth thousands.
+
+The class is a budget for the whole hand, not a limit per die, and the generator shops with it. A rich hand that opens with the 1500 gp die has spent most of its money, so the slots after it fill with whatever is still affordable, down to pocket-change junk. That descending tail is deliberate: a cheat's hand should look like a real purchase. It also means a commoner can never be dealt a monster by accident, because the money simply isn't there.
+
+The toolbar at the top deals to every NPC and generic row at once, and leaves player characters alone.
 
 ### Making your own dice
 
 A player carves their own knucklebone, and you can put it in the game. Custom dice opens a builder that takes a name, a description and a price, plus the chance of each face. Only the name is required. Give the die an image of its own if you have one; left alone it wears the same art as the shipped dice.
 
-The six chances share one pool of 100%. Type a value and that face is locked; leave a face blank and it splits whatever is left, showing the share it would take. Nothing you type can push the total past 100, and the die can't be created until it adds up. The price decides which quick-hand class it belongs to.
+The six chances share one pool of 100%. Type a value and that face is locked; leave a face blank and it splits whatever is left, showing the share it would take. Nothing you type can push the total past 100, and the die can't be created until it adds up. The price decides which hands can afford to be dealt it.
 
 A finished die joins the catalog for everyone. It appears in every slot dropdown right under the honest die, marked with a star, and rolls with the odds you set. On Pathfinder 2e it also becomes an Item in the world directory, so you can drag it onto a sheet and the physical-dice economy counts it like any shipped die. Editing a die updates the copies already in inventories; deleting one takes those copies with it, and is refused while someone is holding it in a running game.
 

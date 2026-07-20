@@ -2,17 +2,23 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   generateLoadout,
-  poolFor,
   synergy,
-  CLASS_CAPS,
+  classForPrice,
+  CLASS_PURSE,
   CLASS_IDS,
   HONEST_DIE,
 } from "../src/core/loadout-gen.mjs";
 
 // The real catalog: these tests are only meaningful against the shipped prices.
 const catalog = JSON.parse(readFileSync(new URL("../data/dice-catalog.json", import.meta.url), "utf8"));
-const entries = catalog.dice.map((d) => ({ id: d.id, weights: d.weights, joker: Boolean(d.joker), price: d.price }));
+const entries = catalog.dice.map((d) => ({
+  id: d.id, weights: d.weights, joker: Boolean(d.joker), jokerFace: d.jokerFace || 1, price: d.price,
+}));
 const priceOf = (id) => entries.find((e) => e.id === id)?.price ?? 0;
+const spend = (hand) => hand.filter((id) => id !== HONEST_DIE).reduce((a, id) => a + priceOf(id), 0);
+
+const QUEEN = "02"; // 1500 gp, the strongest die
+const JOKER = "22"; // 800 gp, the wild
 
 /** Deterministic rng over a fixed sequence, cycling. */
 const seq = (values) => {
@@ -20,42 +26,25 @@ const seq = (values) => {
   return () => values[i++ % values.length];
 };
 
-describe("price classes", () => {
-  it("orders the caps from cheap to elite", () => {
-    expect(CLASS_CAPS.cheap).toBeLessThan(CLASS_CAPS.solid);
-    expect(CLASS_CAPS.solid).toBeLessThan(CLASS_CAPS.expensive);
-    expect(CLASS_CAPS.expensive).toBeLessThan(CLASS_CAPS.elite);
+describe("price classes as purses", () => {
+  it("orders the purses from cheap to elite", () => {
     expect(CLASS_IDS).toEqual(["cheap", "solid", "expensive", "elite"]);
-  });
-
-  it("never puts the honest die in a pool", () => {
-    for (const c of CLASS_IDS) expect(poolFor(entries, c).some((e) => e.id === HONEST_DIE)).toBe(false);
-  });
-
-  it("keeps the premium dice out of every class below elite", () => {
-    const joker = "22";
-    const queen = "02"; // 850 gp, the strongest die in the catalog
-    for (const c of ["cheap", "solid", "expensive"]) {
-      const ids = poolFor(entries, c).map((e) => e.id);
-      expect(ids).not.toContain(joker);
-      expect(ids).not.toContain(queen);
-    }
-    const elite = poolFor(entries, "elite").map((e) => e.id);
-    expect(elite).toContain(joker);
-    expect(elite).toContain(queen);
-  });
-
-  it("grows monotonically: every cheaper pool is contained in the next", () => {
     for (let i = 1; i < CLASS_IDS.length; i++) {
-      const lower = new Set(poolFor(entries, CLASS_IDS[i - 1]).map((e) => e.id));
-      const upper = new Set(poolFor(entries, CLASS_IDS[i]).map((e) => e.id));
-      for (const id of lower) expect(upper.has(id)).toBe(true);
-      expect(upper.size).toBeGreaterThan(lower.size);
+      expect(CLASS_PURSE[CLASS_IDS[i - 1]]).toBeLessThan(CLASS_PURSE[CLASS_IDS[i]]);
     }
   });
 
-  it("falls back to the cheapest cap for an unknown class", () => {
-    expect(poolFor(entries, "nonsense").length).toBe(poolFor(entries, "cheap").length);
+  it("files a die under the cheapest class whose full purse could afford it", () => {
+    expect(classForPrice(priceOf(QUEEN))).toBe("elite");
+    expect(classForPrice(priceOf(JOKER))).toBe("elite");
+    expect(classForPrice(priceOf("03"))).toBe("expensive"); // 225 gp
+    expect(classForPrice(priceOf("09"))).toBe("solid"); // 20 gp
+    expect(classForPrice(priceOf("13"))).toBe("cheap"); // 6 gp
+    expect(classForPrice(0)).toBe("cheap"); // a free custom die
+  });
+
+  it("files anything above the top purse under elite rather than dropping it", () => {
+    expect(classForPrice(999_999_999)).toBe("elite");
   });
 });
 
@@ -67,10 +56,13 @@ describe("generateLoadout", () => {
   });
 
   it("deals the asked-for number of loaded dice and leaves the rest honest", () => {
-    for (const count of [0, 1, 2, 5, 6]) {
-      const hand = gen({ count, priceClass: "solid" });
-      expect(hand.filter((id) => id !== HONEST_DIE).length).toBe(count);
-      expect(hand.filter((id) => id === HONEST_DIE).length).toBe(6 - count);
+    // The purse holds back the cheapest remaining dice for the slots still to come, so an
+    // early splurge never costs the hand its size.
+    for (const priceClass of CLASS_IDS) {
+      for (const count of [0, 1, 2, 5, 6]) {
+        const hand = generateLoadout({ entries, count, priceClass, mode: "random", rng: Math.random });
+        expect(hand.filter((id) => id !== HONEST_DIE).length, `${priceClass} x${count}`).toBe(count);
+      }
     }
   });
 
@@ -79,14 +71,13 @@ describe("generateLoadout", () => {
     expect(gen({ count: -3 })).toEqual(Array(6).fill(HONEST_DIE));
   });
 
-  it("never exceeds the class ceiling, in either mode", () => {
+  it("never spends more than the purse, in either mode, at any count", () => {
     for (const priceClass of CLASS_IDS) {
       for (const mode of ["random", "matched"]) {
-        for (const r of [0.05, 0.33, 0.61, 0.88]) {
-          const hand = generateLoadout({ entries, count: 6, priceClass, mode, rng: () => r });
-          for (const id of hand) {
-            if (id === HONEST_DIE) continue;
-            expect(priceOf(id)).toBeLessThanOrEqual(CLASS_CAPS[priceClass]);
+        for (let count = 1; count <= 6; count++) {
+          for (let k = 0; k < 40; k++) {
+            const hand = generateLoadout({ entries, count, priceClass, mode, rng: Math.random });
+            expect(spend(hand), `${priceClass}/${mode}/${count}`).toBeLessThanOrEqual(CLASS_PURSE[priceClass] * count);
           }
         }
       }
@@ -95,9 +86,11 @@ describe("generateLoadout", () => {
 
   it("never repeats a generated die", () => {
     for (const mode of ["random", "matched"]) {
-      const loaded = generateLoadout({ entries, count: 6, priceClass: "elite", mode, rng: seq([0.2, 0.8, 0.5]) })
-        .filter((id) => id !== HONEST_DIE);
-      expect(new Set(loaded).size).toBe(loaded.length);
+      for (let k = 0; k < 40; k++) {
+        const loaded = generateLoadout({ entries, count: 6, priceClass: "elite", mode, rng: Math.random })
+          .filter((id) => id !== HONEST_DIE);
+        expect(new Set(loaded).size).toBe(loaded.length);
+      }
     }
   });
 
@@ -111,87 +104,134 @@ describe("generateLoadout", () => {
     expect(gen({ count: 0, priceClass: "elite" })).toEqual(Array(6).fill(HONEST_DIE));
   });
 
-  it("degrades to the pool size instead of reaching above the ceiling", () => {
-    // A pool of two cheap dice cannot fill six slots; the rest stay honest.
+  it("leaves slots honest when the pool runs out of dice", () => {
     const tiny = [
       { id: "90", weights: [1, 1, 1, 1, 1, 1], joker: false, price: 10 },
       { id: "91", weights: [1, 1, 1, 1, 1, 1], joker: false, price: 20 },
-      { id: "92", weights: [1, 1, 1, 1, 1, 1], joker: false, price: 999999 },
     ];
-    const hand = generateLoadout({ entries: tiny, count: 6, priceClass: "cheap", mode: "random", rng: () => 0.5 });
+    const hand = generateLoadout({ entries: tiny, count: 6, priceClass: "elite", mode: "random", rng: () => 0.5 });
     expect(hand.filter((id) => id !== HONEST_DIE).sort()).toEqual(["90", "91"]);
     expect(hand.filter((id) => id === HONEST_DIE).length).toBe(4);
+  });
+
+  it("can still draw a free die (a custom one priced at nothing)", () => {
+    const free = [{ id: "cfree1", weights: [50, 10, 10, 10, 10, 10], joker: false, price: 0 }];
+    const hand = generateLoadout({ entries: free, count: 1, priceClass: "cheap", mode: "random", rng: () => 0.5 });
+    expect(hand).toContain("cfree1");
+  });
+});
+
+describe("the purse gates the monsters", () => {
+  it("keeps both monsters out of every class below elite", () => {
+    for (const priceClass of ["cheap", "solid", "expensive"]) {
+      for (const mode of ["random", "matched"]) {
+        for (let count = 1; count <= 6; count++) {
+          for (let k = 0; k < 25; k++) {
+            const hand = generateLoadout({ entries, count, priceClass, mode, rng: Math.random });
+            expect(hand, `${priceClass}/${mode}/${count}`).not.toContain(QUEEN);
+            expect(hand).not.toContain(JOKER);
+          }
+        }
+      }
+    }
+  });
+
+  it("cannot reach the 1500 gp die until an elite purse is big enough to buy it", () => {
+    // 450 gp per die: three dice still fall short of 1500.
+    for (const count of [1, 2, 3]) {
+      for (let k = 0; k < 100; k++) {
+        expect(generateLoadout({ entries, count, priceClass: "elite", mode: "random", rng: Math.random }))
+          .not.toContain(QUEEN);
+      }
+    }
+    let seen = 0;
+    for (let k = 0; k < 200; k++) {
+      if (generateLoadout({ entries, count: 6, priceClass: "elite", mode: "random", rng: Math.random }).includes(QUEEN)) seen += 1;
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it("spends down: an elite hand mixes cheap dice in behind its monsters", () => {
+    // The whole point of a purse. Two monsters cost 2300 of 2700 gp, so the tail has to be
+    // filler; a hand of six top-shelf dice is not purchasable.
+    let sawCheapAlongsideMonster = 0;
+    for (let k = 0; k < 300; k++) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "random", rng: Math.random });
+      const hasMonster = hand.includes(QUEEN) || hand.includes(JOKER);
+      const hasCheap = hand.some((id) => id !== HONEST_DIE && priceOf(id) <= 100); // <= 1 gp
+      if (hasMonster && hasCheap) sawCheapAlongsideMonster += 1;
+    }
+    expect(sawCheapAlongsideMonster).toBeGreaterThan(0);
+  });
+
+  it("never guarantees any die a slot, the joker included", () => {
+    let withJoker = 0;
+    let without = 0;
+    for (let k = 0; k < 300; k++) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "random", rng: Math.random });
+      if (hand.includes(JOKER)) withJoker += 1;
+      else without += 1;
+    }
+    expect(withJoker).toBeGreaterThan(0);
+    expect(without).toBeGreaterThan(0);
   });
 });
 
 describe("matched sets", () => {
   const shareOnFace = (id, face) => synergy(entries.find((e) => e.id === id), face);
 
-  it("scores a joker above its raw face weight", () => {
-    const joker = entries.find((e) => e.joker);
-    expect(synergy(joker, 1)).toBeGreaterThan(1 / 6);
+  it("reads a fair die as exactly a fair share of any face", () => {
+    expect(shareOnFace(HONEST_DIE, 1)).toBeCloseTo(1 / 6, 5);
   });
 
-  it("makes the joker likely in an elite hand, but never certain", () => {
-    // No die may hold a guaranteed slot: across a seed sweep the joker must show up in
-    // some hands and be absent from others.
-    let withJoker = 0;
-    let without = 0;
-    for (let v = 0.025; v < 1; v += 0.05) {
-      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: () => v });
-      if (hand.includes("22")) withJoker += 1;
-      else without += 1;
-    }
-    expect(withJoker).toBeGreaterThan(0);
-    expect(without).toBeGreaterThan(0);
+  it("values the joker's wild face organically, not by a fixed constant", () => {
+    // The wild IS its 1-face, so it earns nothing extra toward a hand of ones; toward a hand
+    // of fives it counts twice over, because the wild stands in for the five.
+    expect(shareOnFace(JOKER, 1)).toBeCloseTo(1 / 6, 5);
+    expect(shareOnFace(JOKER, 5)).toBeCloseTo(1 / 3, 5);
   });
 
-  it("leans harder on the target face than a random hand of the same size", () => {
-    const face = 1;
-    const matched = generateLoadout({ entries, count: 4, priceClass: "solid", mode: "matched", rng: () => 0.1 })
-      .filter((id) => id !== HONEST_DIE);
-    const random = generateLoadout({ entries, count: 4, priceClass: "solid", mode: "random", rng: seq([0.9, 0.2, 0.55, 0.35]) })
-      .filter((id) => id !== HONEST_DIE);
-    const avg = (ids) => ids.reduce((s, id) => s + shareOnFace(id, face), 0) / ids.length;
-    expect(avg(matched)).toBeGreaterThan(avg(random));
-  });
-
-  it("builds around a scoring face, not a trap face", () => {
-    const hand = generateLoadout({ entries, count: 3, priceClass: "solid", mode: "matched", rng: () => 0.1 })
-      .filter((id) => id !== HONEST_DIE);
-    // Every die in the set beats a fair die's share on one of the two scoring faces.
-    for (const id of hand) {
-      expect(Math.max(shareOnFace(id, 1), shareOnFace(id, 5))).toBeGreaterThan(1 / 6);
+  it("builds around a scoring face, never with dice that pull away from it", () => {
+    for (let k = 0; k < 50; k++) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: Math.random })
+        .filter((id) => id !== HONEST_DIE);
+      for (const id of hand) {
+        expect(Math.max(shareOnFace(id, 1), shareOnFace(id, 5)), `die ${id}`).toBeGreaterThan(1 / 6);
+      }
     }
   });
 
-  it("varies from deal to deal instead of cycling two fixed hands", () => {
-    // The old ranking used the rng once (face pick only), so a class had exactly TWO
-    // possible matched hands and half of all Deals reproduced the current one.
+  it("leans harder on a scoring face than a random hand of the same size", () => {
+    const lean = (mode) => {
+      let sum = 0;
+      const runs = 60;
+      for (let k = 0; k < runs; k++) {
+        const hand = generateLoadout({ entries, count: 4, priceClass: "solid", mode, rng: Math.random })
+          .filter((id) => id !== HONEST_DIE);
+        sum += hand.reduce((a, id) => a + Math.max(shareOnFace(id, 1), shareOnFace(id, 5)), 0) / (hand.length || 1);
+      }
+      return sum / runs;
+    };
+    expect(lean("matched")).toBeGreaterThan(lean("random"));
+  });
+
+  it("varies from deal to deal instead of cycling a couple of fixed hands", () => {
     const hands = new Set();
-    for (let v = 0.05; v < 1; v += 0.1) {
-      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: () => v });
+    for (let k = 0; k < 100; k++) {
+      const hand = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: Math.random });
       hands.add([...hand].sort().join(","));
     }
-    expect(hands.size).toBeGreaterThan(2);
+    expect(hands.size).toBeGreaterThan(10);
   });
 
-  it("mixes the hand within one face too, not only via the face pick", () => {
-    // Same target face (rng < 0.5 -> face 1) yet different streams -> different hands.
-    const a = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: seq([0.1, 0.15, 0.35, 0.7, 0.05, 0.9]) });
-    const b = generateLoadout({ entries, count: 6, priceClass: "elite", mode: "matched", rng: seq([0.1, 0.8, 0.02, 0.44, 0.61, 0.3]) });
-    expect([...a].sort().join()).not.toBe([...b].sort().join());
-  });
-
-  it("leaves slots honest when few dice fit the face, instead of padding with traps", () => {
+  it("leaves slots honest when too few dice fit the face, instead of padding with traps", () => {
     const tiny = [
       { id: "90", weights: [50, 10, 10, 10, 10, 10], joker: false, price: 10 }, // pulls to 1
       { id: "91", weights: [40, 12, 12, 12, 12, 12], joker: false, price: 10 }, // pulls to 1
-      { id: "92", weights: [5, 30, 30, 30, 2.5, 2.5], joker: false, price: 10 }, // trap: starves 1 and 5
+      { id: "92", weights: [5, 30, 30, 30, 2.5, 2.5], joker: false, price: 10 }, // trap
     ];
     const hand = generateLoadout({ entries: tiny, count: 4, priceClass: "cheap", mode: "matched", rng: () => 0.1 });
     expect(hand.filter((id) => id !== HONEST_DIE).sort()).toEqual(["90", "91"]);
     expect(hand).not.toContain("92");
-    expect(hand.filter((id) => id === HONEST_DIE).length).toBe(4);
   });
 });

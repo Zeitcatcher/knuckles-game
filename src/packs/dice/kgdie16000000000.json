@@ -36,8 +36,8 @@
     "hardness": 0,
     "price": {
       "value": {
-        "gp": 1,
-        "sp": 2
+        "gp": 3,
+        "sp": 5
       }
     },
     "equipped": {

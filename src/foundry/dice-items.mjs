@@ -10,7 +10,7 @@
  */
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "./themes.mjs";
-import { getCustomDie } from "./dice-data.mjs";
+import { getCustomDie, diePrice } from "./dice-data.mjs";
 
 // Two-digit ids are the shipped catalog; a "c"-prefixed one is a die made at this table.
 const SLUG_RE = /^knuckles-die-(\d{2}|c[0-9a-z]{4,10})$/;
@@ -233,13 +233,33 @@ function themedNameDesc(id) {
   };
 }
 
-/** Re-stamp one die item's name/description to the active theme + language (if it differs). GM-side. */
+/** A pf2e Coins object back to copper, for comparing a stored price against the catalog. */
+function coinsToCp(v) {
+  return (Number(v?.pp) || 0) * 1000 + (Number(v?.gp) || 0) * 100 + (Number(v?.sp) || 0) * 10 + (Number(v?.cp) || 0);
+}
+
+/**
+ * What a die item should carry, limited to the fields that actually differ — so a normal
+ * load is a read-only pass. Price is included because the catalog's prices can change
+ * between versions, and dice already in inventories would otherwise keep the old ones
+ * forever (the quick-hand purse shops by price, so a stale price misprices the hand).
+ */
+function stampFields(item, id) {
+  const { name, desc } = themedNameDesc(id);
+  const fields = {};
+  if (item.name !== name) fields.name = name;
+  if ((item.system?.description?.value ?? "") !== desc) fields["system.description.value"] = desc;
+  const cp = diePrice(id);
+  if (cp !== null && coinsToCp(item.system?.price?.value) !== cp) fields["system.price.value"] = cpToCoins(cp);
+  return fields;
+}
+
+/** Re-stamp one die item's name/description/price to the active theme + catalog. GM-side. */
 export async function stampDie(item) {
   const id = dieIdOf(item);
   if (!id) return;
-  const { name, desc } = themedNameDesc(id);
-  if (item.name === name && (item.system?.description?.value ?? "") === desc) return;
-  await item.update({ name, "system.description.value": desc });
+  const fields = stampFields(item, id);
+  if (Object.keys(fields).length) await item.update(fields);
 }
 
 /** Re-stamp every knuckles die on one actor (one batched update). Returns the updated count. */
@@ -249,10 +269,8 @@ async function stampActorDice(actor) {
   for (const it of equipment) {
     const id = dieIdOf(it);
     if (!id) continue;
-    const { name, desc } = themedNameDesc(id);
-    if (it.name !== name || (it.system?.description?.value ?? "") !== desc) {
-      updates.push({ _id: it.id, name, "system.description.value": desc });
-    }
+    const fields = stampFields(it, id);
+    if (Object.keys(fields).length) updates.push({ _id: it.id, ...fields });
   }
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
   return updates.length;
@@ -286,10 +304,8 @@ export async function restampCompendium() {
   for (const doc of await pack.getDocuments()) {
     const id = dieIdOf(doc);
     if (!id) continue;
-    const { name, desc } = themedNameDesc(id);
-    if (doc.name !== name || (doc.system?.description?.value ?? "") !== desc) {
-      updates.push({ _id: doc.id, name, "system.description.value": desc });
-    }
+    const fields = stampFields(doc, id);
+    if (Object.keys(fields).length) updates.push({ _id: doc.id, ...fields });
   }
   if (!updates.length) return 0;
   const wasLocked = pack.locked;

@@ -67,6 +67,19 @@ export function getCustomDie(id) {
   return customById.get(id) ?? null;
 }
 
+/** Whether a die id exists at all (shipped or table-made). */
+export function hasDie(id) {
+  return byId.has(id) || customById.has(id);
+}
+
+/** A known die's price in copper, or null for an id we don't recognise. Unlike getDieSpec
+ *  this never falls back to the default die: stamping an unknown item with the honest die's
+ *  price would quietly rewrite someone else's item. */
+export function diePrice(id) {
+  if (customById.has(id)) return customById.get(id).price;
+  return byId.has(id) ? byId.get(id).price : null;
+}
+
 /** The roll spec ({weights, joker, jokerFace}) for a die id, falling back to the default.
  *  A table-made die never carries a joker — scoring stays predictable. */
 export function getDieSpec(id) {
