@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createGame, reduce, computeDicePool } from "../src/core/game-state.mjs";
+import { createGame, reduce, computeDicePool, displayedDiceStakes } from "../src/core/game-state.mjs";
 import { pickerSignature } from "../src/core/transient-ui.mjs";
 
 /** A choosing-phase game where alice may wager dice and bob may not. */
@@ -85,6 +85,33 @@ describe("putting dice up", () => {
     expect(() => stake(s, "a", 1)).toThrow();
     // and what was already staked stays staked
     expect(computeDicePool(s.players).length).toBe(1);
+  });
+});
+
+describe("what the pot line displays", () => {
+  it("shows the live picks while the pot is still forming", () => {
+    const s = stake(game(), "a", 0);
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]);
+  });
+
+  it("shows the COLLECTED dice during play, not what a swapped slot now holds", () => {
+    // Start collected the queen into escrow; the GM then swaps the staked slot mid-game.
+    let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02" }];
+    s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 0, dieId: "36" });
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]); // the pot still holds the queen
+    expect(computeDicePool(s.players)[0].dieId).toBe("36"); // even though the slot moved on
+  });
+
+  it("keeps naming the staked picks on the finished screen, like the coin pot does", () => {
+    let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
+    s.status = "finished";
+    s.diceEscrow = []; // settled and cleared at payout
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]);
+  });
+
+  it("is empty for no state at all", () => {
+    expect(displayedDiceStakes(null)).toEqual([]);
   });
 });
 

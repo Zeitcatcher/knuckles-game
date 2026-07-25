@@ -4,7 +4,7 @@
  */
 
 import { scoreSelection } from "../core/scoring.mjs";
-import { computePool, computeDicePool } from "../core/game-state.mjs";
+import { computePool, displayedDiceStakes } from "../core/game-state.mjs";
 import { buildCombos } from "../core/combos.mjs";
 import { dieName, dieDesc, activeTheme, activeLanguage } from "../foundry/themes.mjs";
 import { DEFAULT_DIE_ID } from "../foundry/dice-data.mjs";
@@ -91,8 +91,9 @@ export function buildBoardContext(state, user, ui) {
   }));
 
   const pool = computePool(state.players);
-  // Dice wagered into the pot, named for the table so everyone sees what is on the line.
-  const dicePool = computeDicePool(state.players);
+  // Dice wagered into the pot, named for the table. Read through displayedDiceStakes so a
+  // mid-game die swap can't relabel a pot that was already collected.
+  const dicePool = displayedDiceStakes(state);
   const potDice = dicePool.map((d) => dieName(theme, lang, d.dieId)).join(", ");
 
   return {

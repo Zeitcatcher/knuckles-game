@@ -88,6 +88,20 @@ export function computeDicePool(players) {
   return staked;
 }
 
+/**
+ * The dice the pot should DISPLAY. While choosing, that is the live picks (the pot is
+ * still forming). Once play starts the stakes are physically collected, so the display
+ * reads from the escrow — a mid-game GM die swap changes what a slot rolls, never what
+ * the winner takes, and the pot line must not pretend otherwise. A finished game's
+ * escrow is already settled and empty, so it falls back to the recorded picks, the same
+ * way the coin pot keeps displaying from the bets after payout.
+ */
+export function displayedDiceStakes(state) {
+  if (!state) return [];
+  if (state.status === "playing") return (state.diceEscrow ?? []).map((e) => ({ dieId: e.dieId }));
+  return computeDicePool(state.players).map((d) => ({ dieId: d.dieId }));
+}
+
 /** Apply a command, returning a NEW state (input is never mutated). */
 export function reduce(state, command) {
   const s = structuredClone(state);

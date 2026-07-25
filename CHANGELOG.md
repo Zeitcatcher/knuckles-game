@@ -2,6 +2,10 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.4.1
+
+- Fixed the pot line relabeling itself after a mid-game die swap. Once stakes are collected the pot is frozen: the GM swapping a die in a staked slot changes what that slot rolls, never what the winner takes, and the board now reads the pot from what was actually collected.
+
 ## 1.4.0
 
 - Dice can be wagered instead of, or alongside, coin. Tick Stake dice on a participant's bet row in setup, and their rows in the dice picker grow a checkbox per slot: tick the dice they are putting up. A staked die still plays the game it was wagered in, and the winner takes it.
