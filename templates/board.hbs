@@ -8,7 +8,9 @@
     <div class="kg-pot">
       <span class="kg-muted">{{localize "KNUCKLES.board.pot"}}</span>
       {{#if hasCoinPot}}{{kgCoins pool all=true}}{{/if}}
-      {{#if potDice}}<span class="kg-potdice"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{potDice}}</span>{{/if}}
+      {{#if potDice.length}}<span class="kg-potdice"><i class="fa-solid fa-dice" aria-hidden="true"></i>
+        {{#each potDice}}{{#if canPalm}}<button type="button" class="kg-potdie{{#if swapped}} is-swapped{{/if}}" data-action="palmPotDie" data-index="{{index}}" title="{{#if swapped}}{{actualTitle}}{{else}}{{localize 'KNUCKLES.board.palmHint'}}{{/if}}">{{label}}{{#if swapped}} <span class="kg-potmark" aria-hidden="true">&#9670;</span>{{/if}}</button>{{else}}<span class="kg-potdie-t">{{label}}</span>{{/if}}{{#unless @last}}<span class="kg-potdie-t">, </span>{{/unless}}{{/each}}
+      </span>{{/if}}
     </div>
   {{/if}}
 

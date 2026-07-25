@@ -95,11 +95,18 @@ export function computeDicePool(players) {
  * the winner takes, and the pot line must not pretend otherwise. A finished game's
  * escrow is already settled and empty, so it falls back to the recorded picks, the same
  * way the coin pot keeps displaying from the bets after payout.
+ *
+ * Each entry is `{dieId, shownAs}`: `dieId` is what the pot actually holds, `shownAs` is
+ * what the table BELIEVES it holds. They differ only after the GM palms a die out of the
+ * pot and drops in a lookalike (swapPotDie) — the display keeps the original name, and
+ * the truth comes out when the winner collects.
  */
 export function displayedDiceStakes(state) {
   if (!state) return [];
-  if (state.status === "playing") return (state.diceEscrow ?? []).map((e) => ({ dieId: e.dieId }));
-  return computeDicePool(state.players).map((d) => ({ dieId: d.dieId }));
+  if (state.status === "playing") {
+    return (state.diceEscrow ?? []).map((e) => ({ dieId: e.dieId, shownAs: e.shownAs ?? e.dieId }));
+  }
+  return computeDicePool(state.players).map((d) => ({ dieId: d.dieId, shownAs: d.dieId }));
 }
 
 /** Apply a command, returning a NEW state (input is never mutated). */

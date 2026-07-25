@@ -91,8 +91,14 @@
 .knuckles-game .kg-stakenote { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 18px; color: var(--kg-accent); margin: 6px 0 2px; }
 .knuckles-game .kg-stakedice { gap: 5px; margin-left: 6px; color: var(--kg-accent); }
 .knuckles-game .kg-stakedice input { width: auto; flex: 0 0 auto; margin: 0; }
-.knuckles-game .kg-potdice { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--kg-text); }
-.knuckles-game .kg-potdice i { color: var(--kg-accent); }
+.knuckles-game .kg-potdice { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--kg-text); }
+.knuckles-game .kg-potdice > i { color: var(--kg-accent); margin-right: 4px; }
+.knuckles-game .kg-potdie-t { font-size: 12px; line-height: 18px; color: var(--kg-text); }
+/* GM only: each pot die is a click target for the palming swap. Styled as text with a
+   dashed underline, so the pot reads identically for players and GM at a glance. */
+.knuckles-game button.kg-potdie { height: 18px; line-height: 16px; padding: 0 1px; font-size: 12px; color: var(--kg-text); background: transparent; border: 0; border-bottom: 1px dashed color-mix(in srgb, var(--kg-accent) 50%, transparent); border-radius: 0; cursor: pointer; white-space: nowrap; width: auto; }
+.knuckles-game button.kg-potdie:hover { color: var(--kg-accent); }
+.knuckles-game .kg-potmark { color: var(--kg-accent); font-size: 10px; }
 
 /* theme & language settings submenu */
 .knuckles-game .kg-tl { padding: 4px 2px; }

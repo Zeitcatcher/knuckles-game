@@ -207,5 +207,12 @@
   "KNUCKLES.dice.stakeNote": "{n} dice in the pot: they play this game, and the winner takes them.",
   "KNUCKLES.log.diceStakes": "{n} dice go into the pot.",
   "KNUCKLES.log.dicePot": "{name} takes {n} staked dice",
-  "KNUCKLES.log.returned": "No one could take the pot, so everything went back."
+  "KNUCKLES.log.returned": "No one could take the pot, so everything went back.",
+  "KNUCKLES.board.palmTitle": "Switch a die in the pot",
+  "KNUCKLES.board.palmHint": "Palm this die and drop in a lookalike (GM only). The table keeps seeing the original name.",
+  "KNUCKLES.board.palmCurrent": "In the pot: {name}",
+  "KNUCKLES.board.palmStandin": "Stand-in",
+  "KNUCKLES.board.palmNote": "The palmed die returns to its owner. The stand-in comes from their inventory when they have one, and from nowhere when they do not. Players keep seeing the original name until the pot is claimed.",
+  "KNUCKLES.board.palmDo": "Switch",
+  "KNUCKLES.board.palmReal": "in truth: {name}"
 }

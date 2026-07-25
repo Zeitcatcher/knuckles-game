@@ -373,7 +373,10 @@ describe("wagering dice", () => {
     await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 1, staked: true }, "alice", false);
     const s = await dispatchAsGM({ type: "startPlay" }, "gm", true);
     expect(h.removed).toEqual([{ uuid: "actorAlice", counts: [["02", 1], ["07", 1]]}]);
-    expect(s.diceEscrow).toEqual([{ uuid: "actorAlice", dieId: "02" }, { uuid: "actorAlice", dieId: "07" }]);
+    expect(s.diceEscrow).toEqual([
+      { uuid: "actorAlice", dieId: "02", shownAs: "02" },
+      { uuid: "actorAlice", dieId: "07", shownAs: "07" },
+    ]);
   });
 
   it("moves nothing and refuses to start when a staked die cannot be produced", async () => {
@@ -422,5 +425,69 @@ describe("wagering dice", () => {
       { uuid: "actorAlice", counts: [["02", 2]] }, // both copies, in one grant
       { uuid: "actorBob", counts: [["07", 1]] },
     ]);
+  });
+});
+
+describe("palming a die out of the pot", () => {
+  /** A playing game whose pot holds alice's queen (02), collected and shown as itself. */
+  const palmedGame = () => {
+    const s = playingGame();
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02", shownAs: "02" }];
+    return s;
+  };
+
+  it("is the GM's move alone, and only mid-game", async () => {
+    h.state = palmedGame();
+    await expect(dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "alice", false)).rejects.toThrow();
+    await expect(dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", false)).rejects.toThrow(); // forged over the socket
+    h.state.status = "choosing";
+    await expect(dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true)).rejects.toThrow();
+  });
+
+  it("rejects a die that does not exist and an index that is not in the pot", async () => {
+    h.state = palmedGame();
+    await expect(dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "99" }, "gm", true)).rejects.toThrow();
+    await expect(dispatchAsGM({ type: "swapPotDie", index: 5, dieId: "07" }, "gm", true)).rejects.toThrow();
+  });
+
+  it("returns the real die to its owner and swaps in the stand-in, keeping the shown name", async () => {
+    h.state = palmedGame();
+    h.owned = new Map([["07", 1]]); // the cheat brought the lookalike along
+    const s = await dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true);
+    expect(h.granted).toEqual([{ uuid: "actorAlice", counts: [["02", 1]] }]); // queen into the sleeve
+    expect(h.removed).toEqual([{ uuid: "actorAlice", counts: [["07", 1]] }]); // lookalike out of the pocket
+    expect(s.diceEscrow[0]).toEqual({ uuid: "actorAlice", dieId: "07", shownAs: "02" }); // table still sees the queen
+  });
+
+  it("mints the stand-in when the owner does not have one", async () => {
+    h.state = palmedGame();
+    h.owned = new Map(); // pockets empty; the die appears from nowhere
+    const s = await dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true);
+    expect(h.granted).toEqual([{ uuid: "actorAlice", counts: [["02", 1]] }]);
+    expect(h.removed).toEqual([]); // nothing left an inventory
+    expect(s.diceEscrow[0].dieId).toBe("07");
+  });
+
+  it("hands the winner the stand-in, not the die the table saw", async () => {
+    h.state = palmedGame();
+    await dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true);
+    // drive the game to a finish: alice wins by total
+    h.state.players[0].total = 100;
+    h.state.targetScore = 100;
+    h.state.finalRound = { active: true, triggeredBy: "a" };
+    h.state.round = { index: 0, acted: 1 };
+    h.state.turnIndex = 1;
+    h.state.phase = "bust";
+    const s = await dispatchAsGM({ type: "takeBust" }, "bob", false);
+    expect(s.status).toBe("finished");
+    const toWinner = h.granted.filter((g) => g.uuid === "actorAlice");
+    expect(toWinner.at(-1)).toEqual({ uuid: "actorAlice", counts: [["07", 1]] }); // the cheap truth
+  });
+
+  it("writes no log line: the con leaves no paper trail", async () => {
+    h.state = palmedGame();
+    const before = (h.state.log ?? []).length;
+    const s = await dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true);
+    expect((s.log ?? []).length).toBe(before);
   });
 });

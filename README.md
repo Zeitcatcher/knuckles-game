@@ -120,6 +120,8 @@ Bets are set per player at setup and taken when the game starts, so the pot hold
 
 Dice can ride on the game too. Tick Stake dice on a participant's bet row, and their rows in the dice picker grow a checkbox per slot for choosing which dice go up. A staked die still plays the game it was wagered in, and the winner takes it. The stake sits on the slot rather than the die, so swapping the die in a staked slot changes what is at risk. An NPC can stake a die it was dealt that same evening, which is how a player wins a sharper's cheat die off the table. Everything goes back to its owner if the game ends with no winner. This needs the physical-dice economy below, since it moves real items.
 
+The GM also gets a con artist's move: click a staked die on the pot line mid-game and swap it for a lookalike. The real die slips back to its owner, the stand-in takes its place, and the table keeps seeing the original name, with no log entry to betray the hand. Whether anyone noticed is yours to adjudicate; the winner finds out the honest way, when the pot lands in their inventory.
+
 ![The stakes window when a player is short](docs/images/stakes-initial.png)
 
 Two choices per short player: create the missing coins (useful for NPC tokens with no money) or borrow from party members. The GM picks who lends, and the shortfall splits evenly among them. End a game with no winner and every collected stake is refunded.

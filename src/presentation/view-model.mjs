@@ -91,10 +91,23 @@ export function buildBoardContext(state, user, ui) {
   }));
 
   const pool = computePool(state.players);
-  // Dice wagered into the pot, named for the table. Read through displayedDiceStakes so a
-  // mid-game die swap can't relabel a pot that was already collected.
+  // Dice wagered into the pot. Everyone sees `shownAs` — what the table believes is in the
+  // pot. Only the GM sees when the truth differs (a palmed die), as a mark + tooltip; a
+  // player's view carries no trace of it.
   const dicePool = displayedDiceStakes(state);
-  const potDice = dicePool.map((d) => dieName(theme, lang, d.dieId)).join(", ");
+  const canPalm = Boolean(user.isGM) && state.status === "playing";
+  const potDice = dicePool.map((d, index) => {
+    const swapped = d.dieId !== d.shownAs;
+    return {
+      index,
+      label: dieName(theme, lang, d.shownAs),
+      canPalm,
+      swapped: Boolean(user.isGM) && swapped,
+      actualTitle: Boolean(user.isGM) && swapped
+        ? game.i18n.format("KNUCKLES.board.palmReal", { name: dieName(theme, lang, d.dieId) })
+        : "",
+    };
+  });
 
   return {
     active: true,
@@ -102,7 +115,7 @@ export function buildBoardContext(state, user, ui) {
     targetScore: state.targetScore,
     pool,
     potDice,
-    hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0 || dicePool.length > 0,
+    hasPot: pool.sun + pool.gold + pool.silver + pool.copper > 0 || potDice.length > 0,
     hasCoinPot: pool.sun + pool.gold + pool.silver + pool.copper > 0,
     players,
     canOpenDice: Boolean(user.isGM) && !finished,

@@ -2,9 +2,12 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
-## 1.4.1
+## 1.5.0
 
-- Fixed the pot line relabeling itself after a mid-game die swap. Once stakes are collected the pot is frozen: the GM swapping a die in a staked slot changes what that slot rolls, never what the winner takes, and the board now reads the pot from what was actually collected.
+- The GM can palm a die out of the pot. Click a staked die on the pot line mid-game, pick a stand-in, and the switch happens in silence: the real die returns to its owner, the lookalike takes its place, and the table keeps seeing the original name. No log line is written, so nothing gives the trick away. The truth surfaces when the winner collects and a cheap die lands where a monster should have been.
+- The stand-in comes out of the owner's inventory when they have a copy, and out of nowhere when they do not, so a con artist never needs pre-stocked pockets. Swapping back, if the table catches the hand, is the same tool used in reverse.
+- Only the GM sees the truth: a small mark on the swapped pot entry, with the real die in its tooltip. Player screens carry no trace.
+- Fixed the pot line relabeling itself after a mid-game die swap in a staked slot. Once stakes are collected the pot is frozen: a slot swap changes what that slot rolls, never what the winner takes, and the board now reads the pot from what was actually collected.
 
 ## 1.4.0
 

@@ -179,6 +179,28 @@ async function handleIntent(intent, userId, local) {
     return state;
   }
 
+  // The palming con: the GM swaps a die INSIDE the collected pot for a lookalike. The
+  // palmed die returns to its owner's sleeve (inventory); the stand-in comes out of that
+  // inventory when they own a copy and out of thin air when they don't. `shownAs` is left
+  // alone, so the table keeps seeing the original name — and there is deliberately NO log
+  // entry, because a log line would give the trick away. The truth surfaces at payout.
+  if (intent.type === "swapPotDie") {
+    if (!trustedGM) throw new Error("only the GM's hands are quick enough");
+    if (state.status !== "playing") throw new Error("the pot can only be palmed mid-game");
+    const entry = state.diceEscrow?.[intent.index];
+    if (!entry) throw new Error("no such die in the pot");
+    const standIn = String(intent.dieId ?? "");
+    if (!diceIds().includes(standIn)) throw new Error("unknown die");
+    if (standIn === entry.dieId) return state; // nothing to palm
+    const owner = await fromUuid(entry.uuid);
+    if (!owner) throw new Error("the die's owner cannot be resolved");
+    await grantDice(owner, new Map([[entry.dieId, 1]])); // the real die slips into the sleeve
+    await removeDiceCopies(owner, new Map([[standIn, 1]])); // false = not owned → minted
+    entry.dieId = standIn;
+    await saveState(state);
+    return state;
+  }
+
   // GM value override: replace an in-play die's face (no log, no payout, GM only).
   if (intent.type === "setDieValue") {
     if (!trustedGM) throw new Error("only the GM can change a die");
@@ -453,7 +475,8 @@ async function collectDiceStakes(state) {
       throw new Error(`${p?.name ?? "a participant"} cannot put those dice up`);
     }
     done.push({ actor, counts });
-    for (const [dieId, n] of counts) for (let k = 0; k < n; k += 1) escrow.push({ uuid, dieId });
+    // shownAs starts equal to the die itself; a later palming swap changes dieId only.
+    for (const [dieId, n] of counts) for (let k = 0; k < n; k += 1) escrow.push({ uuid, dieId, shownAs: dieId });
   }
 
   state.diceEscrow = [...(state.diceEscrow ?? []), ...escrow];

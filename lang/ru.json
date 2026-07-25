@@ -207,5 +207,12 @@
   "KNUCKLES.dice.stakeNote": "На кону костей: {n}. Они играют в этой партии, победитель их забирает.",
   "KNUCKLES.log.diceStakes": "Костей ушло на кон: {n}.",
   "KNUCKLES.log.dicePot": "{name} забирает кости с кона: {n}",
-  "KNUCKLES.log.returned": "Забрать кон было некому, всё вернулось владельцам."
+  "KNUCKLES.log.returned": "Забрать кон было некому, всё вернулось владельцам.",
+  "KNUCKLES.board.palmTitle": "Подменить кость в банке",
+  "KNUCKLES.board.palmHint": "Спрятать эту кость в рукав и подложить похожую (только ГМ). Стол продолжит видеть прежнее название.",
+  "KNUCKLES.board.palmCurrent": "В банке: {name}",
+  "KNUCKLES.board.palmStandin": "Подмена",
+  "KNUCKLES.board.palmNote": "Спрятанная кость возвращается владельцу. Подмена берётся из его инвентаря, если она там есть, а если нет — появляется из ниоткуда. Игроки видят прежнее название, пока банк не заберут.",
+  "KNUCKLES.board.palmDo": "Подменить",
+  "KNUCKLES.board.palmReal": "на самом деле: {name}"
 }

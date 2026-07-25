@@ -66,6 +66,7 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       editDie: BoardApp._onEditDie,
       setDieValue: BoardApp._onSetDieValue,
       openDice: BoardApp._onOpenDice,
+      palmPotDie: BoardApp._onPalmPotDie,
       endGame: BoardApp._onEndGame,
       newGame: BoardApp._onNewGame,
     },
@@ -276,6 +277,49 @@ export class BoardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!ok) return;
     }
     import("./setup-app.mjs").then((m) => m.openSetup());
+  }
+
+  /**
+   * The palming con (GM only): swap a die inside the collected pot for a lookalike. The
+   * table keeps seeing the original name; the winner discovers the truth on payout. The
+   * dialog lists the whole catalog with prices, so the GM can pick a convincing dud.
+   */
+  static async _onPalmPotDie(event, target) {
+    const index = Number(target.dataset.index);
+    const state = loadState();
+    const entry = state?.diceEscrow?.[index];
+    if (!entry || !game.user.isGM) return;
+
+    const { diceIds, diePrice } = await import("../foundry/dice-data.mjs");
+    const { dieName, activeTheme, activeLanguage } = await import("../foundry/themes.mjs");
+    const theme = activeTheme();
+    const lang = activeLanguage();
+    const gp = (id) => {
+      const cp = diePrice(id);
+      return cp === null ? "" : ` (${Math.round(cp) / 100} gp)`;
+    };
+    const options = diceIds()
+      .map((id) => `<option value="${id}"${id === entry.dieId ? " selected" : ""}>${dieName(theme, lang, id)}${gp(id)}</option>`)
+      .join("");
+    const content = `
+      <p class="kg-palm-current">${game.i18n.format("KNUCKLES.board.palmCurrent", { name: dieName(theme, lang, entry.dieId) })}</p>
+      <div class="form-group"><label>${game.i18n.localize("KNUCKLES.board.palmStandin")}</label>
+        <select name="standin">${options}</select></div>
+      <p class="hint">${game.i18n.localize("KNUCKLES.board.palmNote")}</p>`;
+
+    const picked = await foundry.applications.api.DialogV2.prompt({
+      window: { title: game.i18n.localize("KNUCKLES.board.palmTitle") },
+      content,
+      modal: true,
+      rejectClose: false,
+      ok: {
+        label: game.i18n.localize("KNUCKLES.board.palmDo"),
+        icon: "fa-solid fa-hand-sparkles",
+        callback: (ev, button) => button.form.elements.standin.value,
+      },
+    });
+    if (!picked || picked === entry.dieId) return;
+    dispatch({ type: "swapPotDie", index, dieId: picked }).catch(reportError);
   }
 
   static _onOpenDice() {

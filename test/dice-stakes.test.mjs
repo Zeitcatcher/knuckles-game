@@ -91,23 +91,35 @@ describe("putting dice up", () => {
 describe("what the pot line displays", () => {
   it("shows the live picks while the pot is still forming", () => {
     const s = stake(game(), "a", 0);
-    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]);
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02", shownAs: "02" }]);
   });
 
   it("shows the COLLECTED dice during play, not what a swapped slot now holds", () => {
     // Start collected the queen into escrow; the GM then swaps the staked slot mid-game.
     let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
-    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02" }];
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02", shownAs: "02" }];
     s = reduce(s, { type: "setDieSlot", playerId: "a", slot: 0, dieId: "36" });
-    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]); // the pot still holds the queen
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02", shownAs: "02" }]); // the pot still holds the queen
     expect(computeDicePool(s.players)[0].dieId).toBe("36"); // even though the slot moved on
+  });
+
+  it("serves the SHOWN name after a palming swap, with the truth beside it", () => {
+    let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "34", shownAs: "02" }]; // palmed: cheap die wearing the queen's name
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "34", shownAs: "02" }]);
+  });
+
+  it("tolerates a 1.4.0 escrow entry that predates shownAs", () => {
+    let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
+    s.diceEscrow = [{ uuid: "actorAlice", dieId: "02" }]; // written by the previous version
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02", shownAs: "02" }]);
   });
 
   it("keeps naming the staked picks on the finished screen, like the coin pot does", () => {
     let s = reduce(stake(game(), "a", 0), { type: "startPlay" });
     s.status = "finished";
     s.diceEscrow = []; // settled and cleared at payout
-    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02" }]);
+    expect(displayedDiceStakes(s)).toEqual([{ dieId: "02", shownAs: "02" }]);
   });
 
   it("is empty for no state at all", () => {
