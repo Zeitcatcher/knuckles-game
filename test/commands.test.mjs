@@ -491,3 +491,75 @@ describe("palming a die out of the pot", () => {
     expect((s.log ?? []).length).toBe(before);
   });
 });
+
+describe("wagering dice without an inventory", () => {
+  /** A choosing-phase physical game where a name-only opponent puts dice up. */
+  const namelessGame = () => {
+    h.physical = true;
+    return createGame({
+      players: [
+        { id: "a", type: "generic", stakeDice: true, dieIds: ["02", "07", "01", "01", "01", "01"] },
+        { id: "b", type: "pc", actorUuid: "actorBob" },
+      ],
+      physical: true,
+    });
+  };
+
+  it("keeps the stake option for a participant entered as a name only", async () => {
+    // buildNewGame is the gate: physical mode is required, an inventory is not.
+    h.physical = true;
+    const config = { players: [{ id: "a", name: "Шулер", stakeDice: true }, { id: "b", actorUuid: "actorBob", stakeDice: true }] };
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.players[0].stakeDice).toBe(true); // no actor, no token
+    expect(s.players[1].stakeDice).toBe(true);
+  });
+
+  it("drops the stake option when the item economy is off", async () => {
+    h.physical = false;
+    const config = { players: [{ id: "a", name: "Шулер", stakeDice: true }, { id: "b", actorUuid: "actorBob" }] };
+    const s = await dispatchAsGM({ type: "startGame", config }, "gm", true);
+    expect(s.players[0].stakeDice).toBe(false);
+  });
+
+  it("mints what a name-only opponent puts up instead of emptying a bag", async () => {
+    h.state = namelessGame();
+    await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "gm", true);
+    const s = await dispatchAsGM({ type: "startPlay" }, "gm", true);
+    expect(h.removed).toEqual([]); // nothing left an inventory
+    expect(s.diceEscrow).toEqual([{ uuid: null, dieId: "02", shownAs: "02" }]);
+  });
+
+  it("still hands a minted stake to the winner", async () => {
+    h.state = namelessGame();
+    await dispatchAsGM({ type: "setDieStake", playerId: "a", slot: 0, staked: true }, "gm", true);
+    h.state = await dispatchAsGM({ type: "startPlay" }, "gm", true);
+    // bob wins on totals
+    h.state.players[1].total = 100;
+    h.state.targetScore = 100;
+    h.state.finalRound = { active: true, triggeredBy: "b" };
+    h.state.round = { index: 0, acted: 1 };
+    h.state.turnIndex = 0;
+    h.state.phase = "bust";
+    const s = await dispatchAsGM({ type: "takeBust" }, "gm", true);
+    expect(s.status).toBe("finished");
+    expect(s.winnerId).toBe("b");
+    // Bob was stocked his own six honest dice at launch; the payout is the grant after that.
+    expect(h.granted.at(-1)).toEqual({ uuid: "actorBob", counts: [["02", 1]] });
+  });
+
+  it("returns nothing to nobody when a minted stake is refunded", async () => {
+    h.state = playingGame();
+    h.state.diceEscrow = [{ uuid: null, dieId: "02", shownAs: "02" }, { uuid: "actorBob", dieId: "07", shownAs: "07" }];
+    await dispatchAsGM({ type: "endGame" }, "gm", true);
+    expect(h.granted).toEqual([{ uuid: "actorBob", counts: [["07", 1]] }]); // only the real owner
+  });
+
+  it("palms a minted stake as pure bookkeeping", async () => {
+    h.state = playingGame();
+    h.state.diceEscrow = [{ uuid: null, dieId: "02", shownAs: "02" }];
+    const s = await dispatchAsGM({ type: "swapPotDie", index: 0, dieId: "07" }, "gm", true);
+    expect(h.granted).toEqual([]); // no sleeve to slip it into
+    expect(h.removed).toEqual([]);
+    expect(s.diceEscrow[0]).toEqual({ uuid: null, dieId: "07", shownAs: "02" });
+  });
+});

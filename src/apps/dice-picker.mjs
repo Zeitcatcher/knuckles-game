@@ -176,6 +176,8 @@ export class DicePicker extends HandlebarsApplicationMixin(ApplicationV2) {
         gen: isGM ? this._genContext(p.id) : null,
         staking,
         canStake: state.status === "choosing",
+        // Before anything is ticked the column has nothing to say for itself, so say it.
+        stakePrompt: staking && !stakedCount ? game.i18n.localize("KNUCKLES.dice.stakePrompt") : null,
         stakeNote: stakedCount ? game.i18n.format("KNUCKLES.dice.stakeNote", { n: stakedCount }) : null,
         slots,
       };

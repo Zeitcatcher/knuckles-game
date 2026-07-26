@@ -192,10 +192,15 @@ async function handleIntent(intent, userId, local) {
     const standIn = String(intent.dieId ?? "");
     if (!diceIds().includes(standIn)) throw new Error("unknown die");
     if (standIn === entry.dieId) return state; // nothing to palm
-    const owner = await fromUuid(entry.uuid);
-    if (!owner) throw new Error("the die's owner cannot be resolved");
-    await grantDice(owner, new Map([[entry.dieId, 1]])); // the real die slips into the sleeve
-    await removeDiceCopies(owner, new Map([[standIn, 1]])); // false = not owned → minted
+    // A minted stake (a name-only participant) has no inventory behind it: the swap is
+    // pure bookkeeping. Otherwise the real die slips into the owner's sleeve and the
+    // stand-in comes out of their pocket, or out of nowhere when they haven't got one.
+    if (entry.uuid) {
+      const owner = await fromUuid(entry.uuid);
+      if (!owner) throw new Error("the die's owner cannot be resolved");
+      await grantDice(owner, new Map([[entry.dieId, 1]]));
+      await removeDiceCopies(owner, new Map([[standIn, 1]]));
+    }
     entry.dieId = standIn;
     await saveState(state);
     return state;
@@ -368,7 +373,10 @@ async function buildNewGame(config) {
     if (!dieIds && physical) dieIds = prefillLoadout(owned);
     // Staking dice needs real dice: only offered in the item economy, and only to a
     // participant whose inventory we can actually reach.
-    const stakeDice = Boolean(p.stakeDice) && physical && Boolean(invActor);
+    // Wagering dice needs real dice, so it needs the item economy. It does NOT need an
+    // inventory: a name-only opponent puts dice up the same way they put coin up, by
+    // minting them into the pot (see collectDiceStakes).
+    const stakeDice = Boolean(p.stakeDice) && physical;
     players.push({ id: p.id, name, type, actorUuid: p.actorUuid ?? null, tokenUuid: p.tokenUuid ?? null, heroPoints, bet: p.bet, dieIds, stakeDice });
   }
   return createGame({ players, targetScore: config.targetScore ?? DEFAULTS.TARGET, physical });
@@ -469,14 +477,19 @@ async function collectDiceStakes(state) {
     const p = state.players.find((x) => x.id === playerId);
     const actor = inventoryActor(p);
     const uuid = participantActorUuid(p);
-    const ok = actor && uuid && (await removeDiceCopies(actor, counts));
-    if (!ok) {
-      for (const d of done) await grantDice(d.actor, d.counts);
-      throw new Error(`${p?.name ?? "a participant"} cannot put those dice up`);
+    // A participant with no inventory (entered as a name only) MINTS what they put up, the
+    // same way their coin bet is minted: nothing leaves a bag, and the winner still
+    // collects a real die. Only a participant who HAS an inventory must produce the dice.
+    if (actor && uuid) {
+      if (!(await removeDiceCopies(actor, counts))) {
+        for (const d of done) await grantDice(d.actor, d.counts);
+        throw new Error(`${p?.name ?? "a participant"} cannot put those dice up`);
+      }
+      done.push({ actor, counts });
     }
-    done.push({ actor, counts });
     // shownAs starts equal to the die itself; a later palming swap changes dieId only.
-    for (const [dieId, n] of counts) for (let k = 0; k < n; k += 1) escrow.push({ uuid, dieId, shownAs: dieId });
+    // A null uuid marks a minted stake: there is nobody to hand it back to.
+    for (const [dieId, n] of counts) for (let k = 0; k < n; k += 1) escrow.push({ uuid: uuid ?? null, dieId, shownAs: dieId });
   }
 
   state.diceEscrow = [...(state.diceEscrow ?? []), ...escrow];
@@ -503,6 +516,7 @@ async function refundEscrow(state, { force = false } = {}) {
   for (const e of state.escrow ?? []) await refundCoins(e.uuid, e.coins);
   const byActor = new Map();
   for (const e of state.diceEscrow ?? []) {
+    if (!e.uuid) continue; // a minted stake: it came from nowhere, so it goes back nowhere
     if (!byActor.has(e.uuid)) byActor.set(e.uuid, new Map());
     const counts = byActor.get(e.uuid);
     counts.set(e.dieId, (counts.get(e.dieId) ?? 0) + 1);

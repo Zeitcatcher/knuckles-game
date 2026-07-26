@@ -214,5 +214,6 @@
   "KNUCKLES.board.palmStandin": "Подмена",
   "KNUCKLES.board.palmNote": "Спрятанная кость возвращается владельцу. Подмена берётся из его инвентаря, если она там есть, а если нет — появляется из ниоткуда. Игроки видят прежнее название, пока банк не заберут.",
   "KNUCKLES.board.palmDo": "Подменить",
-  "KNUCKLES.board.palmReal": "на самом деле: {name}"
+  "KNUCKLES.board.palmReal": "на самом деле: {name}",
+  "KNUCKLES.dice.stakePrompt": "Отметьте кость, чтобы поставить её на кон."
 }

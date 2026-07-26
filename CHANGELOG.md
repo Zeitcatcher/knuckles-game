@@ -2,6 +2,11 @@
 
 Notable changes, newest first. Each version is also on the [Releases page](https://github.com/Zeitcatcher/knuckles-game/releases); to update inside Foundry, press Update on the module.
 
+## 1.5.1
+
+- A participant entered as a name only can wager dice again. The stake option needed an inventory, so it never appeared for an opponent without a token or character. Their dice now work the way their coin already did: minted into the pot rather than taken out of a bag, and the winner collects a real die all the same. Nothing goes back to them if the game is cancelled, since nothing left their hands.
+- The stake checkboxes were nearly invisible on a dark board. They are now a gold-framed box that fills solid when a die goes into the pot, and a line above the slots says what the column is for before anything is ticked.
+
 ## 1.5.0
 
 - The GM can palm a die out of the pot. Click a staked die on the pot line mid-game, pick a stand-in, and the switch happens in silence: the real die returns to its owner, the lookalike takes its place, and the table keeps seeing the original name. No log line is written, so nothing gives the trick away. The truth surfaces when the winner collects and a cheap die lands where a monster should have been.

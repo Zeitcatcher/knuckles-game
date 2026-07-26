@@ -214,5 +214,6 @@
   "KNUCKLES.board.palmStandin": "Stand-in",
   "KNUCKLES.board.palmNote": "The palmed die returns to its owner. The stand-in comes from their inventory when they have one, and from nowhere when they do not. Players keep seeing the original name until the pot is claimed.",
   "KNUCKLES.board.palmDo": "Switch",
-  "KNUCKLES.board.palmReal": "in truth: {name}"
+  "KNUCKLES.board.palmReal": "in truth: {name}",
+  "KNUCKLES.dice.stakePrompt": "Tick a die to put it in the pot."
 }
